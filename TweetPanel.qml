@@ -8,7 +8,9 @@ Rectangle {
     //color: "red"
 
     property int max_tweets: 30
-    property string panel_type
+    property string account: "no account"
+    property string account_oid: "no oid"
+    property string panel_type: "timeline"
     /*
         "friends"
         "mentions"
@@ -30,48 +32,65 @@ Rectangle {
 
     }
 
-    Column {
-        spacing: 2
-        id: tweet_column
+    //spacing: 2
+    //id: tweet_column
 
-        anchors.fill: parent
+    //anchors.fill: parent
+    Toolbar {
+        id: title_rect
+        anchors.top: parent.top
+        height: 22
+
         Text {
-            text: "test"
-            width: tweet_panel.width
+            x: 5
+            text: "@" + account.name
+            color: "white"
+            //width: tweet_panel.width
+            anchors.verticalCenter: parent.verticalCenter
             MouseArea {
                 anchors.fill: parent
                 onClicked: { addTweet({}) }
             }
-            z: 100
+
+        }
+        z: 1
+    }
+
+    ListView {
+        model: tweet_model
+        //anchors.fill: parent
+        //width: parent.width
+        //height: parent.height
+        //anchors.top: title_rect.bottom
+        //anchors.bottom:
+        anchors {
+            top: title_rect.bottom
+            bottom: parent.bottom
+            left: parent.left
+            right: parent.right
         }
 
-        ListView {
-            model: tweet_model
-            //anchors.fill: parent
-            width: parent.width
-            height: parent.height
-
-            spacing: 2
-            delegate: TweetDelegate {
-                width: {
-                    if (parent)
-                        parent.width
-                    else
-                        300
-                }
-            }
-            onFlickEnded: {
-                if (parent.atYEnd) {
-                    needTweets({
-                        "account": account,
-                        "type": type,
-                        "since": tweet_model.get(tweet_model.count).tweet_id
-                    });
-                }    
+        spacing: 2
+        delegate: TweetDelegate {
+            width: {
+                if (parent)
+                    parent.width
+                else
+                    300
             }
         }
+        onFlickEnded: {
+            if (parent.atYEnd) {
+                needTweets({
+                    "account": account,
+                    "type": type,
+                    "since": tweet_model.get(tweet_model.count).tweet_id
+                });
+            }
+        }
+    }
 
-    } /* column */
+
 
     ListModel {
         id: tweet_model
