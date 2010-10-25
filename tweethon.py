@@ -23,10 +23,7 @@ from itertools import *
 
 from path import path
 
-from PySide.QtGui import *
-from PySide.QtCore import *
-from PySide.QtDeclarative import *
-from PySide.QtOpenGL import *
+from PyQt4.Qt import *
 #def qmlify(slot):
     #def wrapped(
 
@@ -42,9 +39,9 @@ def dict_to_qml_map(d):
 
 
 class Twitter(QObject):
-    sig = Signal("QVariant")
+    sig = pyqtSignal("QVariant")
 
-    @Slot(result="QVariant")
+    #@Slot(result="QVariant")
     def get_foo(self):
         print "get_foo_called"
         #return {u"bar": 2}
