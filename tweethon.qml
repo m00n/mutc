@@ -51,7 +51,7 @@ Rectangle {
     Toolbar {
         id: toolbar_row
         height: 22
-
+        z: 2
         anchors.bottom: tweethon.bottom
 
         SystemPalette { id: activePalette }
@@ -72,12 +72,10 @@ Rectangle {
                 }
             }
 
-            ListView {
-                model: account_model
-                orientation: ListView.Horizontal
-                height: toolbar_row.height
-                width: 200
-                delegate: Row {
+            Component {
+                id: account_delegate
+                Row {
+                    id: account_delegate_row
                     Image {
                         source: avatar
                         height: toolbar_row.height
@@ -85,10 +83,54 @@ Rectangle {
                         fillMode: Image.PreserveAspectFit
                     }
                     Text {
+                        id: screen_name_text
                         text: screen_name
                         color: "white"
+                        font.underline: active
+                        anchors.verticalCenter: parent.verticalCenter
                     }
+                    /*
+                    MouseArea {
+                        width: tweethon.width
+                        height: 22
+                        width: screen_name_text.width
+
+                        onClicked: {
+                            console.log("clicked");
+                            var idx = account_view.indexAt(mouseX, mouseY);
+                            var data = account_model.get(idx);
+                            data.active = !data.active;
+                        }
+                    }*/
                 }
+            }
+
+            ListView {
+                id: account_view
+                z: 0
+                model: account_model
+                orientation: ListView.Horizontal
+                height: toolbar_row.height
+                width: 200
+                /*highlight: Rectangle {
+                    color: Qt.lighter(toolbar_row.color, 1.7)
+                    z: 0
+                }*/
+                focus: true
+                currentIndex: 1
+                interactive: false
+
+                delegate: account_delegate
+                /*
+                MouseArea {
+                    anchors.fill: parent.fill
+                    onClicked: {
+                        console.log("clicked");
+                        var idx = account_view.indexAt(mouseX, mouseY);
+                        var data = account_model.get(idx);
+                        data.active = !data.active;
+                    }
+                }*/
             }
         }
     }
@@ -120,8 +162,15 @@ Rectangle {
             oauth: "abcde"
             screen_name: "boringplanet"
             avatar: "m00n_s.png"
+            active: false
         }
 
+        ListElement {
+            oauth: "abcde"
+            screen_name: "tweethon_test"
+            avatar: "m00n_s.png"
+            active: true
+        }
     }
 
     TweetDialog {
