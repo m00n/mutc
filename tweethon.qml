@@ -88,20 +88,24 @@ Rectangle {
                         color: "white"
                         font.underline: active
                         anchors.verticalCenter: parent.verticalCenter
-                    }
-                    /*
-                    MouseArea {
-                        width: tweethon.width
-                        height: 22
-                        width: screen_name_text.width
 
-                        onClicked: {
-                            console.log("clicked");
-                            var idx = account_view.indexAt(mouseX, mouseY);
-                            var data = account_model.get(idx);
-                            data.active = !data.active;
+                        MouseArea {
+                            height: 22
+                            width: screen_name_text.width
+
+                            z: 100
+                            onClicked: {
+                                console.log("clicked " + mouseX + " " + mouseY + " " + account_view.indexAt(mouseX, mouseY));
+                                var idx = account_view.indexAt(mouseX, mouseY);
+                                var data = account_model.get(idx);
+                                data.active = !data.active;
+                                account_model.set(idx, data);
+
+                            }
                         }
-                    }*/
+                    }
+
+
                 }
             }
 
@@ -118,7 +122,7 @@ Rectangle {
                 }*/
                 focus: true
                 currentIndex: 1
-                interactive: false
+                //interactive: false
 
                 delegate: account_delegate
                 /*
@@ -169,7 +173,7 @@ Rectangle {
             oauth: "abcde"
             screen_name: "tweethon_test"
             avatar: "m00n_s.png"
-            active: true
+            active: false
         }
     }
 
