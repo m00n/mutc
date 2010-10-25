@@ -50,21 +50,14 @@ Rectangle {
 
     Toolbar {
         id: toolbar_row
-        SystemPalette { id: activePalette }
-
-        //height: first_text.font.pointSize + 10
         height: 22
+
+        anchors.bottom: tweethon.bottom
+
+        SystemPalette { id: activePalette }
 
         Row {
             spacing: 20
-            //x: 5
-            //anchors.fill: parent
-
-            /*
-            Text {
-                text: "account0"
-                color: "white"
-            }*/
 
             Button {
                 button_text: "t"
@@ -78,12 +71,7 @@ Rectangle {
                         twitter_dialog.opacity = 1;
                 }
             }
-            /*
-            Text {
-                id: first_text
-                text: "tweet"
-                color: "white"
-            }*/
+
             ListView {
                 model: account_model
                 orientation: ListView.Horizontal
@@ -102,16 +90,7 @@ Rectangle {
                     }
                 }
             }
-
-            /*Text {
-                id: first_text
-                text: "tweet"
-                color: "white"
-            }*/
-
         }
-
-        anchors.bottom: tweethon.bottom
     }
 
 

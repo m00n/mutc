@@ -1,5 +1,5 @@
 import Qt 4.7
-import "tweethon.js" as Tweethon
+
 
 Rectangle {
     id: tweet_dialog
@@ -18,33 +18,19 @@ Rectangle {
 
         width: parent.width
         height: partition * 5
-        //color: "red"
+
         border.width: 2
         border.color: activePalette.window
         color: "#00000000"
         TextEdit {
             id: tweet_area
+            z: 5
             anchors.fill: parent
-
-            wrapMode: TextEdit.Wrap
+            anchors.margins: 5
 
             color: "white"
-            /*
-            onTextChanged: {
-                var percent = (tweet_area.text.length / 140)
 
-                var grad = Qt.createQmlObject(
-                    'import Qt 4.7;' +
-                    'Gradient {' +
-                        'GradientStop { position: 0.0; color: "#4d5053"} ' +
-                        'GradientStop { position: ' + percent + '; color: "#6d7176"} ' +
-                    '}',
-                    char_counter_border, "dynamicGradient"
-                );
-                char_counter_border.gradient = grad;
-            }*/
-            anchors.margins: 5
-            z: 5
+            wrapMode: TextEdit.Wrap
         }
 
         anchors.top: parent.top

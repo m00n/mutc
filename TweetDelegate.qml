@@ -6,6 +6,10 @@ Rectangle {
     radius: 5
     opacity: 100
 
+    color: "#323436"
+    width: 100
+    height: 100
+
     //property string author: "No nick"
     //property string tweet_text: "No text"
     property date timestamp
@@ -23,7 +27,6 @@ Rectangle {
             id: twitter_avatar
             source: avatar
             y: tweet_delegate.height / 2 - (height / 2)
-            //anchors.verticalCenter: parent.verticalCenter
         }
 
         Column {
@@ -52,7 +55,6 @@ Rectangle {
                     text: Qt.formatDateTime(timestamp, "hh:mm:ss")
                     font.pointSize: twitter_name.font.pointSize - 3
                     color: "white"
-                    //anchors.bottom: parent.bottom
                 }
                 Text {
                     id: twitter_inreply
@@ -78,9 +80,4 @@ Rectangle {
             }
         }
     }
-
-    color: "#323436"
-    width: 100
-    //width: parent.width
-    height: 100
 }

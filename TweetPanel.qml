@@ -32,10 +32,6 @@ Rectangle {
 
     }
 
-    //spacing: 2
-    //id: tweet_column
-
-    //anchors.fill: parent
     Toolbar {
         id: title_rect
         anchors.top: parent.top
@@ -43,26 +39,17 @@ Rectangle {
 
         Text {
             x: 5
-            text: "@" + account.name
+            text: "@" + account + "/" + panel_type
             color: "white"
-            //width: tweet_panel.width
-            anchors.verticalCenter: parent.verticalCenter
-            MouseArea {
-                anchors.fill: parent
-                onClicked: { addTweet({}) }
-            }
 
+            anchors.verticalCenter: parent.verticalCenter
         }
         z: 1
     }
 
     ListView {
         model: tweet_model
-        //anchors.fill: parent
-        //width: parent.width
-        //height: parent.height
-        //anchors.top: title_rect.bottom
-        //anchors.bottom:
+
         anchors {
             top: title_rect.bottom
             bottom: parent.bottom
@@ -148,10 +135,6 @@ Rectangle {
         console.log(pyobj)
         console.log(pyobj.a)
     }
-
-    function addTweet(tweet) {
-    }
-
 
     Component.onCompleted: {
         console.log("Panel");
