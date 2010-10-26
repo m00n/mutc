@@ -61,7 +61,6 @@ Rectangle {
             width: 25
             height: toolbar_row.height
             onButtonClicked: {
-                console.log(twitter_dialog.opacity)
                 if (twitter_dialog.opacity == 1)
                     twitter_dialog.opacity = 0;
                 else
@@ -69,7 +68,6 @@ Rectangle {
             }
             anchors {
                 left: parent.left
-                //right: account_view.left
             }
         }
 
@@ -79,113 +77,17 @@ Rectangle {
             model: account_model
             orientation: ListView.Horizontal
             height: toolbar_row.height
-            //width: 200
-            //focus: true
-            //currentIndex: 1
-            anchors.left: tweet_dialog_button.right
-            anchors.leftMargin: 30 /* XXX */
-            anchors.right: parent.right
+
+            anchors {
+                left: tweet_dialog_button.right
+                leftMargin: 30 /* XXX */
+                right:parent.right
+            }
+
             spacing: 0
             interactive: false
 
-            delegate: account_delegate
-        }
-
-        Component {
-            id: account_delegate
-
-            Rectangle {
-                height: 22
-                width: (screen_name_text.paintedWidth) + 23
-
-                color: "#00000000"
-
-                Rectangle {
-                    opacity: active ? 1.0 : 0.0
-                    x: 0
-                    y: 1
-                    width: screen_name_text.width + 1
-                    height: 22 - 2
-                    color: "steelblue"
-                    z: -1
-
-                    Behavior on opacity {
-                        NumberAnimation { duration: 250 }
-                    }
-                }
-                Rectangle {
-                    opacity: active ? 1.0 : 0.0
-                    x: avatar_image.x
-                    y: avatar_image.y + 1
-                    width: avatar_image.width
-                    height: avatar_image.height - 2
-                    color: "steelblue"
-                    z: -1
-                    Behavior on opacity {
-                        NumberAnimation { duration: 250 }
-                    }
-
-                }
-
-                Image {
-                    id: avatar_image
-                    source: avatar
-                    height: 22
-                    width: 22
-                    fillMode: Image.PreserveAspectFit
-                    smooth: true
-
-                    anchors {
-                        top: parent.top
-                        right: screen_name_text.left
-                        leftMargin: 5
-                    }
-                }
-
-                Text {
-                    id: screen_name_text
-                    text: screen_name
-                    color: "white"
-
-                    anchors {
-                        left: avatar.right
-                        leftMargin: 5
-                        verticalCenter: parent.verticalCenter
-                    }
-                    /*
-                    MouseArea {
-                        height: 22
-                        width: screen_name_text.width
-
-                        z: 100
-                        onClicked: {
-                            var coords = account_view.mapFromItem(screen_name_text, mouseX, mouseY);
-                            var idx = account_view.indexAt(coords.x, coords.y);
-                            var data = account_model.get(idx);
-                            data.active = !data.active;
-                            account_model.set(idx, data);
-
-                        }
-                    }
-                    */
-                }
-                MouseArea {
-                    height: 22
-
-                    anchors.left: avatar_image.left
-                    anchors.right: screen_name_text.right
-
-                    z: 100
-                    onClicked: {
-                        var coords = account_view.mapFromItem(screen_name_text, mouseX, mouseY);
-                        var idx = account_view.indexAt(coords.x, coords.y);
-                        var data = account_model.get(idx);
-                        data.active = !data.active;
-                        account_model.set(idx, data);
-
-                    }
-                }
-            }
+            delegate: AccountDelegate {}
         }
     }
 
