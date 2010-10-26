@@ -44,100 +44,111 @@ Rectangle {
         anchors.top: tweethon.top
         anchors.bottom: toolbar_row.top
 
-
         spacing: 10
     }
 
     Toolbar {
         id: toolbar_row
         height: 22
-        z: 2
         anchors.bottom: tweethon.bottom
+        anchors.left: tweethon.left
 
         SystemPalette { id: activePalette }
 
-        Row {
-            spacing: 20
-
-            Button {
-                button_text: "t"
-                width: 25
-                height: toolbar_row.height
-                onButtonClicked: {
-                    console.log(twitter_dialog.opacity)
-                    if (twitter_dialog.opacity == 1)
-                        twitter_dialog.opacity = 0;
-                    else
-                        twitter_dialog.opacity = 1;
-                }
+        Button {
+            id: tweet_dialog_button
+            button_text: "t"
+            width: 25
+            height: toolbar_row.height
+            onButtonClicked: {
+                console.log(twitter_dialog.opacity)
+                if (twitter_dialog.opacity == 1)
+                    twitter_dialog.opacity = 0;
+                else
+                    twitter_dialog.opacity = 1;
             }
-
-            Component {
-                id: account_delegate
-                Row {
-                    id: account_delegate_row
-                    Image {
-                        source: avatar
-                        height: toolbar_row.height
-                        width: toolbar_row.height
-                        fillMode: Image.PreserveAspectFit
-                    }
-                    Text {
-                        id: screen_name_text
-                        text: screen_name
-                        color: "white"
-                        font.underline: active
-                        anchors.verticalCenter: parent.verticalCenter
-
-                        MouseArea {
-                            height: 22
-                            width: screen_name_text.width
-
-                            z: 100
-                            onClicked: {
-                                console.log("clicked " + mouseX + " " + mouseY + " " + account_view.indexAt(mouseX, mouseY));
-                                var idx = account_view.indexAt(mouseX, mouseY);
-                                var data = account_model.get(idx);
-                                data.active = !data.active;
-                                account_model.set(idx, data);
-
-                            }
-                        }
-                    }
-
-
-                }
-            }
-
-            ListView {
-                id: account_view
-                z: 0
-                model: account_model
-                orientation: ListView.Horizontal
-                height: toolbar_row.height
-                width: 200
-                /*highlight: Rectangle {
-                    color: Qt.lighter(toolbar_row.color, 1.7)
-                    z: 0
-                }*/
-                focus: true
-                currentIndex: 1
-                //interactive: false
-
-                delegate: account_delegate
-                /*
-                MouseArea {
-                    anchors.fill: parent.fill
-                    onClicked: {
-                        console.log("clicked");
-                        var idx = account_view.indexAt(mouseX, mouseY);
-                        var data = account_model.get(idx);
-                        data.active = !data.active;
-                    }
-                }*/
+            anchors {
+                left: parent.left
+                //right: account_view.left
             }
         }
+
+        ListView {
+            id: account_view
+
+            model: account_model
+            orientation: ListView.Horizontal
+            height: toolbar_row.height
+            //width: 200
+            focus: true
+            currentIndex: 1
+            anchors.left: tweet_dialog_button.right
+            anchors.leftMargin: 30 /* XXX */
+            anchors.right: parent.right
+            spacing: 5
+            //interactive: false
+
+            delegate: account_delegate
+        }
+
+        Component {
+            id: account_delegate
+
+            Item {
+                height: 22
+                width: 100
+
+                Image {
+                    source: avatar
+                    height: 22
+                    width: 22
+                    fillMode: Image.PreserveAspectFit
+                    //anchors.left: parent.left
+                    anchors {
+                        top: parent.top
+                        right: screen_name_text.left
+                        leftMargin: 5
+                        //rightMargin: 5
+
+                    }
+                    //anchors.right:
+                }
+
+                Text {
+                    id: screen_name_text
+                    text: screen_name
+                    color: "white"
+                    font.underline: active
+                    anchors {
+                        left: avatar.right
+                        leftMargin: 5
+                        //verticalCenter: parent.verticalCenter
+                        //top: parent.top
+
+                    }
+
+                    MouseArea {
+                        height: 22
+                        width: screen_name_text.width
+
+                        z: 100
+                        onClicked: {
+                            //console.log("clicked " + mouseX + " " + mouseY + " " + account_view.indexAt(mouseX, mouseY));
+                            var coords = account_view.mapFromItem(screen_name_text, mouseX, mouseY)
+
+                            var idx = account_view.indexAt(coords.x, coords.y);
+                            var data = account_model.get(idx);
+                            data.active = !data.active;
+                            account_model.set(idx, data);
+                        }
+                    }
+                }
+            }
+        }
+
+
     }
+
 
 
 
@@ -185,6 +196,6 @@ Rectangle {
     }
 
     Component.onCompleted: {
-
+       console.log(account_view.x)
     }
 }
