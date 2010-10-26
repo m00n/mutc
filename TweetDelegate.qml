@@ -39,14 +39,13 @@ Rectangle {
                 color: "white"
                 font.bold: true
             }
-            Text {
+            URLText {
                 id: twitter_text
                 text: tweet_text
                 wrapMode: Text.Wrap
-                color: "white"
                 width: tweet_delegate.width - 40
-
             }
+
             Row {
                 spacing: 10
 

@@ -109,7 +109,7 @@ Rectangle {
         }
         ListElement {
             author: "boringplanet a"
-            tweet_text: "Faketweet 2"
+            tweet_text: "gdfg gfdgf http://foo.bar.baz/zort"
             avatar: "m00n_s.png"
         }
         ListElement {
