@@ -85,7 +85,7 @@ Rectangle {
             anchors.left: tweet_dialog_button.right
             anchors.leftMargin: 30 /* XXX */
             anchors.right: parent.right
-            spacing: 5
+            spacing: 0
             interactive: false
 
             delegate: account_delegate
@@ -121,7 +121,6 @@ Rectangle {
                     height: avatar_image.height - 2
                     color: "steelblue"
                     z: -1
-
                     Behavior on opacity {
                         NumberAnimation { duration: 250 }
                     }
@@ -138,7 +137,6 @@ Rectangle {
 
                     anchors {
                         top: parent.top
-
                         right: screen_name_text.left
                         leftMargin: 5
                     }
@@ -154,7 +152,7 @@ Rectangle {
                         leftMargin: 5
                         verticalCenter: parent.verticalCenter
                     }
-
+                    /*
                     MouseArea {
                         height: 22
                         width: screen_name_text.width
@@ -168,6 +166,23 @@ Rectangle {
                             account_model.set(idx, data);
 
                         }
+                    }
+                    */
+                }
+                MouseArea {
+                    height: 22
+
+                    anchors.left: avatar_image.left
+                    anchors.right: screen_name_text.right
+
+                    z: 100
+                    onClicked: {
+                        var coords = account_view.mapFromItem(screen_name_text, mouseX, mouseY);
+                        var idx = account_view.indexAt(coords.x, coords.y);
+                        var data = account_model.get(idx);
+                        data.active = !data.active;
+                        account_model.set(idx, data);
+
                     }
                 }
             }
@@ -218,9 +233,5 @@ Rectangle {
         opacity: 0
         anchors.bottom: toolbar_row.top
         anchors.left: parent.left
-    }
-
-    Component.onCompleted: {
-       console.log(account_view.x)
     }
 }
