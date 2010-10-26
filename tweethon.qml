@@ -80,13 +80,13 @@ Rectangle {
             orientation: ListView.Horizontal
             height: toolbar_row.height
             //width: 200
-            focus: true
-            currentIndex: 1
+            //focus: true
+            //currentIndex: 1
             anchors.left: tweet_dialog_button.right
             anchors.leftMargin: 30 /* XXX */
             anchors.right: parent.right
             spacing: 5
-            //interactive: false
+            interactive: false
 
             delegate: account_delegate
         }
@@ -103,7 +103,7 @@ Rectangle {
                     height: 22
                     width: 22
                     fillMode: Image.PreserveAspectFit
-                    //anchors.left: parent.left
+                    smooth: true
                     anchors {
                         top: parent.top
                         right: screen_name_text.left
