@@ -122,8 +122,7 @@ Rectangle {
                     anchors {
                         left: avatar.right
                         leftMargin: 5
-                        //verticalCenter: parent.verticalCenter
-                        //top: parent.top
+                        verticalCenter: parent.verticalCenter
 
                     }
 
