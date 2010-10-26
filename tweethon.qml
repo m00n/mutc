@@ -94,36 +94,65 @@ Rectangle {
         Component {
             id: account_delegate
 
-            Item {
+            Rectangle {
                 height: 22
-                width: 100
+                width: (screen_name_text.paintedWidth) + 23
+
+                color: "#00000000"
+
+                Rectangle {
+                    opacity: active ? 1.0 : 0.0
+                    x: 0
+                    y: 1
+                    width: screen_name_text.width + 1
+                    height: 22 - 2
+                    color: "steelblue"
+                    z: -1
+
+                    Behavior on opacity {
+                        NumberAnimation { duration: 250 }
+                    }
+                }
+                Rectangle {
+                    opacity: active ? 1.0 : 0.0
+                    x: avatar_image.x
+                    y: avatar_image.y + 1
+                    width: avatar_image.width
+                    height: avatar_image.height - 2
+                    color: "steelblue"
+                    z: -1
+
+                    Behavior on opacity {
+                        NumberAnimation { duration: 250 }
+                    }
+
+                }
 
                 Image {
+                    id: avatar_image
                     source: avatar
                     height: 22
                     width: 22
                     fillMode: Image.PreserveAspectFit
                     smooth: true
+
                     anchors {
                         top: parent.top
+
                         right: screen_name_text.left
                         leftMargin: 5
-                        //rightMargin: 5
-
                     }
-                    //anchors.right:
                 }
 
                 Text {
                     id: screen_name_text
                     text: screen_name
                     color: "white"
-                    font.underline: active
+
                     anchors {
                         left: avatar.right
                         leftMargin: 5
                         verticalCenter: parent.verticalCenter
-
                     }
 
                     MouseArea {
@@ -132,20 +161,17 @@ Rectangle {
 
                         z: 100
                         onClicked: {
-                            //console.log("clicked " + mouseX + " " + mouseY + " " + account_view.indexAt(mouseX, mouseY));
-                            var coords = account_view.mapFromItem(screen_name_text, mouseX, mouseY)
-
+                            var coords = account_view.mapFromItem(screen_name_text, mouseX, mouseY);
                             var idx = account_view.indexAt(coords.x, coords.y);
                             var data = account_model.get(idx);
                             data.active = !data.active;
                             account_model.set(idx, data);
+
                         }
                     }
                 }
             }
         }
-
-
     }
 
 
