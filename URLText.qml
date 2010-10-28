@@ -5,6 +5,8 @@ Item {
     id: container
     property string text: ""
     property alias wrapMode: text_item.wrapMode
+    property alias elide: text_item.elide
+    property alias horizontalAlignment: text_item.horizontalAlignment
 
     height: 22
 
