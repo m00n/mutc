@@ -23,6 +23,12 @@ from itertools import *
 
 from path import path
 
+import sip
+
+sip.setapi('QString', 2)
+sip.setapi('QVariant', 2)
+
+
 from PyQt4.Qt import *
 #def qmlify(slot):
     #def wrapped(
@@ -38,36 +44,92 @@ def dict_to_qml_map(d):
     return ctxmap
 
 
+def from_qml(conversion):
+    def deco(func):
+        def wrapped(self, qmldata):
+            pydict = dict(
+                [unicode(key), ]
+            )
+
+            return func()
+
+
 class Twitter(QObject):
     sig = pyqtSignal("QVariant")
 
-    #@Slot(result="QVariant")
+    @pyqtSlot(result=unicode)
     def get_foo(self):
         print "get_foo_called"
-        #return {u"bar": 2}
-        #return 0
-        #buf = QBuffer(self)
-        #buf.setData("zort")
-        #return buf
-        #self.ba = ba = QByteArray("ZORT")
-        return 0
+        return u"abcd"
+
+
+    @pyqtSlot("QVariant")
+    def subscribe(self, subscription):
+        print subscription
+
+
+class App(QApplication):
+    backendReady = pyqtSignal()
+
+    announceAccount = pyqtSignal('QVariant')
+
+    def __init__(self, args):
+        QApplication.__init__(self, args)
+
+    def start_sync(self):
+        """
+        Emit accounts & saved options to gui
+        """
+        for account in self.accounts:
+            self.announceAccount(account.to_builtins())
+
+
+    # account methods
+    """
+    QML                           Python
+    account = app.account_new()
+    account.verifierNeeded.connect({ show_url; })
+    account.connected.connect({  })
+    account.get_auth_url()
+    account.set_verifier(inputfu.text)
+    """
+    def account_new(self):
+        account = Account()
+        account.ready.connect(announceAccount.emit)
+
+        self.accounts.append(account)
+        #account.connected.connect(self.accounts.append)
+
+        return account
 
 #@Slot(unicode, result=unicode)
-def zort(foo):
+def zort(foo="123"):
     print foo
     return u"foo"
 
+def foo():
+    print "guiReady"
+
+@pyqtSlot('QVariant')
+def f(args):
+    print args
+
 if __name__ == '__main__':
-    app = QApplication([])
+    app = App([])
 
     dv = QDeclarativeView()
     dv.setViewport(QGLWidget())
     dv.setResizeMode(QDeclarativeView.SizeRootObjectToView)
     rc = dv.rootContext()
     tw = Twitter()
-    dv.setSource(QUrl.fromLocalFile("tweethon.qml"))
     QTimer.singleShot(1000, lambda: tw.sig.emit({'a': 'b', 'c': 'd'}))
-
+    rc.setContextProperty('twitter', tw)
+    rc.setContextProperty('app', app)
+    dv.setSource(QUrl.fromLocalFile("tweethon.qml"))
+    ro = dv.rootObject()
+    ro.connect(ro, SIGNAL('guiReady()'), foo)
     dv.show()
 
+    app.backendReady.emit()
+    app.announceAccount.emit({'avatar': 'm00n_s.png', 'screen_name': 'python', 'oauth': ''})
     app.exec_()
