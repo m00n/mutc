@@ -30,28 +30,8 @@ sip.setapi('QVariant', 2)
 
 
 from PyQt4.Qt import *
-#def qmlify(slot):
-    #def wrapped(
 
 import sys
-
-def dict_to_qml_map(d):
-    ctxmap = QDeclarativePropertyMap()
-
-    for key, value in d.iteritems():
-        ctxmap.insert(key, value)
-
-    return ctxmap
-
-
-def from_qml(conversion):
-    def deco(func):
-        def wrapped(self, qmldata):
-            pydict = dict(
-                [unicode(key), ]
-            )
-
-            return func()
 
 
 class Twitter(QObject):
@@ -68,7 +48,7 @@ class Twitter(QObject):
         print subscription
 
 
-class App(QApplication):
+class Tweethon(QApplication):
     backendReady = pyqtSignal()
 
     announceAccount = pyqtSignal('QVariant')
@@ -114,22 +94,44 @@ def foo():
 def f(args):
     print args
 
-if __name__ == '__main__':
-    app = App([])
 
-    dv = QDeclarativeView()
-    dv.setViewport(QGLWidget())
-    dv.setResizeMode(QDeclarativeView.SizeRootObjectToView)
-    rc = dv.rootContext()
-    tw = Twitter()
-    QTimer.singleShot(1000, lambda: tw.sig.emit({'a': 'b', 'c': 'd'}))
-    rc.setContextProperty('twitter', tw)
-    rc.setContextProperty('app', app)
-    dv.setSource(QUrl.fromLocalFile("tweethon.qml"))
-    ro = dv.rootObject()
-    ro.connect(ro, SIGNAL('guiReady()'), foo)
-    dv.show()
+def main():
+    app = Tweethon(sys.argv)
+    twitter = Twitter()
 
-    app.backendReady.emit()
-    app.announceAccount.emit({'avatar': 'm00n_s.png', 'screen_name': 'python', 'oauth': ''})
+    declarative_view = QDeclarativeView()
+    declarative_view.setViewport(QGLWidget())
+
+    root_context = declarative_view.rootContext()
+    root_context.setContextProperty('twitter', twitter)
+    root_context.setContextProperty('tweethon', app)
+
+    declarative_view.setSource(QUrl.fromLocalFile("tweethon.qml"))
+
+    root_object = declarative_view.rootObject()
+    #root_object.coonect(root_object, SIGNAL('guiReady()'), )
+
+    declarative_view.show()
+
     app.exec_()
+
+if __name__ == '__main__':
+    main()
+    #app = App([])
+
+    #dv = QDeclarativeView()
+    #dv.setViewport(QGLWidget())
+    #dv.setResizeMode(QDeclarativeView.SizeRootObjectToView)
+    #rc = dv.rootContext()
+    #tw = Twitter()
+    #QTimer.singleShot(1000, lambda: tw.sig.emit({'a': 'b', 'c': 'd'}))
+    #rc.setContextProperty('twitter', tw)
+    #rc.setContextProperty('app', app)
+    #dv.setSource(QUrl.fromLocalFile("tweethon.qml"))
+    #ro = dv.rootObject()
+    #ro.connect(ro, SIGNAL('guiReady()'), foo)
+    #dv.show()
+
+    #app.backendReady.emit()
+    #app.announceAccount.emit({'avatar': 'm00n_s.png', 'screen_name': 'python', 'oauth': ''})
+    #app.exec_()
