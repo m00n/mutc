@@ -34,18 +34,181 @@ from PyQt4.Qt import *
 import sys
 
 
+def pick(dictionary, *keys):
+    return dict((key, getattr(dictionary, key)) for key in keys)
+
+def status_to_dict(status):
+    is_rt = hasattr(status, "retweeted_status")
+    retweeted_status = getattr(status, "retweeted_status", None)
+
+    return {
+        "author": author_to_dict(status.author),
+        "text": status.text[3:] if is_rt else status.text,
+        "created_at": status.created_at,
+        "id": status.id_str,
+        "is_rt": is_rt,
+        "rt_from": retweeted_status.author.screen_name if is_rt else None,
+    }
+
+def author_to_dict(user):
+    return pick(
+        user,
+        "screen_name",
+        "name",
+        "description",
+        "profile_image_url"
+    )
+
+def search_to_dict(searchresult):
+    return {
+        "author": searchresult.from_user,
+        "text": searchresult.text,
+        "created_at": status.created_at,
+        "id": searchresult.id_str
+    }
+
+
+class TwitterThread(QThread):
+    newTweets = pyqtSignal("QVariant")
+
+    def __init__(self, parent, subscriptions):
+        QThread.__init__(self, parent)
+        self.subscriptions = subscriptions
+
+        self.ticks = 20
+        self.tick_count = 3
+
+        self.running = True
+        self.force_check = threading.Event()
+
+    def run(self):
+        while self.running:
+            for subscription in self.subscriptions:
+                tweets = map(status_to_dict, subscription.update())
+                self.newTweets.emit({
+                    "account": account.uuid,
+                    "type": subscription.subscription_type
+                    "args": subscription.args
+                    "tweets": tweets
+                })
+
+            for x in xrange(self.tick_count):
+                sleep(self.ticks)
+                if self.force_check.is_set():
+                    self.force_check.unset()
+                    break
+
+
+class Subscription(object):
+    subscription_type = "abstract"
+
+    def __init__(self, account, args):
+        self.account = account
+        self.args = args
+        self.last_tweet_id = None
+
+    def get_stream(self):
+        raise NotImplemented
+
+    def get_stream_args(self):
+        return {}
+
+    def simplify(self, tweets):
+        raise NotImplemented
+
+    def update(self):
+        tweets = []
+
+        cursor_args = {}
+
+        if not self.last_tweet_id:
+            cursor_args["since_id"] = self.last_tweet_id
+
+        cursor.update(self.get_stream_args())
+
+        cursor = tweepy.Cursor(
+            self.get_stream(),
+            **cursor_args
+        )
+
+        for status in cursor.items():
+            tweets.append(status)
+
+        self.last_tweet_id = status.id
+
+        return self.simplify(tweets)
+
+
+class TimelineBase(Subscription):
+    def simplify(self, tweets):
+        return map(status_to_dict, tweets)
+
+
+class Timeline(TimelineBase):
+    subscription_type = "timeline"
+    def get_stream(self):
+        return self.account.api.friends_timeline
+
+
+class Mentions(TimelineBase):
+    subscription_type = "mentions"
+    def get_stream(self):
+        return self.account.api.mentions
+
+
+class Search(Subscription):
+    subscription_type = "search"
+
+    def simplify(self, searches):
+        return map(search_to_dict, searches)
+
+    def get_stream(self):
+        return self.account.api.search
+
+    def get_stream_args(self):
+        return {'q': self.args[0]}
+
+
+def create_subscription(name, account, args):
+    return {
+        "timeline": Timeline,
+        "mentions": Mentions
+        "search": Search
+    }[name](account, args)
+
+
 class Twitter(QObject):
     sig = pyqtSignal("QVariant")
+    newTweets = pyqtSignal("QVariant")
 
-    @pyqtSlot(result=unicode)
-    def get_foo(self):
-        print "get_foo_called"
-        return u"abcd"
+    def __init__(self):
+        self.accounts = {}
+        self.subscriptions = set()
 
+        self.thread = TwitterThread(self)
+        self.thread.newTweets.connect(self.newTweets.emit)
+        self.thread.start()
 
     @pyqtSlot("QVariant")
     def subscribe(self, subscription):
         print subscription
+        self.subscriptions.add(
+            create_subscription(
+                subscription["type"],
+                self.accounts[subscription["account"]],
+                subscription.get("args", ())
+            )
+        )
+
+    @pyqtSlot("QVariant")
+    def tweet(self, tweet):
+        """
+        {
+            text:
+            accounts: []
+        }
+        """
+        pass
 
 
 class Tweethon(QApplication):
@@ -82,18 +245,6 @@ class Tweethon(QApplication):
 
         return account
 
-#@Slot(unicode, result=unicode)
-def zort(foo="123"):
-    print foo
-    return u"foo"
-
-def foo():
-    print "guiReady"
-
-@pyqtSlot('QVariant')
-def f(args):
-    print args
-
 
 def main():
     app = Tweethon(sys.argv)
@@ -101,6 +252,7 @@ def main():
 
     declarative_view = QDeclarativeView()
     declarative_view.setViewport(QGLWidget())
+    declarative_view.setResizeMode(QDeclarativeView.SizeRootObjectToView)
 
     root_context = declarative_view.rootContext()
     root_context.setContextProperty('twitter', twitter)
@@ -113,25 +265,7 @@ def main():
 
     declarative_view.show()
 
-    app.exec_()
+    return app.exec_()
 
 if __name__ == '__main__':
-    main()
-    #app = App([])
-
-    #dv = QDeclarativeView()
-    #dv.setViewport(QGLWidget())
-    #dv.setResizeMode(QDeclarativeView.SizeRootObjectToView)
-    #rc = dv.rootContext()
-    #tw = Twitter()
-    #QTimer.singleShot(1000, lambda: tw.sig.emit({'a': 'b', 'c': 'd'}))
-    #rc.setContextProperty('twitter', tw)
-    #rc.setContextProperty('app', app)
-    #dv.setSource(QUrl.fromLocalFile("tweethon.qml"))
-    #ro = dv.rootObject()
-    #ro.connect(ro, SIGNAL('guiReady()'), foo)
-    #dv.show()
-
-    #app.backendReady.emit()
-    #app.announceAccount.emit({'avatar': 'm00n_s.png', 'screen_name': 'python', 'oauth': ''})
-    #app.exec_()
+    sys.exit(main())
