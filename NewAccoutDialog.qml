@@ -1,8 +1,10 @@
 import Qt 4.7
 
 Rectangle {
-    width: 640
+    width: 320
     height: 240
+
+    id: new_account_dialog
 
     color: "#323436"
 
@@ -134,4 +136,21 @@ Rectangle {
             bottomMargin: 1
         }
     }
+
+    opacity: 0
+    states: [
+        State {
+            name: "open"
+            PropertyChanges {
+                target: new_account_dialog
+                opacity: 1
+            }
+        }
+    ]
+    transitions: [
+        Transition {
+            NumberAnimation { property: "opacity"; duration: 250 }
+        }
+    ]
+
 }
