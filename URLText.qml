@@ -30,4 +30,6 @@ Item {
             setText(container.text);
         }
     }
+
+    function setText (txt) { text_item.setText(txt) }
 }
