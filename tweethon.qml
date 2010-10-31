@@ -46,6 +46,15 @@ Rectangle {
             anchors.top: { if (parent) parent.top }
             anchors.bottom: { if (parent) parent.bottom }
 
+            onNeedTweets: {
+                twitter.need_tweets({
+                    "uuid": uuid,
+                    "type": type,
+                    "args": args,
+                    "before": tweet_panel.model.get(tweet_panel.model.count - 1).id
+                });
+            }
+
             Component.onCompleted: {
                 console.log("Delegate completed")
                 if (!connected) {
@@ -55,7 +64,11 @@ Rectangle {
                         if (data.uuid == uuid && data.type == type && data.args == args) {
                             console.log("mytweets");
                             Tweethon.each(data.tweets, function (index, tweet_data) {
-                                tweet_panel.model.insert(index, tweet_data)
+                                if (data.insert == "top") {
+                                    tweet_panel.model.insert(index, tweet_data);
+                                } else {
+                                    tweet_panel.model.append(tweet_data);
+                                }
                             });
                         }
 
@@ -259,9 +272,5 @@ Rectangle {
             console.log("newSubscription");
             tweet_panel_model.append(data);
         })
-        twitter.newTweets.connect(function (data) {
-            var index = Tweethon.indexFor(tweet_panel_model, 'uuid', data.uuid);
-        })
-
     }
 }

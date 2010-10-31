@@ -35,7 +35,7 @@ import sys
 import threading
 
 from time import sleep
-from twitter import Account
+from twitter import Account, async
 
 import json
 
@@ -101,6 +101,7 @@ class TwitterThread(QThread):
                             "uuid": subscription.account.uuid,
                             "type": subscription.subscription_type,
                             "args": subscription.args,
+                            "insert": "top",
                             "tweets": tweets
                         })
 
@@ -283,6 +284,28 @@ class Twitter(QObject):
     @pyqtSlot("QVariant")
     def dismiss_account(self, uuid):
         del self.accounts[uuid]
+
+    @pyqtSlot("QVariant")
+    @async
+    def need_tweets(self, request):
+        print "need_tweets", request
+
+        account = self.accounts[request["uuid"]]
+        subscription = create_subscription(request["type"], account, None)
+        cursor = tweepy.Cursor(
+            subscription.get_stream(),
+            max_id=request["before"]
+        )
+
+        tweets = map(status_to_dict, cursor.items(20))[1:]
+
+        self.newTweets.emit({
+            "uuid": subscription.account.uuid,
+            "type": subscription.subscription_type,
+            "args": subscription.args,
+            "insert": "bottom",
+            "tweets": tweets
+        })
 
     def start_sync(self):
         """

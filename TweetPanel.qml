@@ -70,18 +70,26 @@ Rectangle {
                     300
             }
         }
-        onFlickEnded: {
-            if (parent.atYEnd) {
-                needTweets({
-                    "account": account,
-                    "type": type,
-                    "since": tweet_model.get(tweet_model.count).tweet_id
-                });
+        onMovementEnded: {
+            //console.log(tweet_view.contentHeight + " " + tweet_view.contentY)
+            if (tweet_view.atYEnd) {
+                //console.log("atyend");
+                if (!new_tweet_timeout.running)
+                {
+                    needTweets()
+                    new_tweet_timeout.start()
+                }
+
             }
         }
     }
 
-
+    Timer {
+        id: new_tweet_timeout
+        interval: 3000
+        repeat: false
+        running: false
+    }
 
     ListModel {
         id: tweet_model
