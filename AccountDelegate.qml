@@ -11,10 +11,10 @@ Component {
 
         Rectangle {
             opacity: active ? 1.0 : 0.0
-            x: avatar_image.x
-            y: avatar_image.y + 1
-            width: avatar_image.width + screen_name_text.width
-            height: avatar_image.height - 2
+            x: avatar_border.x
+            y: avatar_border.y + 1
+            width: avatar_border.width + screen_name_text.width + 3
+            height: avatar_border.height - 2
             color: "steelblue"
             z: -1
             Behavior on opacity {
@@ -23,14 +23,24 @@ Component {
 
         }
 
-        Image {
-            id: avatar_image
-            source: avatar
+        Rectangle {
+            id: avatar_border
+
             height: 22
             width: 22
-            fillMode: Image.PreserveAspectFit
-            smooth: true
 
+            color: "#00000000"
+
+            Image {
+                id: avatar_image
+                source: avatar
+
+                fillMode: Image.PreserveAspectFit
+                smooth: true
+
+                anchors.fill: parent
+                anchors.margins: 2
+            }
             anchors {
                 top: parent.top
                 right: screen_name_text.left
@@ -53,7 +63,7 @@ Component {
         MouseArea {
             height: 22
 
-            anchors.left: avatar_image.left
+            anchors.left: avatar_border.left
             anchors.right: screen_name_text.right
 
             z: 100
