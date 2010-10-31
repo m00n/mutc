@@ -1,12 +1,16 @@
 import Qt 4.7
 
 Rectangle {
-    width: 320
-    height: 240
+    width: 640
+    height: 320
 
     id: new_account_dialog
 
     color: "#323436"
+
+    property string account /* uuid */
+    property string auth_url: ""
+    property string waiting_str: "Waiting for authentication url"
 
 
     SystemPalette { id: activePalette }
@@ -60,7 +64,7 @@ Rectangle {
         wrapMode: Text.Wrap
         text: "If you have a twitter account please visit the url below and paste the verifier code below the url"
     }
-    URLText {
+    /*URLText {
         id: auth_url_text
 
         anchors {
@@ -74,13 +78,55 @@ Rectangle {
         elide: Text.ElideMiddle
         wrapMode: Text.Wrap
         text: "Waiting for authorization url"
+    }*/
+
+    Rectangle {
+        id: auth_url_border
+
+        height: 44
+        color: "#00000000"
+
+        anchors {
+            top: auth_text.bottom
+            left: parent.left
+            right: parent.right
+            margins: 3
+
+        }
+
+        border {
+            width: 1
+            color: "white"
+        }
+
+        TextEdit {
+            id: auth_url_text
+            color: "white"
+
+            anchors {
+                fill: parent
+                margins: 4
+            }
+
+            horizontalAlignment: Text.AlignHCenter
+            wrapMode: Text.Wrap
+
+            selectByMouse: true
+
+            text: {
+                if (auth_url)
+                    auth_url
+                else
+                    waiting_str
+            }
+        }
     }
 
     Rectangle {
         height: 44
         color: "#00000000"
         anchors {
-            top: auth_url_text.bottom
+            top: auth_url_border.bottom
             left: parent.left
             right: parent.right
             margins: 4
@@ -92,19 +138,19 @@ Rectangle {
         }
 
         TextInput {
-            id: verfier_input
+            id: verifier_input
 
             text: "enter verifier code"
             color: "white"
-
+            horizontalAlignment: Text.AlignHCenter
             anchors {
                 fill: parent
                 margins: 4
             }
 
-
+            selectByMouse: true
             Component.onCompleted: {
-                verfier_input.selectAll()
+                //verfier_input.selectAll()
             }
         }
     }
@@ -121,6 +167,10 @@ Rectangle {
             topMargin: 5
             bottomMargin: 1
         }
+
+        onButtonClicked: {
+            twitter.account(account).set_verifier(verifier_input.text);
+        }
     }
 
     Button {
@@ -134,6 +184,10 @@ Rectangle {
             right: ok_button.left
             topMargin: 5
             bottomMargin: 1
+        }
+
+        onButtonClicked: {
+            new_account_dialog.state = ""
         }
     }
 
@@ -153,4 +207,21 @@ Rectangle {
         }
     ]
 
+    function init () {
+        var account_obj = twitter.new_account();
+        new_account_dialog.account = account_obj.get_uuid();
+        account_obj.authURLReady.connect(function (url) {
+            new_account_dialog.auth_url = url;
+        });
+        account_obj.request_auth();
+        console.log(account_obj)
+    }
+
+    onStateChanged: {
+        if (new_account_dialog.state == "") {
+            console.log("hiding")
+            new_account_dialog.auth_url = "";
+            twitter.dismiss_account(new_account_dialog.account);
+        }
+    }
 }
