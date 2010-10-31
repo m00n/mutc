@@ -32,7 +32,14 @@ sip.setapi('QVariant', 2)
 from PyQt4.Qt import *
 
 import sys
+import threading
 
+from time import sleep
+from twitter import Account
+
+import json
+
+import tweepy
 
 def pick(dictionary, *keys):
     return dict((key, getattr(dictionary, key)) for key in keys)
@@ -43,7 +50,7 @@ def status_to_dict(status):
 
     return {
         "author": author_to_dict(status.author),
-        "text": status.text[3:] if is_rt else status.text,
+        "message": status.text[3:] if is_rt else status.text,
         "created_at": status.created_at,
         "id": status.id_str,
         "is_rt": is_rt,
@@ -74,28 +81,31 @@ class TwitterThread(QThread):
     def __init__(self, parent, subscriptions):
         QThread.__init__(self, parent)
         self.subscriptions = subscriptions
+        self.subscriptions_lock = threading.Lock()
 
-        self.ticks = 20
-        self.tick_count = 3
+        self.ticks = 1
+        self.tick_count = 60
 
         self.running = True
         self.force_check = threading.Event()
 
     def run(self):
         while self.running:
-            for subscription in self.subscriptions:
-                tweets = map(status_to_dict, subscription.update())
-                self.newTweets.emit({
-                    "account": account.uuid,
-                    "type": subscription.subscription_type
-                    "args": subscription.args
-                    "tweets": tweets
-                })
+            with self.subscriptions_lock:
+                for subscription in self.subscriptions:
+                    tweets = subscription.update()
+                    print "new_tweets", len(tweets), tweets[0]
+                    self.newTweets.emit({
+                        "uuid": subscription.account.uuid,
+                        "type": subscription.subscription_type,
+                        "args": subscription.args,
+                        "tweets": tweets
+                    })
 
             for x in xrange(self.tick_count):
                 sleep(self.ticks)
                 if self.force_check.is_set():
-                    self.force_check.unset()
+                    self.force_check.clear()
                     break
 
 
@@ -120,21 +130,29 @@ class Subscription(object):
         tweets = []
 
         cursor_args = {}
+        count = None
 
-        if not self.last_tweet_id:
+        if self.last_tweet_id:
             cursor_args["since_id"] = self.last_tweet_id
+        else:
+            count = 20
 
-        cursor.update(self.get_stream_args())
+        cursor_args.update(self.get_stream_args())
 
         cursor = tweepy.Cursor(
             self.get_stream(),
             **cursor_args
         )
 
-        for status in cursor.items():
+        for status in cursor.items(count):
+            #print status, repr(status.text)
             tweets.append(status)
 
-        self.last_tweet_id = status.id
+            #if self.last_tweet_id and self.last_tweet_id == status.id:
+                #break
+
+        if tweets:
+            self.last_tweet_id = tweets[0].id
 
         return self.simplify(tweets)
 
@@ -172,33 +190,52 @@ class Search(Subscription):
 def create_subscription(name, account, args):
     return {
         "timeline": Timeline,
-        "mentions": Mentions
-        "search": Search
+        "mentions": Mentions,
+        "search": Search,
     }[name](account, args)
 
 
 class Twitter(QObject):
-    sig = pyqtSignal("QVariant")
     newTweets = pyqtSignal("QVariant")
+    newSubscription = pyqtSignal("QVariant")
+
+    announceAccount = pyqtSignal("QVariant")
+    accountConnected = pyqtSignal("QVariant")
 
     def __init__(self):
+        QObject.__init__(self)
+
         self.accounts = {}
+        self.ordered_accounts = []
         self.subscriptions = set()
 
-        self.thread = TwitterThread(self)
+        self.thread = TwitterThread(self, self.subscriptions)
         self.thread.newTweets.connect(self.newTweets.emit)
         self.thread.start()
 
     @pyqtSlot("QVariant")
     def subscribe(self, subscription):
         print subscription
-        self.subscriptions.add(
-            create_subscription(
-                subscription["type"],
-                self.accounts[subscription["account"]],
-                subscription.get("args", ())
-            )
+        account = self.accounts[subscription["uuid"]]
+
+        if account.me:
+            subscription['screen_name'] = account.me.screen_name
+        else:
+            subscription['screen_name'] = account.uuid[:4]
+
+        self.newSubscription.emit(subscription)
+
+        # XXX
+        subscription = create_subscription(
+            subscription["type"],
+            account,
+            subscription.get("args", ())
         )
+        with self.thread.subscriptions_lock:
+            self.subscriptions.add(subscription)
+
+        self.thread.force_check.set()
+
 
     @pyqtSlot("QVariant")
     def tweet(self, tweet):
@@ -209,24 +246,6 @@ class Twitter(QObject):
         }
         """
         pass
-
-
-class Tweethon(QApplication):
-    backendReady = pyqtSignal()
-
-    announceAccount = pyqtSignal('QVariant')
-
-    def __init__(self, args):
-        QApplication.__init__(self, args)
-
-    def start_sync(self):
-        """
-        Emit accounts & saved options to gui
-        """
-        for account in self.accounts:
-            self.announceAccount(account.to_builtins())
-
-
     # account methods
     """
     QML                           Python
@@ -236,19 +255,83 @@ class Tweethon(QApplication):
     account.get_auth_url()
     account.set_verifier(inputfu.text)
     """
-    def account_new(self):
+    def announce_account(self, account):
+        print account
+        print account.simplify()
+        self.announceAccount.emit(account.simplify())
+
+    @pyqtSlot(result=QObject)
+    def new_account(self):
         account = Account()
-        account.ready.connect(announceAccount.emit)
-
-        self.accounts.append(account)
-        #account.connected.connect(self.accounts.append)
-
+        account.ready.connect(partial(self.announce_account, account))
+        self.add_account(account)
         return account
+
+    def add_account(self, account):
+        self.ordered_accounts.append(account)
+        self.accounts[account.uuid] = account
+        account.connected.connect(
+            lambda account: self.accountConnected.emit(account.simplify())
+        )
+
+    @pyqtSlot("QVariant", result=QObject)
+    def account(self, uuid):
+        return self.accounts[uuid]
+
+    @pyqtSlot("QVariant")
+    def dismiss_account(self, uuid):
+        del self.accounts[uuid]
+
+    def start_sync(self):
+        """
+        Emit accounts & saved options to gui
+        """
+        for account in self.ordered_accounts:
+            self.announceAccount.emit(account.simplify())
+            account.connect()
+
+
+class Tweethon(QApplication):
+    backendReady = pyqtSignal()
+
+    def __init__(self, args, twitter):
+        QApplication.__init__(self, args)
+
+        self.twitter = twitter
+
+        self.data_path = path('~/.tweethon').expand()
+
+        #self.load_accounts()
+
+        self.aboutToQuit.connect(self._stop_tweethon)
+
+
+    def load_accounts(self):
+        try:
+            with open(self.data_path / 'accounts.json') as fd:
+                accounts = json.load(fd)
+        except IOError:
+            pass
+        else:
+            for accout_data in accounts:
+                self.twitter.add_account(Account(*accout_data))
+
+    def _stop_tweethon(self):
+        #self.twitter.thread.running.clear()
+        #self.twitter.thread.wait()
+        accounts = []
+        for account in self.twitter.ordered_accounts:
+            accounts.append(
+                (account.oauth_key, account.oauth_secret, account.uuid)
+            )
+
+        with open(self.data_path / 'accounts.json', 'w') as fd:
+            json.dump(accounts, fd)
 
 
 def main():
-    app = Tweethon(sys.argv)
     twitter = Twitter()
+    app = Tweethon(sys.argv, twitter)
 
     declarative_view = QDeclarativeView()
     declarative_view.setViewport(QGLWidget())
@@ -263,9 +346,15 @@ def main():
     root_object = declarative_view.rootObject()
     #root_object.coonect(root_object, SIGNAL('guiReady()'), )
 
+    app.load_accounts()
+    twitter.start_sync()
+
     declarative_view.show()
 
     return app.exec_()
 
 if __name__ == '__main__':
+    import sys
+    sys.stdout = sys.stderr
+
     sys.exit(main())
