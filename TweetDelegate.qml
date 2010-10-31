@@ -12,7 +12,7 @@ Rectangle {
 
     //property string author: "No nick"
     //property string tweet_text: "No text"
-    property date timestamp
+    //property date timestamp
     property bool in_reply: false
     property string in_reply_to
     property bool retweet: false
@@ -25,7 +25,7 @@ Rectangle {
 
         Image {
             id: twitter_avatar
-            source: avatar
+            source: author.profile_image_url
             y: tweet_delegate.height / 2 - (height / 2)
         }
 
@@ -35,15 +35,15 @@ Rectangle {
 
             Text {
                 id: twitter_name
-                text: author
+                text: author.screen_name
                 color: "white"
                 font.bold: true
             }
             URLText {
                 id: twitter_text
-                text: tweet_text
+                text: message
                 wrapMode: Text.Wrap
-                width: tweet_delegate.width - 40
+                width: tweet_delegate.width - 60
             }
 
             Row {
@@ -51,7 +51,7 @@ Rectangle {
 
                 Text {
                     id: twitter_time
-                    text: Qt.formatDateTime(timestamp, "hh:mm:ss")
+                    text: Qt.formatDateTime(created_at, "hh:mm:ss")
                     font.pointSize: twitter_name.font.pointSize - 3
                     color: "white"
                 }
