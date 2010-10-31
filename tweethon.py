@@ -94,13 +94,15 @@ class TwitterThread(QThread):
             with self.subscriptions_lock:
                 for subscription in self.subscriptions:
                     tweets = subscription.update()
-                    print "new_tweets", len(tweets), tweets[0]
-                    self.newTweets.emit({
-                        "uuid": subscription.account.uuid,
-                        "type": subscription.subscription_type,
-                        "args": subscription.args,
-                        "tweets": tweets
-                    })
+
+                    if tweets:
+                        print "new_tweets", len(tweets), tweets[0]
+                        self.newTweets.emit({
+                            "uuid": subscription.account.uuid,
+                            "type": subscription.subscription_type,
+                            "args": subscription.args,
+                            "tweets": tweets
+                        })
 
             for x in xrange(self.tick_count):
                 sleep(self.ticks)
