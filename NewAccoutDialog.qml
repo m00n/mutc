@@ -187,7 +187,8 @@ Rectangle {
         }
 
         onButtonClicked: {
-            new_account_dialog.state = ""
+            twitter.dismiss_account(account);
+            new_account_dialog.state = "";
         }
     }
 
