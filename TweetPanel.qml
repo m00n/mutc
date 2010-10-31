@@ -8,9 +8,10 @@ Rectangle {
     //color: "red"
 
     property int max_tweets: 30
-    property string account: "no account"
+    property alias model: tweet_view.model
+    /*property string account: "no account"
     property string account_oid: "no oid"
-    property string panel_type: "timeline"
+    property string panel_type: "timeline"*/
 
     /*
         "friends"
@@ -40,7 +41,8 @@ Rectangle {
 
         Text {
             x: 5
-            text: "@" + account + "/" + panel_type
+            text: "@" + screen_name + "/" + type
+            //text: "static"
             color: "white"
 
             anchors.verticalCenter: parent.verticalCenter
@@ -49,7 +51,9 @@ Rectangle {
     }
 
     ListView {
+        id: tweet_view
         model: tweet_model
+        spacing: 2
 
         anchors {
             top: title_rect.bottom
@@ -58,7 +62,6 @@ Rectangle {
             right: parent.right
         }
 
-        spacing: 2
         delegate: TweetDelegate {
             width: {
                 if (parent)
@@ -82,6 +85,7 @@ Rectangle {
 
     ListModel {
         id: tweet_model
+        /*
         ListElement {
             author: "boringplanet"
             tweet_text: "Faketweet test das ist ein test blablubb foo bar baz bazinga zort hoot hoot hoot"
@@ -126,15 +130,7 @@ Rectangle {
             author: "boringplanet a"
             tweet_text: "Faketweet 2"
             avatar: "m00n_s.png"
-        }
-    }
-
-    function foo() {
-        console.log('bar');
-    }
-    function bar(pyobj) {
-        console.log(pyobj)
-        console.log(pyobj.a)
+        }*/
     }
 
     Component.onCompleted: {
