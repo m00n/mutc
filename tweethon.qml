@@ -1,5 +1,7 @@
 import Qt 4.7
 
+import "tweethon.js" as Tweethon
+
 Rectangle {
     id: tweethon
 
@@ -39,8 +41,28 @@ Rectangle {
         orientation: ListView.Horizontal
         snapMode: ListView.SnapOneItem
         delegate: TweetPanel {
+            id: tweet_panel
+            property bool connected: false
             anchors.top: { if (parent) parent.top }
             anchors.bottom: { if (parent) parent.bottom }
+
+            Component.onCompleted: {
+                console.log("Delegate completed")
+                if (!connected) {
+                    connected = true;
+                    twitter.newTweets.connect(function (data) {
+                        console.log("newTweets");
+                        if (data.uuid == uuid && data.type == type && data.args == args) {
+                            console.log("mytweets");
+                            Tweethon.each(data.tweets, function (index, tweet_data) {
+                                tweet_panel.model.insert(index, tweet_data)
+                            });
+                        }
+
+
+                    })
+                }
+            }
         }
         width: parent.width
 
@@ -124,40 +146,44 @@ Rectangle {
 
     ListModel {
         id: tweet_panel_model
-
+/*
         ListElement {
-            panel_type: "friends"
+            type: "friends"
+            screen_name: "boringplanet"
+            uuid: ""
+            args: ""
+        }
+        ListElement {
+            type: "friends"
             account: "boringplanet"
         }
         ListElement {
-            panel_type: "friends"
+            type: "friends"
             account: "boringplanet"
-        }
-        ListElement {
-            panel_type: "friends"
-            account: "boringplanet"
-        }
+        }*/
 
     }
 
     ListModel {
         id: account_model
-
+/*
         ListElement {
-            uuid: ""
+            uuid: "abcd"
             oauth: "abcde"
             screen_name: "boringplanet"
             avatar: "m00n_s.png"
             active: false
-        }
-
+        }*/
+/*
         ListElement {
             uuid: ""
             oauth: "abcde"
             screen_name: "tweethon_test"
             avatar: "m00n_s.png"
             active: false
-        }
+        }*/
+
+
     }
 
     ListModel {
@@ -179,177 +205,63 @@ Rectangle {
         anchors.margins: 1
     }
 
-    Rectangle {
+    TweethonMenu {
         id: tweethon_menu
-        opacity: 0
 
-        width: 320
-        height: 240
+        accountModel: account_model
+        panelModel: panel_model
 
-        color: "#323436"
-
-        Behavior on opacity {
-            NumberAnimation { duration: 250 }
+        onAddAccount: {
+            new_account_dialog.state = 'open';
         }
 
-        TitleBar {
-            id: title
-            text: "Tweethon menu"
-            color: border.color
+        onAddPanel: {
+            twitter.subscribe({
+                'uuid': tweethon_menu.for_account,
+                'type': tweethon_menu.panel_type,
+                'args': null,
+            });
         }
-        Button {
-            id: add_account_button
-            button_text: "Add account"
-            height: 22
-            width: parent.width
-            border {
-                width: title.border.width
-                color: title.border.color
-            }
-            anchors {
-                top: title.bottom
-                left: parent.left
-                right: parent.right
-                topMargin: 5
-            }
-            onButtonClicked: {
-                new_account_dialog.state = 'open'
-            }
-        }
-
-        ListView {
-            id: account_menu_view
-
-            model: account_model
-
-
-            delegate: Button {
-                button_text: "Create panel for `" + screen_name + "` >"
-                height: 22
-                width: 320
-                border {
-                    width: title.border.width
-                    color: title.border.color
-                }
-                onButtonClicked: {
-                    panel_view.for_account = uuid
-                    tweethon_menu.state = "panel_menu"
-                }
-            }
-
-            anchors {
-                top: add_account_button.bottom
-                bottom: parent.bottom
-                left: parent.left
-                right: parent.right
-                topMargin: 5
-            }
-        }
-
-        ListView {
-            id: panel_view
-            model: panel_model
-
-            property string for_account
-
-            delegate: Button {
-                button_text: type
-                height: 22
-                width: 320
-
-                border {
-                    width: title.border.width
-                    color: title.border.color
-                }
-
-                onButtonClicked: {
-                    tweethon_menu.state = "hidden";
-                    twitter.subscribe({
-                        'account': panel_view.for_account,
-                        'type': type
-                    });
-                }
-            }
-            anchors {
-                top: add_account_button.bottom
-                bottom: parent.bottom
-                left: parent.left
-                right: parent.right
-                topMargin: 5
-            }
-        }
-
-        anchors {
-            bottom: toolbar_row.top
-            right: parent.right
-        }
-
-        state: "hidden"
-
-        states: [
-            State {
-                name: "main_menu"
-                PropertyChanges {
-                    target: account_menu_view
-                    opacity: 1
-                }
-                PropertyChanges {
-                    target: panel_view
-                    opacity: 0
-                }
-                PropertyChanges {
-                    target: tweethon_menu
-                    opacity: 1
-                }
-            },
-            State {
-                name: "panel_menu"
-                PropertyChanges {
-                    target: account_menu_view
-                    opacity: 0
-                }
-                PropertyChanges {
-                    target: panel_view
-                    opacity: 1
-                }
-                PropertyChanges {
-                    target: tweethon_menu
-                    opacity: 1
-                }
-            },
-            State {
-                name: "hidden"
-                PropertyChanges {
-                    target: tweethon_menu
-                    opacity: 0
-                }
-            }
-
-        ]
-        transitions: [
-            Transition {
-                NumberAnimation { property: "opacity"; duration: 250 }
-            }
-        ]
-
-
     }
 
     NewAccoutDialog {
         id: new_account_dialog
         anchors.centerIn: parent
+
+        onStateChanged: {
+            if (state == 'open') {
+                new_account_dialog.init();
+            }
+        }
     }
 
     Component.onCompleted: {
-        if (app) {
-            app.backendReady.connect(function () {
-                console.log("Backend ready");
-                guiReady();
-            })
-            app.announceAccount.connect(function (data) {
-                account_model.append(data)
-                console.log(data)
-            })
-        }
+        /*
+        app.backendReady.connect(function () {
+            console.log("Backend ready");
+            guiReady();
+        })*/
+        //account_model.changeEntry("uuid", "abcd", "screen_name", "itworks");
+        twitter.announceAccount.connect(function (data) {
+            account_model.append(data);
+            console.log(data);
+        })
+        twitter.accountConnected.connect(function (data) {
+            console.log("accountConnected " + data.screen_name);
+            var keys = ['screen_name', 'avatar', 'connected'];
+            for (var index in keys) {
+                console.log(data.uuid + " " + keys[index] + " " + data[keys[index]]);
+                Tweethon.changeEntry(account_model, "uuid", data.uuid, keys[index], data[keys[index]]);
+            }
+            Tweethon.changeEntry(tweet_panel_model, "uuid", data.uuid, "screen_name", data.screen_name);
+        })
+        twitter.newSubscription.connect(function (data) {
+            console.log("newSubscription");
+            tweet_panel_model.append(data);
+        })
+        twitter.newTweets.connect(function (data) {
+            var index = Tweethon.indexFor(tweet_panel_model, 'uuid', data.uuid);
+        })
+
     }
 }
