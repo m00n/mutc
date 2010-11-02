@@ -27,6 +27,7 @@ import sip
 
 sip.setapi('QString', 2)
 sip.setapi('QVariant', 2)
+sip.setapi('QDateTime', 2)
 
 
 from PyQt4.Qt import *
@@ -51,7 +52,7 @@ def status_to_dict(status):
     return {
         "author": author_to_dict(status.author),
         "message": status.text[3:] if is_rt else status.text,
-        "created_at": status.created_at,
+        "created_at": format_datetime(status.created_at),
         "id": status.id_str,
         "is_rt": is_rt,
         "rt_from": retweeted_status.author.screen_name if is_rt else None,
@@ -241,6 +242,7 @@ class Twitter(QObject):
 
 
     @pyqtSlot("QVariant")
+    @async
     def tweet(self, tweet):
         """
         {
@@ -248,16 +250,9 @@ class Twitter(QObject):
             accounts: []
         }
         """
-        pass
-    # account methods
-    """
-    QML                           Python
-    account = app.account_new()
-    account.verifierNeeded.connect({ show_url; })
-    account.connected.connect({  })
-    account.get_auth_url()
-    account.set_verifier(inputfu.text)
-    """
+        for account in imap(self.account, tweet["accounts"]):
+            account.api.update_status(tweet["text"], tweet["in_reply"])
+
     def announce_account(self, account):
         print account
         print account.simplify()
@@ -342,8 +337,8 @@ class Tweethon(QApplication):
                 self.twitter.add_account(Account(*accout_data))
 
     def _stop_tweethon(self):
-        #self.twitter.thread.running.clear()
-        #self.twitter.thread.wait()
+        self.twitter.thread.running = False
+        self.twitter.thread = False
         accounts = []
         for account in self.twitter.ordered_accounts:
             accounts.append(
@@ -352,6 +347,18 @@ class Tweethon(QApplication):
 
         with open(self.data_path / 'accounts.json', 'w') as fd:
             json.dump(accounts, fd)
+
+
+from datetime import datetime
+
+def format_datetime(dt):
+    delta = datetime.now() - dt
+    if delta.total_seconds() > 60 * 60 * 24:
+        return dt.strftime(u"%d.%m. %H:%M:%S")
+    elif delta.seconds > 3600:
+        return dt.strftime(u"%H:%M:%S")
+    else:
+        return u"{0}m ago".format(delta.seconds / 60)
 
 
 def main():
