@@ -47,6 +47,7 @@ Rectangle {
                 console.log("Delegate completed")
                 if (!connected) {
                     console.log("Firstload");
+                    Tweethon.restoreTweets(uuid, type, args, tweet_panel.model);
                     connected = true;
                     twitter.newTweets.connect(function (data) {
                         console.log("newTweets");
@@ -65,9 +66,9 @@ Rectangle {
                     })
                 }
             }
-            Component.onDestroyed: {
+            Component.onDestruction: {
                 console.log("Delegate destroyed");
-
+                Tweethon.storeTweets(uuid, type, args, tweet_panel.model);
             }
 
         }
