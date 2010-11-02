@@ -222,7 +222,6 @@ Rectangle {
         if (new_account_dialog.state == "") {
             console.log("hiding")
             new_account_dialog.auth_url = "";
-            twitter.dismiss_account(new_account_dialog.account);
         }
     }
 }
