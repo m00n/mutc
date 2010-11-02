@@ -8,19 +8,7 @@ Rectangle {
     width: 320
     height: 480
 
-    signal subscribe /* emitted when a new panel is created { account: id, type: panel_type, args: [] } */
-    signal needTweets /* { type: x, account: y, since: z } */
-
-    signal addAccount  /* */
-    signal delAccount  /* */
-
-    signal sendTweet /* { accounts: [], text: "", } */
-    signal sendReTweet /* { accounts: [], id: int } */
-
-    signal needAuthURL /* {  } */
     signal guiReady
-
-    //property accounts list
 
     gradient: Gradient {
         GradientStop {
@@ -58,6 +46,7 @@ Rectangle {
             Component.onCompleted: {
                 console.log("Delegate completed")
                 if (!connected) {
+                    console.log("Firstload");
                     connected = true;
                     twitter.newTweets.connect(function (data) {
                         console.log("newTweets");
@@ -76,6 +65,11 @@ Rectangle {
                     })
                 }
             }
+            Component.onDestroyed: {
+                console.log("Delegate destroyed");
+
+            }
+
         }
         width: parent.width
 
