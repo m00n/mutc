@@ -7,8 +7,8 @@ Rectangle {
     opacity: 100
 
     color: "#323436"
-    width: 100
-    height: 100
+    width: 300
+    height: 120
 
     //property string author: "No nick"
     //property string tweet_text: "No text"
@@ -19,13 +19,71 @@ Rectangle {
     property string retweeted_by
     property string via: ""
 
+    Image {
+        id: twitter_avatar
+        source: author.profile_image_url
 
+        fillMode: Image.PreserveAspectFit
+
+        anchors {
+            left: parent.left
+            top: parent.top
+            verticalCenter: parent.verticalCenter
+
+            margins: 5
+        }
+    }
+
+    Text {
+        id: twitter_name
+        text: author.screen_name
+        color: "white"
+        font.bold: true
+
+        anchors {
+            left: twitter_avatar.right
+            top: parent.top
+            margins: 5
+        }
+
+    }
+
+    URLText {
+        id: twitter_text
+        text: message
+        wrapMode: Text.Wrap
+        width: tweet_delegate.width - twitter_avatar.width - 10
+
+        anchors {
+            top: twitter_name.bottom
+            left: twitter_avatar.right
+            margins: 5
+        }
+    }
+
+    Text {
+        id: twitter_time
+        text: created_at
+
+        font.pointSize: twitter_name.font.pointSize - 3
+        height: 22
+        color: "white"
+
+        anchors {
+            bottom: parent.bottom
+            left: parent.left
+            margins: 0
+        }
+    }
+
+    /*
     Row {
         spacing: 5
 
         Image {
             id: twitter_avatar
             source: author.profile_image_url
+            x: 5
             y: tweet_delegate.height / 2 - (height / 2)
         }
 
@@ -48,11 +106,13 @@ Rectangle {
 
             Row {
                 spacing: 10
-
+                width: tweet_delegate.width - 5
                 Text {
                     id: twitter_time
-                    text: Qt.formatDateTime(created_at, "hh:mm:ss")
+                    text: created_at
+
                     font.pointSize: twitter_name.font.pointSize - 3
+                    height: 22
                     color: "white"
                 }
                 Text {
@@ -79,4 +139,5 @@ Rectangle {
             }
         }
     }
+    */
 }
