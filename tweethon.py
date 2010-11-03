@@ -42,6 +42,8 @@ import json
 
 import tweepy
 
+import tweetmodel
+
 def pick(dictionary, *keys):
     return dict((key, getattr(dictionary, key)) for key in keys)
 
@@ -206,6 +208,8 @@ class Twitter(QObject):
     announceAccount = pyqtSignal("QVariant")
     accountConnected = pyqtSignal("QVariant")
 
+    test = pyqtSignal("QVariant")
+
     def __init__(self):
         QObject.__init__(self)
 
@@ -294,7 +298,8 @@ class Twitter(QObject):
             max_id=request["before"]
         )
 
-        tweets = map(status_to_dict, cursor.items(20))[1:]
+        raw_tweets = list(cursor.items(20))
+        tweets = map(status_to_dict, raw_tweets)[1:]
 
         self.newTweets.emit({
             "uuid": subscription.account.uuid,

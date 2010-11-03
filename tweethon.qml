@@ -267,5 +267,12 @@ Rectangle {
             console.log("newSubscription");
             tweet_panel_model.append(data);
         })
+        /*
+        twitter.newTweets.connect(function (data) {
+
+        });*/
+        twitter.test.connect(function (qtweet) {
+            console.log("QTweet -> " + qtweet + " " + qtweet.message);
+        })
     }
 }
