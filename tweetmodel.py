@@ -69,7 +69,12 @@ class QTweet(QObject):
 
 
 class TweetModel(QAbstractListModel):
-    AuthorRole, MessageRole, CreatedRole = range(Qt.UserRole, Qt.UserRole + 3)
+    AuthorRole = Qt.UserRole
+    MessageRole = Qt.UserRole + 1
+    CreatedRole =  Qt.UserRole + 2
+    IsRetweetRole = Qt.UserRole + 3
+    RetweetByRole = Qt.UserRole + 4
+
 
     def __init__(self, parent=None):
         QAbstractListModel.__init__(self, parent)
@@ -79,7 +84,9 @@ class TweetModel(QAbstractListModel):
         self.setRoleNames({
             self.AuthorRole: "author",
             self.MessageRole: "message",
-            self.CreatedRole: "created_at"
+            self.CreatedRole: "created_at",
+            self.IsRetweetRole: "is_retweet",
+            self.RetweetByRole: "retweet_by",
         })
 
     def oldestId(self):
@@ -89,12 +96,10 @@ class TweetModel(QAbstractListModel):
         if pos == -1:
             pos = len(self.tweets)
 
-        self.beginInsertRows(QModelIndex(), pos, len(tweets))
-        print "self.begin", pos, len(tweets)
+        self.beginInsertRows(QModelIndex(), pos, len(tweets) - 1)
         for i, tweet in enumerate(tweets):
             self.tweets.insert(pos + i, tweet)
         self.endInsertRows()
-        print "self.end"
 
     def rowCount(self, parent):
         return len(self.tweets)
@@ -102,13 +107,28 @@ class TweetModel(QAbstractListModel):
     def data(self, index, role):
         status = self.tweets[index.row()]
 
-        if role == self.AuthorRole:
-            return author_to_dict(status.author)
-        elif role == self.MessageRole:
-            return status.text
-        elif role == self.CreatedRole:
-            return status.created_at.strftime("%H:%M")
-
+        if hasattr(status, "retweeted_status"):
+            if role == self.AuthorRole:
+                return author_to_dict(status.retweeted_status.author)
+            elif role == self.MessageRole:
+                return ":".join(status.text.split(":")[1:])
+            elif role == self.CreatedRole:
+                return status.created_at.strftime("%H:%M")
+            elif role == self.IsRetweetRole:
+                return True
+            elif role == self.RetweetByRole:
+                return author_to_dict(status.author)
+        else:
+            if role == self.AuthorRole:
+                return author_to_dict(status.author)
+            elif role == self.MessageRole:
+                return status.text
+            elif role == self.CreatedRole:
+                return status.created_at.strftime("%H:%M")
+            elif role == self.IsRetweetRole:
+                return False
+            elif role == self.RetweetByRole:
+                return None
 
 def main():
     import sys
