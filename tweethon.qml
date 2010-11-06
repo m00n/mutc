@@ -34,17 +34,19 @@ Rectangle {
             anchors.top: { if (parent) parent.top }
             anchors.bottom: { if (parent) parent.bottom }
 
+            model: twitter.get_model(uuid, type, args)
+
             onNeedTweets: {
                 twitter.need_tweets({
                     "uuid": uuid,
                     "type": type,
                     "args": args,
-                    "before": tweet_panel.model.get(tweet_panel.model.count - 1).id
                 });
             }
 
             Component.onCompleted: {
                 console.log("Delegate completed")
+                /*
                 if (!connected) {
                     console.log("Firstload");
                     Tweethon.restoreTweets(uuid, type, args, tweet_panel.model);
@@ -64,11 +66,11 @@ Rectangle {
 
 
                     })
-                }
+                }*/
             }
             Component.onDestruction: {
                 console.log("Delegate destroyed");
-                Tweethon.storeTweets(uuid, type, args, tweet_panel.model);
+                //Tweethon.storeTweets(uuid, type, args, tweet_panel.model);
             }
 
         }
@@ -266,13 +268,6 @@ Rectangle {
         twitter.newSubscription.connect(function (data) {
             console.log("newSubscription");
             tweet_panel_model.append(data);
-        })
-        /*
-        twitter.newTweets.connect(function (data) {
-
-        });*/
-        twitter.test.connect(function (qtweet) {
-            console.log("QTweet -> " + qtweet + " " + qtweet.message);
         })
     }
 }
