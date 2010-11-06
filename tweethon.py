@@ -210,6 +210,7 @@ class Twitter(QObject):
         model = self.models[key]
         model.insertTweets(tweets, 0)
 
+
     @pyqtSlot("QVariant")
     def subscribe(self, subscription):
         print subscription
@@ -220,7 +221,12 @@ class Twitter(QObject):
         else:
             subscription['screen_name'] = account.uuid[:4]
 
-        self.models[subscription["uuid"], subscription["type"], subscription["args"]] = TweetModel(self)
+        model_key = (
+            subscription["uuid"],
+            subscription["type"],
+            subscription["args"]
+        )
+        self.models[model_key] = TweetModel(self)
 
         self.newSubscription.emit(subscription)
 
@@ -234,7 +240,6 @@ class Twitter(QObject):
             self.subscriptions.add(subscription)
 
         self.thread.force_check.set()
-
 
     @pyqtSlot("QVariant")
     @async
@@ -289,12 +294,7 @@ class Twitter(QObject):
             subscription.get_stream(),
             max_id=model.oldestId(),
         )
-        print "recv_tweets",
         tweets = list(cursor.items(21))[1:]
-        print "ok", tweets
-
-        #model.insertTweets(tweets, -1)
-        print "insert_event"
         self.newTweetsForModel.emit(model, tweets, -1)
 
     def start_sync(self):
