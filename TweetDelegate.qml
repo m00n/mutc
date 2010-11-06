@@ -23,6 +23,9 @@ Rectangle {
         id: twitter_avatar
         source: author.profile_image_url
 
+        width: 48
+        height: 48
+
         fillMode: Image.PreserveAspectFit
 
         anchors {
@@ -69,11 +72,34 @@ Rectangle {
         height: 22
         color: "white"
 
-        anchors {
+        x: 5
+        y: parent.height - 18
+        /*anchors {
             bottom: parent.bottom
-            left: parent.left
-            margins: 0
+            //left: parent.left
+            margins: 2
+        }*/
+    }
+
+    Text {
+        id: rt_by
+
+        y: twitter_time.y
+        text: {
+            if (is_retweet)
+                "\u21BA" + retweet_by.screen_name
+            else
+                ""
         }
+        visible: is_retweet
+        color: "white"
+        anchors {
+            //bottom: parent.bottom
+            left: twitter_time.right
+            leftMargin: 2
+        }
+        height: 22
+        font.pointSize: twitter_time.font.pointSize
     }
 
     /*
