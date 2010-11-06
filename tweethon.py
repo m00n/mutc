@@ -348,35 +348,6 @@ class Tweethon(QApplication):
             json.dump(accounts, fd)
 
 
-class TweetStore(QObject):
-    def __init__(self):
-        QObject.__init__(self)
-        self._store = {}
-
-    @staticmethod
-    def key(data):
-        return data['account'], data['type'], data['args']
-
-    @pyqtSlot("QVariant")
-    def store(self, data):
-        self._store[self.key(data)] = data['tweets']
-
-    @pyqtSlot("QVariant")
-    def append(self, data, tweets):
-        try:
-            self._store[self.key(data)].extend(data['tweets'])
-        except KeyError:
-            pass
-
-    @pyqtSlot("QVariant", result="QVariant")
-    def load(self, data):
-        try:
-            return self._store.pop(self.key(data))
-        except KeyError:
-            return False
-
-
-
 from datetime import datetime
 
 def format_datetime(dt):
@@ -391,7 +362,6 @@ def format_datetime(dt):
 
 def main():
     twitter = Twitter()
-    tweet_store = TweetStore()
     app = Tweethon(sys.argv, twitter)
 
     declarative_view = QDeclarativeView()
@@ -401,7 +371,6 @@ def main():
     root_context = declarative_view.rootContext()
     root_context.setContextProperty('twitter', twitter)
     root_context.setContextProperty('tweethon', app)
-    root_context.setContextProperty('tweet_store', tweet_store)
 
     declarative_view.setSource(QUrl.fromLocalFile("tweethon.qml"))
 
