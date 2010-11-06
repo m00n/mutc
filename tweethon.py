@@ -42,32 +42,8 @@ import json
 
 import tweepy
 
-import tweetmodel
+from tweetmodel import TweetModel
 
-def pick(dictionary, *keys):
-    return dict((key, getattr(dictionary, key)) for key in keys)
-
-def status_to_dict(status):
-    is_rt = hasattr(status, "retweeted_status")
-    retweeted_status = getattr(status, "retweeted_status", None)
-
-    return {
-        "author": author_to_dict(status.author),
-        "message": status.text[3:] if is_rt else status.text,
-        "created_at": format_datetime(status.created_at),
-        "id": status.id_str,
-        "is_rt": is_rt,
-        "rt_from": retweeted_status.author.screen_name if is_rt else None,
-    }
-
-def author_to_dict(user):
-    return pick(
-        user,
-        "screen_name",
-        "name",
-        "description",
-        "profile_image_url"
-    )
 
 def search_to_dict(searchresult):
     return {
@@ -79,7 +55,7 @@ def search_to_dict(searchresult):
 
 
 class TwitterThread(QThread):
-    newTweets = pyqtSignal("QVariant")
+    newTweets = pyqtSignal(object, object)
 
     def __init__(self, parent, subscriptions):
         QThread.__init__(self, parent)
@@ -100,13 +76,7 @@ class TwitterThread(QThread):
 
                     if tweets:
                         print "new_tweets", len(tweets), tweets[0]
-                        self.newTweets.emit({
-                            "uuid": subscription.account.uuid,
-                            "type": subscription.subscription_type,
-                            "args": subscription.args,
-                            "insert": "top",
-                            "tweets": tweets
-                        })
+                        self.newTweets.emit(subscription, tweets)
 
             for x in xrange(self.tick_count):
                 sleep(self.ticks)
@@ -122,6 +92,9 @@ class Subscription(object):
         self.account = account
         self.args = args
         self.last_tweet_id = None
+
+    def __hash__(self):
+        return hash((self.account.uuid, self.args, self.__class__.__name__))
 
     def get_stream(self):
         raise NotImplemented
@@ -165,7 +138,8 @@ class Subscription(object):
 
 class TimelineBase(Subscription):
     def simplify(self, tweets):
-        return map(status_to_dict, tweets)
+        #return map(status_to_dict, tweets)
+        return tweets
 
 
 class Timeline(TimelineBase):
@@ -208,18 +182,33 @@ class Twitter(QObject):
     announceAccount = pyqtSignal("QVariant")
     accountConnected = pyqtSignal("QVariant")
 
+    newTweetsForModel = pyqtSignal(QObject, list, int)
+
     test = pyqtSignal("QVariant")
 
     def __init__(self):
         QObject.__init__(self)
 
         self.accounts = {}
+        self.models = {}
         self.ordered_accounts = []
         self.subscriptions = set()
 
         self.thread = TwitterThread(self, self.subscriptions)
-        self.thread.newTweets.connect(self.newTweets.emit)
+        self.thread.newTweets.connect(self.on_new_tweets)
         self.thread.start()
+
+        self.newTweetsForModel.connect(
+            lambda model, tweets, index: model.insertTweets(tweets, index)
+        )
+
+    def on_new_tweets(self, subscription, tweets):
+        key = (subscription.account.uuid,
+               subscription.subscription_type,
+               subscription.args)
+
+        model = self.models[key]
+        model.insertTweets(tweets, 0)
 
     @pyqtSlot("QVariant")
     def subscribe(self, subscription):
@@ -230,6 +219,8 @@ class Twitter(QObject):
             subscription['screen_name'] = account.me.screen_name
         else:
             subscription['screen_name'] = account.uuid[:4]
+
+        self.models[subscription["uuid"], subscription["type"], subscription["args"]] = TweetModel()
 
         self.newSubscription.emit(subscription)
 
@@ -293,21 +284,18 @@ class Twitter(QObject):
 
         account = self.accounts[request["uuid"]]
         subscription = create_subscription(request["type"], account, None)
+        model = self.models[request["uuid"], request["type"], request["args"]]
         cursor = tweepy.Cursor(
             subscription.get_stream(),
-            max_id=request["before"]
+            max_id=model.oldestId(),
         )
+        print "recv_tweets",
+        tweets = list(cursor.items(21))[:1]
+        print "ok", tweets
 
-        raw_tweets = list(cursor.items(20))
-        tweets = map(status_to_dict, raw_tweets)[1:]
-
-        self.newTweets.emit({
-            "uuid": subscription.account.uuid,
-            "type": subscription.subscription_type,
-            "args": subscription.args,
-            "insert": "bottom",
-            "tweets": tweets
-        })
+        #model.insertTweets(tweets, -1)
+        print "insert_event"
+        self.newTweetsForModel.emit(model, tweets, -1)
 
     def start_sync(self):
         """
@@ -316,6 +304,10 @@ class Twitter(QObject):
         for account in self.ordered_accounts:
             self.announceAccount.emit(account.simplify())
             account.connect()
+
+    @pyqtSlot("QVariant", "QVariant", "QVariant", result=QObject)
+    def get_model(self, uuid, panel_type, args):
+        return self.models[uuid, panel_type, args]
 
 
 class Tweethon(QApplication):
