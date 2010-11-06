@@ -23,8 +23,10 @@ from itertools import *
 
 from path import path
 
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
+from PyQt4.Qt import *
+
+def pick(dictionary, *keys):
+    return dict((key, getattr(dictionary, key)) for key in keys)
 
 def status_to_dict(status):
     is_rt = hasattr(status, "retweeted_status")
@@ -66,8 +68,77 @@ class QTweet(QObject):
         return author_to_dict(self.status.author)
 
 
+class TweetModel(QAbstractListModel):
+    AuthorRole, MessageRole, CreatedRole = range(Qt.UserRole, Qt.UserRole + 3)
 
-class TweetModel(QAbstractItemModel):
     def __init__(self):
-        QAbstractItemModel.__init__(self)
+        QAbstractListModel.__init__(self)
 
+        self.tweets = []
+        #self.setRoleNames(["author", "message"])
+        self.setRoleNames({
+            self.AuthorRole: "author",
+            self.MessageRole: "message",
+            self.CreatedRole: "created_at"
+        })
+
+    def oldestId(self):
+        print "oldestID", self.tweets[0].created_at, self.tweets[-1].created_at
+        return self.tweets[-1].id_str
+
+    def insertTweets(self, tweets, pos):
+        if pos == -1:
+            pos = len(self.tweets)
+
+        self.beginInsertRows(QModelIndex(), pos, len(tweets))
+        print "self.begin"
+        for i, tweet in enumerate(tweets):
+            self.tweets.insert(pos + i, tweet)
+            print "insert to ds"
+        self.endInsertRows()
+        print "self.end"
+
+    def rowCount(self, parent):
+        return len(self.tweets)
+
+    def data(self, index, role):
+        status = self.tweets[index.row()]
+
+        if role == self.AuthorRole:
+            return author_to_dict(status.author)
+        elif role == self.MessageRole:
+            return status.text
+        elif role == self.CreatedRole:
+            return status.created_at.strftime("%H:%M")
+
+
+def main():
+    import sys
+    app = QApplication(sys.argv)
+
+    declarative_view = QDeclarativeView()
+    declarative_view.setViewport(QGLWidget())
+    declarative_view.setResizeMode(QDeclarativeView.SizeRootObjectToView)
+
+    root_context = declarative_view.rootContext()
+
+    model = TweetModel()
+    #model.insertTweets([QTweet(FakeStatus)], 0)
+
+    root_context.setContextProperty('tweetmodel', model)
+    #root_context.setContextProperty('tweethon', app)
+    #root_context.setContextProperty('tweet_store', tweet_store)
+
+    declarative_view.setSource(QUrl.fromLocalFile("testmodels.qml"))
+
+    #root_object = declarative_view.rootObject()
+    #root_object.coonect(root_object, SIGNAL('guiReady()'), )
+
+    #app.load_accounts()
+
+    declarative_view.show()
+
+    return app.exec_()
+
+if __name__ == '__main__':
+    main()
