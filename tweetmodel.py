@@ -71,8 +71,8 @@ class QTweet(QObject):
 class TweetModel(QAbstractListModel):
     AuthorRole, MessageRole, CreatedRole = range(Qt.UserRole, Qt.UserRole + 3)
 
-    def __init__(self):
-        QAbstractListModel.__init__(self)
+    def __init__(self, parent=None):
+        QAbstractListModel.__init__(self, parent)
 
         self.tweets = []
         #self.setRoleNames(["author", "message"])
@@ -83,18 +83,16 @@ class TweetModel(QAbstractListModel):
         })
 
     def oldestId(self):
-        print "oldestID", self.tweets[0].created_at, self.tweets[-1].created_at
-        return self.tweets[-1].id_str
+        return self.tweets[-1].id
 
     def insertTweets(self, tweets, pos):
         if pos == -1:
             pos = len(self.tweets)
 
         self.beginInsertRows(QModelIndex(), pos, len(tweets))
-        print "self.begin"
+        print "self.begin", pos, len(tweets)
         for i, tweet in enumerate(tweets):
             self.tweets.insert(pos + i, tweet)
-            print "insert to ds"
         self.endInsertRows()
         print "self.end"
 
