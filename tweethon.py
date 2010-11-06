@@ -348,18 +348,6 @@ class Tweethon(QApplication):
             json.dump(accounts, fd)
 
 
-from datetime import datetime
-
-def format_datetime(dt):
-    delta = datetime.now() - dt
-    if delta.total_seconds() > 60 * 60 * 24:
-        return dt.strftime(u"%d.%m. %H:%M:%S")
-    elif delta.seconds > 3600:
-        return dt.strftime(u"%H:%M:%S")
-    else:
-        return u"{0}m ago".format(delta.seconds / 60)
-
-
 def main():
     twitter = Twitter()
     app = Tweethon(sys.argv, twitter)

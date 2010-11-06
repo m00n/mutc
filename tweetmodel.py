@@ -24,6 +24,17 @@ from itertools import *
 from path import path
 
 from PyQt4.Qt import *
+from datetime import datetime
+
+
+def format_datetime(dt):
+    delta = datetime.now() - dt
+    if delta.total_seconds() > 60 * 60 * 24:
+        return dt.strftime(u"%d.%m. %H:%M")
+    elif delta.seconds > 3600:
+        return dt.strftime(u"%H:%M:%S")
+    else:
+        return u"{0}m ago".format(delta.seconds / 60)
 
 def pick(dictionary, *keys):
     return dict((key, getattr(dictionary, key)) for key in keys)
@@ -124,7 +135,7 @@ class TweetModel(QAbstractListModel):
             elif role == self.MessageRole:
                 return status.text
             elif role == self.CreatedRole:
-                return status.created_at.strftime("%H:%M")
+                return format_datetime(status.created_at)
             elif role == self.IsRetweetRole:
                 return False
             elif role == self.RetweetByRole:
