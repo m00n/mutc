@@ -103,7 +103,7 @@ class Subscription(object):
         return {}
 
     def simplify(self, tweets):
-        raise NotImplemented
+        return tweets
 
     def update(self):
         tweets = []
@@ -157,14 +157,11 @@ class Mentions(TimelineBase):
 class Search(Subscription):
     subscription_type = "search"
 
-    def simplify(self, searches):
-        return map(search_to_dict, searches)
-
     def get_stream(self):
         return self.account.api.search
 
     def get_stream_args(self):
-        return {'q': self.args[0]}
+        return {'q': self.args}
 
 
 def create_subscription(name, account, args):
@@ -224,7 +221,7 @@ class Twitter(QObject):
         model_key = (
             subscription["uuid"],
             subscription["type"],
-            subscription["args"]
+            subscription["args"],
         )
         self.models[model_key] = TweetModel(self)
 
@@ -290,9 +287,13 @@ class Twitter(QObject):
         account = self.accounts[request["uuid"]]
         subscription = create_subscription(request["type"], account, None)
         model = self.models[request["uuid"], request["type"], request["args"]]
+        cursor_args = {
+            "max_id": model.oldestId()
+        }
+        cursor_args.update(subscription.get_stream_args())
         cursor = tweepy.Cursor(
             subscription.get_stream(),
-            max_id=model.oldestId(),
+            **cursor_args
         )
         tweets = list(cursor.items(21))[1:]
         self.newTweetsForModel.emit(model, tweets, -1)
@@ -307,6 +308,8 @@ class Twitter(QObject):
 
     @pyqtSlot("QVariant", "QVariant", "QVariant", result=QObject)
     def get_model(self, uuid, panel_type, args):
+        print self.models
+        print "A", args
         return self.models[uuid, panel_type, args]
 
 
