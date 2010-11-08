@@ -146,14 +146,14 @@ Rectangle {
 
     ListModel {
         id: account_model
-/*
+
         ListElement {
             uuid: "abcd"
             oauth: "abcde"
             screen_name: "boringplanet"
             avatar: "m00n_s.png"
             active: false
-        }*/
+        }
 /*
         ListElement {
             uuid: ""
@@ -211,10 +211,36 @@ Rectangle {
                 'args': null,
             });
         }
+        onNeedArgs: {
+            search_dialog.text = tweethon_menu.need_args
+            search_dialog.state = "visible"
+        }
+        Component.onCompleted: {
+            search_dialog.dialogAccepted.connect(function () {
+                twitter.subscribe({
+                    'uuid': tweethon_menu.for_account,
+                    'type': tweethon_menu.panel_type,
+                    'args': search_dialog.value
+                })
+            })
+        }
+    }
+
+    InputDialog {
+        id: search_dialog
+        text: ""
+        state: "hidden"
+
+        onDialogAccepted: {
+            console.log(value);
+        }
+
+        anchors.centerIn: tweethon
     }
 
     NewAccoutDialog {
         id: new_account_dialog
+
         anchors.centerIn: parent
 
         onStateChanged: {
