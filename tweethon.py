@@ -44,6 +44,8 @@ import tweepy
 
 from tweetmodel import TweetModel
 
+import datetime
+
 
 def search_to_dict(searchresult):
     return {
