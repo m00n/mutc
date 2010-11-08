@@ -171,9 +171,18 @@ Rectangle {
 
         ListElement {
             type: 'timeline'
+            args: false
+            ask_text: ""
         }
         ListElement {
             type: 'mentions'
+            args: false
+            ask_text: ""
+        }
+        ListElement {
+            type: 'search'
+            args: true
+            ask_text: "Enter search query"
         }
     }
 
