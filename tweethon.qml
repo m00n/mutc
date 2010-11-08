@@ -146,14 +146,14 @@ Rectangle {
 
     ListModel {
         id: account_model
-
+/*
         ListElement {
             uuid: "abcd"
             oauth: "abcde"
             screen_name: "boringplanet"
             avatar: "m00n_s.png"
             active: false
-        }
+        }*/
 /*
         ListElement {
             uuid: ""
@@ -208,7 +208,7 @@ Rectangle {
             twitter.subscribe({
                 'uuid': tweethon_menu.for_account,
                 'type': tweethon_menu.panel_type,
-                'args': null,
+                'args': "",
             });
         }
         onNeedArgs: {
@@ -220,7 +220,7 @@ Rectangle {
                 twitter.subscribe({
                     'uuid': tweethon_menu.for_account,
                     'type': tweethon_menu.panel_type,
-                    'args': search_dialog.value
+                    'args': search_dialog.value,
                 })
             })
         }
@@ -271,7 +271,7 @@ Rectangle {
             Tweethon.changeEntry(tweet_panel_model, "uuid", data.uuid, "screen_name", data.screen_name);
         })
         twitter.newSubscription.connect(function (data) {
-            console.log("newSubscription");
+            console.log("newSubscription" + data.args);
             tweet_panel_model.append(data);
         })
     }
