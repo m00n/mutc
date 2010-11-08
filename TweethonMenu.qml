@@ -125,10 +125,12 @@ Rectangle {
             PropertyChanges {
                 target: account_menu_view
                 opacity: 1
+                visible: true
             }
             PropertyChanges {
                 target: panel_view
                 opacity: 0
+                visible: false
             }
             PropertyChanges {
                 target: tweethon_menu
@@ -139,10 +141,12 @@ Rectangle {
             name: "panel_menu"
             PropertyChanges {
                 target: account_menu_view
+                visible: false
                 opacity: 0
             }
             PropertyChanges {
                 target: panel_view
+                visible: true
                 opacity: 1
             }
             PropertyChanges {
@@ -156,6 +160,15 @@ Rectangle {
                 target: tweethon_menu
                 opacity: 0
             }
+            PropertyChanges {
+                target: account_menu_view
+                visible: account_menu_view.opacity
+            }
+            PropertyChanges {
+                target: panel_view
+                visible: panel_view.opacity
+            }
+
         }
 
     ]
