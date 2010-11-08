@@ -98,10 +98,7 @@ Rectangle {
             onButtonClicked: {
                 tweethon_menu.state = "hidden";
                 panel_view.panel_type = type;
-                /*twitter.subscribe({
-                    'uuid': panel_view.for_account,
-                    'type': type
-                });*/
+
                 addPanel();
             }
         }
