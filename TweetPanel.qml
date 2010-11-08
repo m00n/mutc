@@ -41,8 +41,12 @@ Rectangle {
 
         Text {
             x: 5
-            text: "@" + screen_name + "/" + type
-            //text: "static"
+            text: {
+                if (args)
+                    "@" + screen_name + "/" + type + "(" + args + ")"
+                else
+                    "@" + screen_name + "/" + type
+            }
             color: "white"
 
             anchors.verticalCenter: parent.verticalCenter
