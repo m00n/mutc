@@ -1,5 +1,4 @@
 import Qt 4.7
-import "tweethon.js" as Tweethon
 
 Rectangle {
     id: tweet_panel

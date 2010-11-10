@@ -1,7 +1,7 @@
 import Qt 4.7
 
 Rectangle {
-    id: tweethon_menu
+    id: main_menu
     opacity: 0
 
     width: 320
@@ -25,7 +25,7 @@ Rectangle {
 
     TitleBar {
         id: title
-        text: "Tweethon menu"
+        text: "Main menu"
         color: border.color
     }
     Button {
@@ -46,7 +46,7 @@ Rectangle {
         onButtonClicked: {
             //new_account_dialog.state = 'open';
             addAccount()
-            tweethon_menu.state = 'hidden';
+            main_menu.state = 'hidden';
         }
     }
 
@@ -65,7 +65,7 @@ Rectangle {
             }
             onButtonClicked: {
                 panel_view.for_account = uuid
-                tweethon_menu.state = "panel_menu"
+                main_menu.state = "panel_menu"
             }
         }
 
@@ -96,7 +96,7 @@ Rectangle {
             }
 
             onButtonClicked: {
-                tweethon_menu.state = "hidden";
+                main_menu.state = "hidden";
                 panel_view.panel_type = type;
 
                 addPanel();
@@ -122,13 +122,15 @@ Rectangle {
             PropertyChanges {
                 target: account_menu_view
                 opacity: 1
+                visible: true
             }
             PropertyChanges {
                 target: panel_view
                 opacity: 0
+                visible: false
             }
             PropertyChanges {
-                target: tweethon_menu
+                target: main_menu
                 opacity: 1
             }
         },
@@ -136,23 +138,34 @@ Rectangle {
             name: "panel_menu"
             PropertyChanges {
                 target: account_menu_view
+                visible: false
                 opacity: 0
             }
             PropertyChanges {
                 target: panel_view
+                visible: true
                 opacity: 1
             }
             PropertyChanges {
-                target: tweethon_menu
+                target: main_menu
                 opacity: 1
             }
         },
         State {
             name: "hidden"
             PropertyChanges {
-                target: tweethon_menu
+                target: main_menu
                 opacity: 0
             }
+            PropertyChanges {
+                target: account_menu_view
+                visible: account_menu_view.opacity
+            }
+            PropertyChanges {
+                target: panel_view
+                visible: panel_view.opacity
+            }
+
         }
 
     ]

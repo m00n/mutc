@@ -30,7 +30,7 @@ Rectangle {
         height:22
 
         Text {
-            text: "Add account to tweethon"
+            text: "Add account"
             color: "white"
             anchors {
                 verticalCenter: parent.verticalCenter

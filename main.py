@@ -44,6 +44,8 @@ import tweepy
 
 from tweetmodel import TweetModel
 
+import datetime
+
 
 def search_to_dict(searchresult):
     return {
@@ -310,7 +312,7 @@ class Twitter(QObject):
         return self.models[uuid, panel_type, args]
 
 
-class Tweethon(QApplication):
+class App(QApplication):
     backendReady = pyqtSignal()
 
     def __init__(self, args, twitter):
@@ -322,7 +324,7 @@ class Tweethon(QApplication):
 
         #self.load_accounts()
 
-        self.aboutToQuit.connect(self._stop_tweethon)
+        self.aboutToQuit.connect(self._on_shutdown)
 
 
     def load_accounts(self):
@@ -335,7 +337,7 @@ class Tweethon(QApplication):
             for accout_data in accounts:
                 self.twitter.add_account(Account(*accout_data))
 
-    def _stop_tweethon(self):
+    def _on_shutdown(self):
         self.twitter.thread.running = False
         self.twitter.thread = False
         accounts = []
@@ -350,7 +352,7 @@ class Tweethon(QApplication):
 
 def main():
     twitter = Twitter()
-    app = Tweethon(sys.argv, twitter)
+    app = App(sys.argv, twitter)
 
     declarative_view = QDeclarativeView()
     declarative_view.setViewport(QGLWidget())
@@ -358,9 +360,9 @@ def main():
 
     root_context = declarative_view.rootContext()
     root_context.setContextProperty('twitter', twitter)
-    root_context.setContextProperty('tweethon', app)
+    root_context.setContextProperty('app', app)
 
-    declarative_view.setSource(QUrl.fromLocalFile("tweethon.qml"))
+    declarative_view.setSource(QUrl.fromLocalFile("main.qml"))
 
     root_object = declarative_view.rootObject()
     #root_object.coonect(root_object, SIGNAL('guiReady()'), )
