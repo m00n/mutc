@@ -15,7 +15,7 @@ Toolbar {
 
     Text {
         id: title
-        text: "Add account to tweethon"
+        text: ""
         color: "white"
         anchors {
             verticalCenter: parent.verticalCenter

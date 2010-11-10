@@ -1,9 +1,9 @@
 import Qt 4.7
 
-import "tweethon.js" as Tweethon
+import "util.js" as Utils
 
 Rectangle {
-    id: tweethon
+    id: main_window
 
     width: 320
     height: 480
@@ -46,7 +46,7 @@ Rectangle {
         }
         width: parent.width
 
-        anchors.top: tweethon.top
+        anchors.top: main_window.top
         anchors.bottom: toolbar_row.top
 
         spacing: 10
@@ -55,8 +55,8 @@ Rectangle {
     Toolbar {
         id: toolbar_row
         height: 22
-        anchors.bottom: tweethon.bottom
-        anchors.left: tweethon.left
+        anchors.bottom: main_window.bottom
+        anchors.left: main_window.left
 
         SystemPalette { id: activePalette }
 
@@ -113,10 +113,10 @@ Rectangle {
                 color: toolbar_row.border.color
             }
             onButtonClicked: {
-                if (tweethon_menu.state == "hidden")
-                    tweethon_menu.state = "main_menu"
+                if (main_menu.state == "hidden")
+                    main_menu.state = "main_menu"
                 else
-                    tweethon_menu.state = "hidden"
+                    main_menu.state = "hidden"
             }
         }
     }
@@ -185,8 +185,8 @@ Rectangle {
         anchors.margins: 1
     }
 
-    TweethonMenu {
-        id: tweethon_menu
+    MainMenu {
+        id: main_menu
 
         accountModel: account_model
         panelModel: panel_model
@@ -197,8 +197,8 @@ Rectangle {
 
         onAddPanel: {
             twitter.subscribe({
-                'uuid': tweethon_menu.for_account,
-                'type': tweethon_menu.panel_type,
+                'uuid': main_menu.for_account,
+                'type': main_menu.panel_type,
                 'args': null,
             });
         }
@@ -231,9 +231,9 @@ Rectangle {
             var keys = ['screen_name', 'avatar', 'connected'];
             for (var index in keys) {
                 console.log(data.uuid + " " + keys[index] + " " + data[keys[index]]);
-                Tweethon.changeEntry(account_model, "uuid", data.uuid, keys[index], data[keys[index]]);
+                Utils.changeEntry(account_model, "uuid", data.uuid, keys[index], data[keys[index]]);
             }
-            Tweethon.changeEntry(tweet_panel_model, "uuid", data.uuid, "screen_name", data.screen_name);
+            Utils.changeEntry(tweet_panel_model, "uuid", data.uuid, "screen_name", data.screen_name);
         })
         twitter.newSubscription.connect(function (data) {
             console.log("newSubscription");
