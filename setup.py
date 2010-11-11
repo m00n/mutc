@@ -20,8 +20,6 @@ from __future__ import with_statement, division
 
 from distutils.core import setup
 
-from path import path
-
 setup(
     name='mutc',
     version='0.0',
