@@ -206,20 +206,20 @@ Rectangle {
 
         onAddPanel: {
             twitter.subscribe({
-                'uuid': tweethon_menu.for_account,
-                'type': tweethon_menu.panel_type,
+                'uuid': main_menu.for_account,
+                'type': main_menu.panel_type,
                 'args': "",
             });
         }
         onNeedArgs: {
-            search_dialog.text = tweethon_menu.need_args
+            search_dialog.text = main_menu.need_args
             search_dialog.state = "visible"
         }
         Component.onCompleted: {
             search_dialog.dialogAccepted.connect(function () {
                 twitter.subscribe({
-                    'uuid': tweethon_menu.for_account,
-                    'type': tweethon_menu.panel_type,
+                    'uuid': main_menu.for_account,
+                    'type': main_menu.panel_type,
                     'args': search_dialog.value,
                 })
             })
@@ -235,7 +235,7 @@ Rectangle {
             console.log(value);
         }
 
-        anchors.centerIn: tweethon
+        anchors.centerIn: main_window
     }
 
     NewAccoutDialog {
