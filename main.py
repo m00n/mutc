@@ -287,7 +287,7 @@ class Twitter(QObject):
         print "need_tweets", request
 
         account = self.accounts[request["uuid"]]
-        subscription = create_subscription(request["type"], account, None)
+        subscription = create_subscription(request["type"], account, request["args"])
         model = self.models[request["uuid"], request["type"], request["args"]]
         cursor_args = {
             "max_id": model.oldestId()
