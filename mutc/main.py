@@ -59,7 +59,7 @@ def search_to_dict(searchresult):
 class TwitterThread(QThread):
     newTweets = pyqtSignal(object, object)
 
-    def __init__(self, parent, subscriptions):
+    def __init__(self, parent, subscriptions, logger=None):
         QThread.__init__(self, parent)
         self.subscriptions = subscriptions
         self.subscriptions_lock = threading.Lock()
@@ -70,11 +70,20 @@ class TwitterThread(QThread):
         self.running = True
         self.force_check = threading.Event()
 
+        self.logger = logger
+
     def run(self):
         while self.running:
             with self.subscriptions_lock:
                 for subscription in self.subscriptions:
-                    tweets = subscription.update()
+                    try:
+                        tweets = subscription.update()
+                    except tweepy.TweepError as error:
+                        if self.logger:
+                            self.logger.exception()
+                            print "Error while fetching tweets:"
+                            print type(error), error
+                            print error.args, error.msg
 
                     if tweets:
                         print "new_tweets", len(tweets), tweets[0]
