@@ -365,7 +365,7 @@ def main():
     root_context.setContextProperty('twitter', twitter)
     root_context.setContextProperty('app', app)
 
-    declarative_view.setSource(QUrl.fromLocalFile("main.qml"))
+    declarative_view.setSource(QUrl.fromLocalFile("qml/main.qml"))
 
     root_object = declarative_view.rootObject()
     #root_object.coonect(root_object, SIGNAL('guiReady()'), )
