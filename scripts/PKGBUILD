@@ -1,13 +1,13 @@
 # Maintainer: Yannick Schaefer <m00n(at)chillaz-net.de>
 pkgname=mutc
 pkgver=0.0
-pkgrel=2
+pkgrel=5
 pkgdesc="A twitter client using pyqt & qml"
 arch=('i686' 'x86_64')
 url="http://www.github.com/m00n/mutc"
 license=('GPL')
 makedepends=('git')
-depends=('pyqt' 'python2-tweepy-git')
+depends=('pyqt' 'python2-tweepy-git' 'python2-logbook' 'python2-path')
 
 _gitroot="git://github.com/m00n/mutc.git"
 _gitname="mutc"
