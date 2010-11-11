@@ -27,7 +27,7 @@ setup(
     version='0.0',
     description='A twitter client using pyqt & qml',
     author='Yannick "m00n" Schaefer',
-    author_email='yannick.schaefer@chillaz-net.de',
+    author_email='m00n@chillaz-net.de',
     url='http://github.com/m00n/mutc',
     packages=['mutc'],
     #package_dir={'mutc': 'mutc/'},
