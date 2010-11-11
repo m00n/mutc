@@ -12,12 +12,14 @@ Rectangle {
 
     signal addAccount
     signal addPanel
+    signal needArgs(string uuid, string panel_type, string ask_text)
 
     property alias accountModel: account_menu_view.model
     property alias panelModel: panel_view.model
 
     property alias for_account: panel_view.for_account
     property alias panel_type: panel_view.panel_type
+    property alias need_args: panel_view.need_args
 
     Behavior on opacity {
         NumberAnimation { duration: 250 }
@@ -84,6 +86,7 @@ Rectangle {
 
         property string for_account
         property string panel_type
+        property string need_args
 
         delegate: Button {
             button_text: type
@@ -98,8 +101,11 @@ Rectangle {
             onButtonClicked: {
                 main_menu.state = "hidden";
                 panel_view.panel_type = type;
-
-                addPanel();
+                panel_view.need_args = ask_text;
+                if (!args)
+                    addPanel();
+                else
+                    needArgs(panel_view.for_account, type, ask_text);
             }
         }
         anchors {

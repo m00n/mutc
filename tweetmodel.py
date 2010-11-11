@@ -26,6 +26,7 @@ from path import path
 from PyQt4.Qt import *
 from datetime import datetime
 
+import tweepy
 
 def format_datetime(dt):
     delta = datetime.now() - dt
@@ -117,29 +118,51 @@ class TweetModel(QAbstractListModel):
 
     def data(self, index, role):
         status = self.tweets[index.row()]
-
-        if hasattr(status, "retweeted_status"):
-            if role == self.AuthorRole:
-                return author_to_dict(status.retweeted_status.author)
-            elif role == self.MessageRole:
-                return ":".join(status.text.split(":")[1:])
-            elif role == self.CreatedRole:
-                return status.created_at.strftime("%H:%M")
-            elif role == self.IsRetweetRole:
-                return True
-            elif role == self.RetweetByRole:
-                return author_to_dict(status.author)
+        if isinstance(status, tweepy.SearchResult):
+            return self.data_search(status, role)
+        elif hasattr(status, "retweeted_status"):
+            return self.data_retweet(status, role)
         else:
-            if role == self.AuthorRole:
-                return author_to_dict(status.author)
-            elif role == self.MessageRole:
-                return status.text
-            elif role == self.CreatedRole:
-                return format_datetime(status.created_at)
-            elif role == self.IsRetweetRole:
-                return False
-            elif role == self.RetweetByRole:
-                return None
+            return self.data_default(status, role)
+
+    def data_retweet(self, status, role):
+        if role == self.AuthorRole:
+            return author_to_dict(status.retweeted_status.author)
+        elif role == self.MessageRole:
+            return ":".join(status.text.split(":")[1:])
+        elif role == self.CreatedRole:
+            return status.created_at.strftime("%H:%M")
+        elif role == self.IsRetweetRole:
+            return True
+        elif role == self.RetweetByRole:
+            return author_to_dict(status.author)
+
+    def data_default(self, status, role):
+        if role == self.AuthorRole:
+            return author_to_dict(status.author)
+        elif role == self.MessageRole:
+            return status.text
+        elif role == self.CreatedRole:
+            return format_datetime(status.created_at)
+        elif role == self.IsRetweetRole:
+            return False
+        elif role == self.RetweetByRole:
+            return None
+
+    def data_search(self, result, role):
+        if role == self.AuthorRole:
+            return {
+                "screen_name": result.from_user,
+                "profile_image_url": result.profile_image_url
+            }
+        elif role == self.MessageRole:
+            return result.text
+        elif role == self.CreatedRole:
+            return format_datetime(result.created_at)
+        elif role == self.IsRetweetRole:
+            return False
+        elif role == self.RetweetByRole:
+            return None
 
 def main():
     import sys

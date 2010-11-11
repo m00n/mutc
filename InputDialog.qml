@@ -4,6 +4,13 @@ Rectangle {
     width: 320
     height: 90
 
+    signal dialogAccepted
+
+    property bool accepted: false
+    property string value: ""
+
+    id: input_dialog
+
     color: "#323436"
 
     property alias text: prompt_text.text
@@ -41,13 +48,18 @@ Rectangle {
             margins: 5
         }
 
-        TextEdit {
+        TextInput {
+            id: input
             anchors.fill: parent
             anchors.margins: 2
             horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
             color: "white"
             focus: true
+            Keys.onPressed: {
+                if (event.key == Qt.Key_Return) {
+                    accept()
+                }
+            }
         }
     }
 
@@ -62,6 +74,10 @@ Rectangle {
         }
         width: parent.width / 3
         height: 22
+
+        onButtonClicked: {
+            accept()
+        }
     }
     Button {
         button_text: "cancel"
@@ -73,6 +89,46 @@ Rectangle {
         }
         width: parent.width / 3
         height: 22
+
+        onButtonClicked: {
+            input_dialog.state = "hidden"
+        }
     }
 
+    states: [
+        State {
+            name: "hidden"
+            PropertyChanges {
+                target: input_dialog
+                opacity: 0
+            }
+        },
+        State {
+            name: "visible"
+            PropertyChanges {
+                target: input_dialog
+                opacity: 1
+            }
+            PropertyChanges {
+                target: input
+                focus: true
+            }
+            PropertyChanges {
+                target: input
+                text: ""
+            }
+        }
+
+    ]
+
+    function accept() {
+        value = input.text
+        accepted = true
+        state = "hidden"
+        dialogAccepted()
+    }
+
+    Behavior on opacity {
+        NumberAnimation { duration: 250 }
+    }
 }

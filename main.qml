@@ -206,15 +206,41 @@ Rectangle {
 
         onAddPanel: {
             twitter.subscribe({
-                'uuid': main_menu.for_account,
-                'type': main_menu.panel_type,
-                'args': null,
+                'uuid': tweethon_menu.for_account,
+                'type': tweethon_menu.panel_type,
+                'args': "",
             });
         }
+        onNeedArgs: {
+            search_dialog.text = tweethon_menu.need_args
+            search_dialog.state = "visible"
+        }
+        Component.onCompleted: {
+            search_dialog.dialogAccepted.connect(function () {
+                twitter.subscribe({
+                    'uuid': tweethon_menu.for_account,
+                    'type': tweethon_menu.panel_type,
+                    'args': search_dialog.value,
+                })
+            })
+        }
+    }
+
+    InputDialog {
+        id: search_dialog
+        text: ""
+        state: "hidden"
+
+        onDialogAccepted: {
+            console.log(value);
+        }
+
+        anchors.centerIn: tweethon
     }
 
     NewAccoutDialog {
         id: new_account_dialog
+
         anchors.centerIn: parent
 
         onStateChanged: {
@@ -245,7 +271,7 @@ Rectangle {
             Utils.changeEntry(tweet_panel_model, "uuid", data.uuid, "screen_name", data.screen_name);
         })
         twitter.newSubscription.connect(function (data) {
-            console.log("newSubscription");
+            console.log("newSubscription" + data.args);
             tweet_panel_model.append(data);
         })
     }
