@@ -8,14 +8,15 @@ Rectangle {
     property string button_text
     property string image: ""
 
+    property color default_color: "#00000000"
+
     color: {
         if (mouse_area.pressedButtons == Qt.LeftButton) {
             Qt.lighter("steelblue", 1.5)
         } else if (mouse_area.containsMouse) {
             "steelblue"
-            //"red"
         } else {
-            "#00000000"
+            default_color
         }
     }
 
