@@ -146,11 +146,18 @@ class Subscription(object):
         return tweets
 
 
-class Timeline(Subscription):
+class FriendsTimeline(Subscription):
+    def get_stream(self):
+        return self.account.api.friends_timeline
+
+class RetweetsTimeline(Subscription):
+    def get_stream(self):
+        return self.account.api.retweeted_to_me
+
+class HomeTimeline(Subscription):
     subscription_type = "timeline"
     def get_stream(self):
         return self.account.api.home_timeline
-
 
 class Mentions(Subscription):
     subscription_type = "mentions"
@@ -169,7 +176,7 @@ class Search(Subscription):
 
 def create_subscription(name, account, args):
     return {
-        "timeline": Timeline,
+        "timeline": HomeTimeline,
         "mentions": Mentions,
         "search": Search,
     }[name](account, args)

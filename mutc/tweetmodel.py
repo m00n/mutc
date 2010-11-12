@@ -99,7 +99,7 @@ class TweetModel(QAbstractListModel):
         if role == self.AuthorRole:
             return author_to_dict(status.retweeted_status.author)
         elif role == self.MessageRole:
-            return ":".join(status.text.split(":")[1:])
+            return status.retweeted_status.text
         elif role == self.CreatedRole:
             return status.created_at.strftime("%H:%M")
         elif role == self.IsRetweetRole:
