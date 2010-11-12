@@ -40,19 +40,6 @@ def format_datetime(dt):
 def pick(dictionary, *keys):
     return dict((key, getattr(dictionary, key)) for key in keys)
 
-def status_to_dict(status):
-    is_rt = hasattr(status, "retweeted_status")
-    retweeted_status = getattr(status, "retweeted_status", None)
-
-    return {
-        "author": author_to_dict(status.author),
-        "message": status.text[3:] if is_rt else status.text,
-        "created_at": format_datetime(status.created_at),
-        "id": status.id_str,
-        "is_rt": is_rt,
-        "rt_from": retweeted_status.author.screen_name if is_rt else None,
-    }
-
 def author_to_dict(user):
     return pick(
         user,
@@ -61,23 +48,6 @@ def author_to_dict(user):
         "description",
         "profile_image_url"
     )
-
-class QTweet(QObject):
-    def __init__(self, status):
-        QObject.__init__(self)
-        self.status = status
-
-    @pyqtProperty(unicode)
-    def message(self):
-        return self.status.text
-
-    @pyqtProperty("QDateTime")
-    def created_at(self):
-        return self.status.created_at
-
-    @pyqtProperty("QVariant")
-    def author(self):
-        return author_to_dict(self.status.author)
 
 
 class TweetModel(QAbstractListModel):

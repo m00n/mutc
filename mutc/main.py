@@ -49,14 +49,6 @@ import datetime
 if strptime("12", "%H"):
     pass
 
-def search_to_dict(searchresult):
-    return {
-        "author": searchresult.from_user,
-        "text": searchresult.text,
-        "created_at": status.created_at,
-        "id": searchresult.id_str
-    }
-
 
 class TwitterThread(QThread):
     newTweets = pyqtSignal(object, object)
