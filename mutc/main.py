@@ -334,9 +334,7 @@ class App(QApplication):
             for accout_data in accounts:
                 self.twitter.add_account(Account(*accout_data))
 
-    def _on_shutdown(self):
-        self.twitter.thread.running = False
-        self.twitter.thread = False
+    def save_accounts(self):
         accounts = []
         for account in self.twitter.ordered_accounts:
             accounts.append(
@@ -345,6 +343,40 @@ class App(QApplication):
 
         with open(self.data_path / 'accounts.json', 'w') as fd:
             json.dump(accounts, fd)
+
+    def load_panels(self):
+        try:
+            with open(self.data_path / 'panels.json') as fd:
+                panels = json.load(fd)
+        except IOError:
+            pass
+        else:
+            for ptype, uuid, args in panels:
+                self.twitter.subscribe({
+                    "uuid": uuid,
+                    "type": ptype,
+                    "args": args
+                })
+
+    def save_panels(self):
+        panels = []
+        for subscription in self.twitter.ordered_subscriptions:
+            panels.append(
+                (subscription.subscription_type,
+                 subscription.account.uuid,
+                 subscription.args)
+            )
+
+        with open(self.data_path / 'panels.json', 'w') as fd:
+            json.dump(panels, fd)
+
+
+    def _on_shutdown(self):
+        self.twitter.thread.running = False
+        self.twitter.thread = False
+
+        self.save_accounts()
+        self.save_panels()
 
 
 def main():
@@ -367,6 +399,7 @@ def main():
     #root_object.coonect(root_object, SIGNAL('guiReady()'), )
 
     app.load_accounts()
+    app.load_panels()
     twitter.start_sync()
 
     declarative_view.show()
