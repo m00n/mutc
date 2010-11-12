@@ -74,6 +74,7 @@ Rectangle {
 
         font.pointSize: twitter_name.font.pointSize - 3
         height: 22
+        width: parent.width / 4
         color: "white"
 
         x: 5
@@ -105,69 +106,4 @@ Rectangle {
         height: 22
         font.pointSize: twitter_time.font.pointSize
     }
-
-    /*
-    Row {
-        spacing: 5
-
-        Image {
-            id: twitter_avatar
-            source: author.profile_image_url
-            x: 5
-            y: tweet_delegate.height / 2 - (height / 2)
-        }
-
-        Column {
-            id: inner_tweet
-            spacing: 1
-
-            Text {
-                id: twitter_name
-                text: author.screen_name
-                color: "white"
-                font.bold: true
-            }
-            URLText {
-                id: twitter_text
-                text: message
-                wrapMode: Text.Wrap
-                width: tweet_delegate.width - 60
-            }
-
-            Row {
-                spacing: 10
-                width: tweet_delegate.width - 5
-                Text {
-                    id: twitter_time
-                    text: created_at
-
-                    font.pointSize: twitter_name.font.pointSize - 3
-                    height: 22
-                    color: "white"
-                }
-                Text {
-                    id: twitter_inreply
-                    text: in_reply_to
-                    font.pointSize: twitter_time.font.pointSize
-                    color: "white"
-                    visible: in_reply
-                }
-                Text {
-                    id: twitter_rt
-                    text: "Retweeted by"
-                    font.pointSize: twitter_time.font.pointSize
-                    color: "white"
-                    visible: retweet
-                }
-                Text {
-                    id: twitter_via
-                    text: via
-                    font.pointSize: twitter_time.font.pointSize
-                    color: "white"
-                    visible: via.length > 0
-                }
-            }
-        }
-    }
-    */
 }
