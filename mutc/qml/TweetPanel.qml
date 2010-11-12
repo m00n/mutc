@@ -4,20 +4,9 @@ Rectangle {
     id: tweet_panel
     width: 320
     height: 480
-    //color: "red"
 
-    property int max_tweets: 30
     property alias model: tweet_view.model
-    /*property string account: "no account"
-    property string account_oid: "no oid"
-    property string panel_type: "timeline"*/
-
-    /*
-        "friends"
-        "mentions"
-        "search"
-    */
-
+    property bool overlay: true
     signal needTweets
 
     gradient: Gradient {
@@ -31,6 +20,16 @@ Rectangle {
             color: "#6d7176"
         }
 
+    }
+
+    MouseArea {
+        anchors.fill: parent
+
+        onClicked: {
+            console.log("!")
+            overlay = false
+        }
+        //z: 10
     }
 
     Toolbar {
@@ -72,12 +71,112 @@ Rectangle {
                 else
                     300
             }
+
+            MouseArea {
+                anchors.fill: parent
+                onDoubleClicked: {
+                    var coords = ListView.view.mapFromItem(parent, mouseX, mouseY);
+                    var idx = ListView.view.indexAt(coords.x, coords.y);
+
+                    if (idx == ListView.view.currentIndex && overlay) {
+                        overlay = false;
+                    } else {
+                        overlay = true;
+                        ListView.view.currentIndex = idx;
+                    }
+                }
+            }
         }
+
+        highlight: Rectangle {
+            //visible: overlay
+            color: "#00000000"
+            opacity: overlay ? 1 : 0
+            /*
+            border {
+                width: 2
+                color: "steelblue"
+            }*/
+            z: 5
+
+            Rectangle {
+                //color: "#33333388"
+                color: "#4682B4"
+                opacity: 0.9
+                height: parent.height / 3
+                anchors {
+                    left: parent.left
+                    right: parent.right
+                    verticalCenter: parent.verticalCenter
+
+                }
+            }
+
+            Item {
+                height: parent.height / 3
+                //width: parent.width
+                z: 7
+
+                anchors {
+                    left: parent.left
+                    right: parent.right
+                    verticalCenter: parent.verticalCenter
+
+                }
+
+                Item {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    width: 90
+
+                    z: 7
+                    Button {
+                        id: rt_button
+                        button_text: "\u21BA"
+                        default_color: "#000000"
+                        width: 30
+                        height: parent.height - 10
+                        anchors {
+                            verticalCenter: parent.verticalCenter
+                            left: parent.left
+                            margins: 5
+                        }
+                        z: 7
+                    }
+
+                    Button {
+                        button_text: "\u21B7"
+                        default_color: "#000000"
+                        width: 30
+                        height: parent.height - 10
+                        anchors {
+                            verticalCenter: parent.verticalCenter
+                            left: rt_button.right
+                            margins: 5
+                        }
+                        z: 7
+
+                    }
+                }
+
+            }
+
+            Behavior on opacity {
+                NumberAnimation { duration: 250 }
+            }
+        }
+
+        Timer {
+            id: new_tweet_timeout
+            interval: 3000
+            repeat: false
+            running: false
+        }
+
         onMovementEnded: {
-            //console.log(tweet_view.contentHeight + " " + tweet_view.contentY)
             if (tweet_view.atYEnd) {
-                //console.log("atyend");
-                if (!new_tweet_timeout.running)
+                if (!new_tweet_timeout.running && model.count > 0)
                 {
                     needTweets()
                     new_tweet_timeout.start()
@@ -85,68 +184,5 @@ Rectangle {
 
             }
         }
-    }
-
-    Timer {
-        id: new_tweet_timeout
-        interval: 3000
-        repeat: false
-        running: false
-    }
-
-    ListModel {
-        id: tweet_model
-        /*
-        ListElement {
-            author: "boringplanet"
-            tweet_text: "Faketweet test das ist ein test blablubb foo bar baz bazinga zort hoot hoot hoot"
-            avatar: "m00n_s.png"
-        }
-        ListElement {
-            author: "boringplanet a"
-            tweet_text: "Faketweet 2"
-            avatar: "m00n_s.png"
-        }
-        ListElement {
-            author: "boringplanet a"
-            tweet_text: "Faketweet 2"
-            avatar: "m00n_s.png"
-        }
-        ListElement {
-            author: "boringplanet a"
-            tweet_text: "Faketweet 2"
-            avatar: "m00n_s.png"
-        }
-        ListElement {
-            author: "boringplanet a"
-            tweet_text: "Faketweet 2"
-            avatar: "m00n_s.png"
-        }
-        ListElement {
-            author: "boringplanet a"
-            tweet_text: "gdfg gfdgf http://foo.bar.baz/zort"
-            avatar: "m00n_s.png"
-        }
-        ListElement {
-            author: "boringplanet a"
-            tweet_text: "Faketweet 2"
-            avatar: "m00n_s.png"
-        }
-        ListElement {
-            author: "boringplanet a"
-            tweet_text: "Faketweet 2"
-            avatar: "m00n_s.png"
-        }
-        ListElement {
-            author: "boringplanet a"
-            tweet_text: "Faketweet 2"
-            avatar: "m00n_s.png"
-        }*/
-    }
-
-    Component.onCompleted: {
-        console.log("Panel");
-        //console.log("> " + pyobj.get_foo() + "<");
-        //console.log("> " + zort() + "<");
     }
 }
