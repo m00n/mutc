@@ -47,6 +47,10 @@ from tweetmodel import TweetModel
 import datetime
 
 if strptime("12", "%H"):
+    """
+    This seems to cure the AttributeError: _strptime_time bug which
+    seems to be related to the use of strptime in a thread before it's there
+    """
     pass
 
 
