@@ -30,7 +30,7 @@ Rectangle {
         snapMode: ListView.SnapOneItem
         delegate: TweetPanel {
             id: tweet_panel
-            property bool connected: false
+
             anchors.top: { if (parent) parent.top }
             anchors.bottom: { if (parent) parent.bottom }
 
