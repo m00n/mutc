@@ -145,13 +145,13 @@ class Subscription(object):
         return tweets
 
 
-class Timeline(Timeline):
+class Timeline(Subscription):
     subscription_type = "timeline"
     def get_stream(self):
         return self.account.api.home_timeline
 
 
-class Mentions(Timeline):
+class Mentions(Subscription):
     subscription_type = "mentions"
     def get_stream(self):
         return self.account.api.mentions
@@ -221,16 +221,16 @@ class Twitter(QObject):
             request.get("args", "")
         )
 
-        model_key = (
+        key = (
             request["uuid"],
             request["type"],
             request["args"],
         )
 
-        self.models[model_key] = TweetModel(self)
+        self.models[key] = TweetModel(self)
 
         with self.thread.subscriptions_lock:
-            self.subscriptions[model_key] = subscription
+            self.subscriptions[key] = subscription
             self.ordered_subscriptions.append(subscription)
 
         if subscription.account.me:
@@ -317,12 +317,12 @@ class App(QApplication):
 
         self.twitter = twitter
 
-        self.data_path = path('~/.tweethon').expand()
+        self.data_path = path('~/.mutc').expand()
 
-        #self.load_accounts()
+        if not self.data_path.exists():
+            self.data_path.mkdir()
 
         self.aboutToQuit.connect(self._on_shutdown)
-
 
     def load_accounts(self):
         try:
