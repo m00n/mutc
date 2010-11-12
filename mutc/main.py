@@ -124,11 +124,7 @@ class Subscription(object):
         )
 
         for status in cursor.items(count):
-            #print status, repr(status.text)
             tweets.append(status)
-
-            #if self.last_tweet_id and self.last_tweet_id == status.id:
-                #break
 
         if tweets:
             self.last_tweet_id = tweets[0].id
@@ -149,20 +145,13 @@ class Subscription(object):
         return tweets
 
 
-
-class TimelineBase(Subscription):
-    def simplify(self, tweets):
-        #return map(status_to_dict, tweets)
-        return tweets
-
-
-class Timeline(TimelineBase):
+class Timeline(Timeline):
     subscription_type = "timeline"
     def get_stream(self):
         return self.account.api.home_timeline
 
 
-class Mentions(TimelineBase):
+class Mentions(Timeline):
     subscription_type = "mentions"
     def get_stream(self):
         return self.account.api.mentions
@@ -170,7 +159,6 @@ class Mentions(TimelineBase):
 
 class Search(Subscription):
     subscription_type = "search"
-
     def get_stream(self):
         return self.account.api.search
 
