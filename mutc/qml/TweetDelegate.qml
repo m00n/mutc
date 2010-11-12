@@ -62,6 +62,10 @@ Rectangle {
             left: twitter_avatar.right
             margins: 5
         }
+
+        onLinkActivated: {
+           app.open_url(link);
+        }
     }
 
     Text {

@@ -34,6 +34,7 @@ from PyQt4.Qt import *
 
 import sys
 import threading
+import webbrowser
 
 from time import sleep, strptime
 from twitter import Account, async
@@ -377,6 +378,10 @@ class App(QApplication):
 
         self.save_accounts()
         self.save_panels()
+
+    @pyqtSlot("QVariant")
+    def open_url(self, url):
+        return webbrowser.open_new_tab(url)
 
 
 def main():
