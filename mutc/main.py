@@ -73,11 +73,12 @@ class TwitterThread(QThread):
         while self.running:
             with self.subscriptions_lock:
                 for subscription in self.subscriptions.values():
-                    tweets = subscription.update()
+                    if subscription.account.api:
+                        tweets = subscription.update()
 
-                    if tweets:
-                        print "new_tweets", len(tweets), tweets[0]
-                        self.newTweets.emit(subscription, tweets)
+                        if tweets:
+                            print "new_tweets", len(tweets), tweets[0]
+                            self.newTweets.emit(subscription, tweets)
 
             for x in xrange(self.tick_count):
                 sleep(self.ticks)
