@@ -89,40 +89,24 @@ Rectangle {
         }
 
         highlight: Rectangle {
-            //visible: overlay
             color: "#00000000"
             opacity: overlay ? 1 : 0
-            /*
-            border {
-                width: 2
-                color: "steelblue"
-            }*/
             z: 5
 
             Rectangle {
-                //color: "#33333388"
-                color: "#4682B4"
+                color: "steelblue"
                 opacity: 0.9
-                //height: parent //.height / 3
-                anchors {
-                    /*left: parent.left
-                    right: parent.right
-                    verticalCenter: parent.verticalCenter*/
-                    fill: parent
-                }
+                anchors.fill: parent
             }
 
             Item {
                 height: parent.height / 3
-                //width: parent.width
                 z: 7
 
                 anchors {
                     left: parent.left
                     right: parent.right
                     verticalCenter: parent.verticalCenter
-                    //fill: parent
-
                 }
 
                 Item {
