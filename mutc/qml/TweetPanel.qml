@@ -103,12 +103,12 @@ Rectangle {
                 //color: "#33333388"
                 color: "#4682B4"
                 opacity: 0.9
-                height: parent.height / 3
+                //height: parent //.height / 3
                 anchors {
-                    left: parent.left
+                    /*left: parent.left
                     right: parent.right
-                    verticalCenter: parent.verticalCenter
-
+                    verticalCenter: parent.verticalCenter*/
+                    fill: parent
                 }
             }
 
@@ -121,6 +121,7 @@ Rectangle {
                     left: parent.left
                     right: parent.right
                     verticalCenter: parent.verticalCenter
+                    //fill: parent
 
                 }
 
@@ -128,7 +129,7 @@ Rectangle {
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
                     anchors.bottom: parent.bottom
-                    width: 90
+                    width: 300
 
                     z: 7
                     Button {
@@ -139,21 +140,39 @@ Rectangle {
                         height: parent.height - 10
                         anchors {
                             verticalCenter: parent.verticalCenter
-                            left: parent.left
-                            margins: 5
+                            right: reply_button.left
+                            margins: 15
                         }
                         z: 7
                     }
 
                     Button {
+                        id: reply_button
                         button_text: "\u21B7"
                         default_color: "#000000"
                         width: 30
                         height: parent.height - 10
                         anchors {
                             verticalCenter: parent.verticalCenter
-                            left: rt_button.right
-                            margins: 5
+                            horizontalCenter: parent.horizontalCenter
+                            //left: rt_button.right
+                            //right: delete_button.left
+                            margins: 15
+                        }
+                        z: 7
+
+                    }
+
+                    Button {
+                        id: delete_button
+                        button_text: "x"
+                        default_color: "#000000"
+                        width: 30
+                        height: parent.height - 10
+                        anchors {
+                            verticalCenter: parent.verticalCenter
+                            left: reply_button.right
+                            margins: 15
                         }
                         z: 7
 
