@@ -78,7 +78,8 @@ class TweetModel(QAbstractListModel):
         if pos == -1:
             pos = len(self.tweets)
 
-        self.beginInsertRows(QModelIndex(), pos, len(tweets) - 1)
+        self.beginInsertRows(QModelIndex(), pos, pos + len(tweets) - 1)
+        #self.beginInsertRows(QModelIndex(), pos, len(tweets) - 1)
         for i, tweet in enumerate(tweets):
             self.tweets.insert(pos + i, tweet)
         self.endInsertRows()
