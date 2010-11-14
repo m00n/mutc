@@ -37,6 +37,7 @@ import threading
 import webbrowser
 
 from time import sleep, strptime
+from threading import Lock
 from twitter import Account, async
 
 import json
@@ -71,7 +72,7 @@ class TwitterThread(QThread):
 
     def run(self):
         while self.running:
-            with self.subscriptions_lock:
+            with self.subscriptions:
                 for subscription in self.subscriptions.values():
                     if subscription.account.api:
                         tweets = subscription.update()
@@ -97,6 +98,13 @@ class Subscription(object):
 
     def __hash__(self):
         return hash((self.account.uuid, self.args, self.__class__.__name__))
+
+    def __repr__(self):
+        return "<Subscription(%r, %r, %r)>" % (
+            self.account.uuid[:8],
+            self.subscription_type,
+            self.args
+        )
 
     def get_stream(self):
         raise NotImplemented
@@ -146,6 +154,13 @@ class Subscription(object):
 
         return tweets
 
+    def key(self):
+        return (
+            self.account.uuid,
+            self.subscription_type,
+            self.args
+        )
+
 
 class FriendsTimeline(Subscription):
     def get_stream(self):
@@ -165,7 +180,6 @@ class Mentions(Subscription):
     def get_stream(self):
         return self.account.api.mentions
 
-
 class Search(Subscription):
     subscription_type = "search"
     def get_stream(self):
@@ -181,6 +195,126 @@ def create_subscription(name, account, args):
         "mentions": Mentions,
         "search": Search,
     }[name](account, args)
+
+
+class PanelModel(QAbstractListModel):
+    UUIDRole = Qt.UserRole
+    TypeRole = Qt.UserRole + 1
+    ArgsRole = Qt.UserRole + 2
+    ScreenNameRole = Qt.UserRole + 3
+    TweetModelRole = Qt.UserRole + 4
+
+    def __init__(self, parent, subscriptions):
+        QAbstractListModel.__init__(self, parent)
+
+        self.subscriptions = subscriptions
+        self.panels = []
+
+        self.role_to_key = {
+            self.UUIDRole: "uuid",
+            self.TypeRole: "type",
+            self.ArgsRole: "args",
+            self.ScreenNameRole: "screen_name",
+        }
+
+        self.setRoleNames(self.role_to_key)
+
+    def rowCount(self, parent=None):
+        return len(self.panels)
+
+    def addPanel(self, subscription, pos=-1):
+        if pos == -1:
+            pos = self.rowCount()
+
+        self.beginInsertRows(QModelIndex(), pos, pos)
+
+
+        self.panels.append(subscription)
+        with self.subscriptions:
+            self.subscriptions[subscription.key()] = subscription
+
+        self.endInsertRows()
+
+    def data(self, index, role):
+        subscription = self.panels[index.row()]
+        account = subscription.account
+
+        if account.me:
+            screen_name = account.me.screen_name
+        else:
+            screen_name = account.uuid[:4]
+
+        return {
+            self.UUIDRole: subscription.account.uuid,
+            self.TypeRole: subscription.subscription_type,
+            self.ArgsRole: subscription.args,
+            self.ScreenNameRole: screen_name
+        }[role]
+
+    @pyqtSlot(int, int)
+    def move(self, idx_from, idx_to):
+        print idx_from, idx_to
+        if idx_from < 0:
+            idx_from = self.rowCount()
+        elif idx_from >= self.rowCount():
+            idx_from = 0
+
+        if idx_to < 0:
+            idx_to = self.rowCount()
+        elif idx_to >= self.rowCount():
+            idx_to = 0
+
+        #idx_from = idx_from
+        #idx_to = idx_to
+
+        if idx_from < idx_to:
+            idx_to, idx_from = idx_from, idx_to
+            print "s", idx_from, idx_to
+
+        print >>sys.stderr, self.beginMoveRows(
+            QModelIndex(), idx_from, idx_from,
+            QModelIndex(), idx_to,
+        )
+
+        print self.panels
+
+        panel = self.panels[idx_from]
+        self.panels[idx_from] = self.panels[idx_to]
+        self.panels[idx_to] = panel
+
+        print self.panels
+
+        self.endMoveRows()
+
+    @pyqtSlot(int)
+    def remove(self, idx):
+        self.beginRemoveRows(QModelIndex(), idx, idx + 1)
+
+        subscription = self.panels.pop(idx)
+        with self.subscriptions:
+            self.subscriptions.pop(subscription.key())
+
+        self.endRemoveRows()
+
+        return subscription
+
+    def setScreenName(self, uuid, screen_name):
+        for row, subscription in enumerate(self.panels):
+            if subscription.account.uuid == uuid:
+                print "setScreenName"
+                self.dataChanged.emit(self.index(row), self.index(row))
+
+
+class LockableDict(dict):
+    def __init__(self, *args, **kwds):
+        dict.__init__(self, *args, **kwds)
+        self._lock = Lock()
+
+    def __enter__(self):
+        self._lock.acquire()
+
+    def __exit__(self, *args):
+        self._lock.release()
 
 
 class Twitter(QObject):
@@ -202,8 +336,12 @@ class Twitter(QObject):
         self.accounts = {}
         self.ordered_accounts = []
 
-        self.subscriptions = {}
-        self.ordered_subscriptions = []
+        self.subscriptions = LockableDict()
+
+        self.panel_model = PanelModel(
+            self,
+            self.subscriptions,
+        )
 
         self.thread = TwitterThread(self, self.subscriptions)
         self.thread.newTweets.connect(self.on_new_tweets)
@@ -221,6 +359,9 @@ class Twitter(QObject):
         model = self.models[key]
         model.insertTweets(tweets, 0)
 
+    def on_account_connected(self, account):
+        self.accountConnected.emit(account.simplify())
+        self.panel_model.setScreenName(account.uuid, account.me.screen_name)
 
     @pyqtSlot("QVariant")
     def subscribe(self, request):
@@ -238,16 +379,13 @@ class Twitter(QObject):
 
         self.models[key] = TweetModel(self)
 
-        with self.thread.subscriptions_lock:
-            self.subscriptions[key] = subscription
-            self.ordered_subscriptions.append(subscription)
-
         if subscription.account.me:
             request['screen_name'] = subscription.account.me.screen_name
         else:
             request['screen_name'] = subscription.account.uuid[:4]
 
         self.newSubscription.emit(request)
+        self.panel_model.addPanel(subscription)
         self.thread.force_check.set()
 
     @pyqtSlot("QVariant")
@@ -277,9 +415,7 @@ class Twitter(QObject):
     def add_account(self, account):
         self.ordered_accounts.append(account)
         self.accounts[account.uuid] = account
-        account.connected.connect(
-            lambda account: self.accountConnected.emit(account.simplify())
-        )
+        account.connected.connect(self.on_account_connected)
 
     @pyqtSlot("QVariant", result=QObject)
     def account(self, uuid):
@@ -369,7 +505,7 @@ class App(QApplication):
 
     def save_panels(self):
         panels = []
-        for subscription in self.twitter.ordered_subscriptions:
+        for subscription in self.twitter.panel_model.panels:
             panels.append(
                 (subscription.subscription_type,
                  subscription.account.uuid,
@@ -403,6 +539,7 @@ def main():
     root_context = declarative_view.rootContext()
     root_context.setContextProperty('twitter', twitter)
     root_context.setContextProperty('app', app)
+    root_context.setContextProperty('tweet_panel_model', twitter.panel_model)
 
     declarative_view.setSource(
         QUrl.fromLocalFile(path(__file__).parent / "qml" / "main.qml")
