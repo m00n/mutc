@@ -121,29 +121,6 @@ Rectangle {
         }
     }
 
-
-
-
-    ListModel {
-        id: tweet_panel_model
-/*
-        ListElement {
-            type: "friends"
-            screen_name: "boringplanet"
-            uuid: ""
-            args: ""
-        }
-        ListElement {
-            type: "friends"
-            account: "boringplanet"
-        }
-        ListElement {
-            type: "friends"
-            account: "boringplanet"
-        }*/
-
-    }
-
     ListModel {
         id: account_model
 /*
@@ -270,9 +247,10 @@ Rectangle {
             }
             Utils.changeEntry(tweet_panel_model, "uuid", data.uuid, "screen_name", data.screen_name);
         })
+        /*
         twitter.newSubscription.connect(function (data) {
             console.log("newSubscription" + data.args);
             tweet_panel_model.append(data);
-        })
+        })*/
     }
 }
