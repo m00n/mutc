@@ -102,6 +102,10 @@ class Account(QObject):
         self.api = None
         self.me = None
 
+    def __repr__(self):
+        return "<Account %s>" % (
+            self.me.screen_name if self.me else self.uuid[:4]
+        )
 
     @pyqtSlot(result="QVariant")
     def get_uuid(self):
