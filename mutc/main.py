@@ -254,41 +254,54 @@ class PanelModel(QAbstractListModel):
     @pyqtSlot(int, int)
     def move(self, idx_from, idx_to):
         print idx_from, idx_to
-        if idx_from < 0:
-            idx_from = self.rowCount()
-        elif idx_from >= self.rowCount():
-            idx_from = 0
+        list_idx_from = idx_from
+        list_idx_to = idx_to
 
-        if idx_to < 0:
-            idx_to = self.rowCount()
-        elif idx_to >= self.rowCount():
-            idx_to = 0
+        rows = self.rowCount()
+
+        if idx_from < 0 or idx_to < 0 or idx_from >= rows or idx_to >= rows:
+            print "idx < 0 || > n"
+            return
+
+        #if idx_from < 0:
+            #idx_from = self.rowCount()
+            #list_idx_from = self.rowCount() - 1
+        #elif idx_from >= self.rowCount():
+            #idx_from = 0
+            #list_idx_from = 0
+
+        #if idx_to < 0:
+            #idx_to = self.rowCount()
+            #list_idx_to = self.rowCount() - 1
+        #elif idx_to >= self.rowCount():
+            #idx_to = 0
+            #list_idx_to = 0
 
         #idx_from = idx_from
         #idx_to = idx_to
 
         if idx_from < idx_to:
             idx_to, idx_from = idx_from, idx_to
+            list_idx_to, list_idx_from = list_idx_from, list_idx_to
             print "s", idx_from, idx_to
 
-        print >>sys.stderr, self.beginMoveRows(
+        if self.beginMoveRows(
             QModelIndex(), idx_from, idx_from,
             QModelIndex(), idx_to,
-        )
+        ):
+            print self.panels
 
-        print self.panels
+            panel = self.panels[list_idx_from]
+            self.panels[list_idx_from] = self.panels[list_idx_to]
+            self.panels[list_idx_to] = panel
 
-        panel = self.panels[idx_from]
-        self.panels[idx_from] = self.panels[idx_to]
-        self.panels[idx_to] = panel
+            print self.panels
 
-        print self.panels
-
-        self.endMoveRows()
+            self.endMoveRows()
 
     @pyqtSlot(int)
     def remove(self, idx):
-        self.beginRemoveRows(QModelIndex(), idx, idx + 1)
+        self.beginRemoveRows(QModelIndex(), idx, idx)
 
         subscription = self.panels.pop(idx)
         with self.subscriptions:
