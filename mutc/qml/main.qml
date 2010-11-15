@@ -37,11 +37,13 @@ Rectangle {
             model: twitter.get_model(uuid, type, args)
 
             onNeedTweets: {
+                /*
                 twitter.need_tweets({
                     "uuid": uuid,
                     "type": type,
                     "args": args,
-                });
+                });*/
+                twitter.get_model(uuid, type, args).needTweets()
             }
         }
         width: parent.width

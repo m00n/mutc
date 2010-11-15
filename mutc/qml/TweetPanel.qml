@@ -8,6 +8,7 @@ Rectangle {
 
     property int max_tweets: 30
     property alias model: tweet_view.model
+    property bool model_busy
     /*property string account: "no account"
     property string account_oid: "no oid"
     property string panel_type: "timeline"*/
@@ -153,7 +154,7 @@ Rectangle {
 
     ListModel {
         id: tweet_model
-        /*
+
         ListElement {
             author: "boringplanet"
             tweet_text: "Faketweet test das ist ein test blablubb foo bar baz bazinga zort hoot hoot hoot"
@@ -164,6 +165,7 @@ Rectangle {
             tweet_text: "Faketweet 2"
             avatar: "m00n_s.png"
         }
+        /*
         ListElement {
             author: "boringplanet a"
             tweet_text: "Faketweet 2"
@@ -202,7 +204,7 @@ Rectangle {
     }
 
     Component.onCompleted: {
-        console.log("Panel");
+        //console.log("Panel");
         //console.log("> " + pyobj.get_foo() + "<");
         //console.log("> " + zort() + "<");
     }

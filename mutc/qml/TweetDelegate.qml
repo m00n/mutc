@@ -4,20 +4,54 @@ Rectangle {
     id: tweet_delegate
 
     radius: 5
-    opacity: 100
 
     color: "#323436"
     width: 300
     height: 120
 
-    //property string author: "No nick"
-    //property string tweet_text: "No text"
-    //property date timestamp
-    property bool in_reply: false
-    property string in_reply_to
-    property bool retweet: false
-    property string retweeted_by
-    property string via: ""
+    visible: index != ListView.view.model.rowCount() - 1 || (index == ListView.view.model.rowCount() - 1 && model_busy)
+    opacity: visible ? 1.0 : 0.0
+
+    Rectangle {
+        id: load_display
+        visible: index == ListView.view.model.rowCount() - 1
+
+        z: 2
+
+        color: "#323436"
+        radius: 5
+
+        anchors.fill: parent
+
+        Item {
+            anchors.fill: parent
+            visible: model_busy
+
+            Text {
+                id: load_text
+                text: "Loading tweets"
+                anchors {
+                    top: parent.top
+                    horizontalCenter: parent.horizontalCenter
+                    margins: 5
+                }
+                height: 22
+                color: "white"
+            }
+
+            AnimatedImage {
+                id: load_animation
+                source: "thobber.gif"
+                playing: model_busy
+
+                anchors {
+                    horizontalCenter: parent.horizontalCenter
+                    verticalCenter: parent.verticalCenter
+                    margins: 5
+                }
+            }
+        }
+    }
 
     Image {
         id: twitter_avatar
@@ -106,68 +140,7 @@ Rectangle {
         font.pointSize: twitter_time.font.pointSize
     }
 
-    /*
-    Row {
-        spacing: 5
-
-        Image {
-            id: twitter_avatar
-            source: author.profile_image_url
-            x: 5
-            y: tweet_delegate.height / 2 - (height / 2)
-        }
-
-        Column {
-            id: inner_tweet
-            spacing: 1
-
-            Text {
-                id: twitter_name
-                text: author.screen_name
-                color: "white"
-                font.bold: true
-            }
-            URLText {
-                id: twitter_text
-                text: message
-                wrapMode: Text.Wrap
-                width: tweet_delegate.width - 60
-            }
-
-            Row {
-                spacing: 10
-                width: tweet_delegate.width - 5
-                Text {
-                    id: twitter_time
-                    text: created_at
-
-                    font.pointSize: twitter_name.font.pointSize - 3
-                    height: 22
-                    color: "white"
-                }
-                Text {
-                    id: twitter_inreply
-                    text: in_reply_to
-                    font.pointSize: twitter_time.font.pointSize
-                    color: "white"
-                    visible: in_reply
-                }
-                Text {
-                    id: twitter_rt
-                    text: "Retweeted by"
-                    font.pointSize: twitter_time.font.pointSize
-                    color: "white"
-                    visible: retweet
-                }
-                Text {
-                    id: twitter_via
-                    text: via
-                    font.pointSize: twitter_time.font.pointSize
-                    color: "white"
-                    visible: via.length > 0
-                }
-            }
-        }
+    Behavior on opacity {
+        NumberAnimation { duration: 250 }
     }
-    */
 }
