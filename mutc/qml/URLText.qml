@@ -3,13 +3,15 @@ import Qt 4.7
 
 Item {
     id: container
+
+    signal linkActivated(string link)
+
     property string text: ""
     property alias wrapMode: text_item.wrapMode
     property alias elide: text_item.elide
     property alias horizontalAlignment: text_item.horizontalAlignment
 
     height: 22
-
 
     Text {
         id: text_item
@@ -28,6 +30,9 @@ Item {
 
         Component.onCompleted: {
             setText(container.text);
+        }
+        onLinkActivated: {
+            container.linkActivated(link)
         }
     }
 
