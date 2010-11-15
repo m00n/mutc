@@ -225,6 +225,29 @@ Rectangle {
                 new_account_dialog.init();
             }
         }
+
+        onAuthFailed: {
+            console.log("authfailed");
+            status_dialog.show("Account", "Authentication failed - please try again");
+        }
+
+        onAuthSuccessful: {
+            status_dialog.show("Account", "Account successfully authenticated")
+        }
+    }
+
+    Dialog {
+        id: status_dialog
+        text: ""
+        state: "hidden"
+
+        anchors.centerIn: parent
+
+        function show(title, msg) {
+            text = msg
+            title = title
+            state = "visible";
+        }
     }
 
     Component.onCompleted: {

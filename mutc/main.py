@@ -345,6 +345,7 @@ class Twitter(QObject):
 
     announceAccount = pyqtSignal("QVariant")
     accountConnected = pyqtSignal("QVariant")
+    accountAuthFailed = pyqtSignal("QVariant")
 
     newTweetsForModel = pyqtSignal(TweetModel, list, int)
 
@@ -431,6 +432,9 @@ class Twitter(QObject):
     def new_account(self):
         account = Account()
         account.ready.connect(partial(self.announce_account, account))
+        account.authFailed.connect(
+            lambda account: self.accountAuthFailed.emit(account.simplify())
+        )
         self.add_account(account)
         return account
 

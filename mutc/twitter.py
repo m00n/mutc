@@ -87,6 +87,8 @@ class Account(QObject):
     ready = pyqtSignal()
     connected = pyqtSignal(QObject)
     connectionFailed = pyqtSignal(QObject)
+    authFailed = pyqtSignal(QObject)
+    authSuccessful = pyqtSignal(QObject)
 
     def __init__(self, oauth_key=None, oauth_secret=None, uuid=None):
         QObject.__init__(self)
@@ -120,15 +122,18 @@ class Account(QObject):
     @async
     def set_verifier(self, code):
         print >>sys.stderr, "set_verifier", code
-        self._auth.get_access_token(code)
-        self.oauth_key = self._auth.access_token.key
-        self.oauth_secret = self._auth.access_token.secret
-        print >>sys.stderr, self.uuid
-        print >>sys.stderr, self._auth.access_token.key
-        print >>sys.stderr, self._auth.access_token.secret
-        self.ready.emit()
+        try:
+            self._auth.get_access_token(code)
+        except tweepy.TweepError as error:
+            self.authFailed.emit(self)
+        else:
+            self.authSuccessful.emit(self)
 
-        self.connect()
+            self.oauth_key = self._auth.access_token.key
+            self.oauth_secret = self._auth.access_token.secret
+            self.ready.emit()
+
+            self.connect()
 
     @async
     def connect(self):
