@@ -48,6 +48,8 @@ from tweetmodel import TweetModel
 
 import datetime
 
+from logbook import Logger
+
 if strptime("12", "%H"):
     """
     This seems to cure the AttributeError: _strptime_time bug which
@@ -75,26 +77,35 @@ class TwitterThread(QThread):
     def run(self):
         while self.running:
             with self.subscriptions:
-                for subscription in self.subscriptions:
-                    if subscription.account.api:
-                        try:
-                            tweets = subscription.update()
-                        except tweepy.TweepError as error:
-                            if self.logger:
-                                self.logger.exception()
-                                print "Error while fetching tweets:"
-                                print type(error), error
-                                print error.args, error.msg
+                self.check_subscriptions()
 
-                        if tweets:
-                            print "new_tweets", len(tweets), tweets[0]
-                            self.newTweets.emit(subscription, tweets)
+            self.stepped_sleep()
 
-            for x in xrange(self.tick_count):
-                sleep(self.ticks)
-                if self.force_check.is_set():
-                    self.force_check.clear()
-                    break
+    def check_subscriptions(self):
+        for subscription in self.subscriptions.values():
+            if subscription.account.api:
+                try:
+                    tweets = subscription.update()
+                except tweepy.TweepError as error:
+                    if self.logger:
+                        self.logger.exception("Error while fetching tweets")
+                else:
+                    if tweets:
+                        self.logger.debug("{0} new tweets for {1}/{2}",
+                            len(tweets),
+                            subscription.account,
+                            subscription.subscription_type
+                        )
+                        self.newTweets.emit(subscription, tweets)
+
+
+    def stepped_sleep(self):
+        for x in xrange(self.tick_count):
+            sleep(self.ticks)
+            if self.force_check.is_set():
+                self.force_check.clear()
+                break
+
 
 
 class Subscription(object):
@@ -366,7 +377,7 @@ class Twitter(QObject):
             self.subscriptions,
         )
 
-        self.thread = TwitterThread(self, self.subscriptions)
+        self.thread = TwitterThread(self, self.subscriptions, Logger("thread"))
         self.thread.newTweets.connect(self.on_new_tweets)
         self.thread.start()
 
