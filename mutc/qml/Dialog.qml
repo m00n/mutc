@@ -14,7 +14,7 @@ Rectangle {
     color: "#323436"
 
     property alias text: prompt_text.text
-    property alias title: title_text
+    property alias title: title_text.text
 
     border {
         width: 1
@@ -34,7 +34,7 @@ Rectangle {
 
         Text {
             id: title_text
-            text: ""
+            text: "Title bar"
             color: "white"
             anchors {
                 verticalCenter: parent.verticalCenter
@@ -45,12 +45,12 @@ Rectangle {
 
     Text {
         id: prompt_text
-        text: "Enter value"
+        text: "Prompt text"
         color: "white"
         anchors {
             left: parent.left
             right: parent.right
-            top: title_bar.top
+            top: title_bar.bottom
             margins: 5
         }
         height: 22
@@ -87,7 +87,7 @@ Rectangle {
         height: 22
 
         onButtonClicked: {
-            input_dialog.state = "hidden"
+            dialog.state = "hidden"
         }
     }
 
