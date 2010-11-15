@@ -38,7 +38,8 @@ import webbrowser
 
 from time import sleep, strptime
 from threading import Lock
-from twitter import Account, async
+from twitter import Account
+from utils import async
 
 import json
 
@@ -108,13 +109,20 @@ class TwitterThread(QThread):
 
 
 
-class Subscription(object):
+class Subscription(QObject):
     subscription_type = "abstract"
 
+    newTweetsReceived = pyqtSignal(object, object)
+    oldTweetsReceived = pyqtSignal(object, object)
+
     def __init__(self, account, args):
+        QObject.__init__(self)
+
         self.account = account
         self.args = args
         self.last_tweet_id = None
+
+        self.fetching = False
 
     def __hash__(self):
         return hash((self.account.uuid, self.args, self.__class__.__name__))
@@ -158,10 +166,13 @@ class Subscription(object):
 
         if tweets:
             self.last_tweet_id = tweets[0].id
+            self.newTweetsReceived.emit(self, tweets)
 
-        return self.simplify(tweets)
+        return tweets
 
     def tweets_before(self, max_id):
+        self.fetching = True
+
         cursor_args = {
             "max_id": max_id
         }
@@ -171,6 +182,9 @@ class Subscription(object):
             **cursor_args
         )
         tweets = list(cursor.items(21))[1:]
+
+        self.fetching = False
+        self.oldTweetsReceived.emit(self, tweets)
 
         return tweets
 
@@ -378,20 +392,7 @@ class Twitter(QObject):
         )
 
         self.thread = TwitterThread(self, self.subscriptions, Logger("thread"))
-        self.thread.newTweets.connect(self.on_new_tweets)
         self.thread.start()
-
-        self.newTweetsForModel.connect(
-            lambda model, tweets, index: model.insertTweets(tweets, index)
-        )
-
-    def on_new_tweets(self, subscription, tweets):
-        key = (subscription.account.uuid,
-               subscription.subscription_type,
-               subscription.args)
-
-        model = self.models[key]
-        model.insertTweets(tweets, 0)
 
     def on_account_connected(self, account):
         self.accountConnected.emit(account.simplify())
@@ -411,7 +412,7 @@ class Twitter(QObject):
             request["args"],
         )
 
-        self.models[key] = TweetModel(self)
+        self.models[key] = TweetModel(self, subscription)
 
         if subscription.account.me:
             request['screen_name'] = subscription.account.me.screen_name
