@@ -18,20 +18,18 @@
 
 from __future__ import with_statement, division
 
+import sys
+from uuid import uuid4
 from functools import *
 from itertools import *
 
-from path import path
-
 import tweepy
-from functools import wraps
 
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 
-from uuid import uuid4
+from utils import async
 
-import sys
 
 CK = "owLrhjNm3qUOHA1ybLnZzA"
 CS = "lycIVjOXaALggV18Cgec9mOFkDqC1hNXoFxHet5dEg"
@@ -50,36 +48,6 @@ def test():
     # Construct the API instance
     api = tweepy.API(auth)
     return api
-
-
-def async(func):
-    """
-    This decorator turns `func` on the fly into a QRunnable and enqueues
-    it in the global QThreadPool
-    """
-    @wraps(func)
-    def wrapper(*func_args, **func_kwds):
-        def run(self, *args, **kwds):
-            func(*func_args, **func_kwds)
-
-        runnable = type(
-            func.func_name + "/runnable",
-            (QRunnable,),
-            {
-                'run': run,
-            }
-        )()
-        QThreadPool.globalInstance().start(runnable)
-
-    wrapper.sync = func
-    return wrapper
-
-@async
-def zort(a, b, c):
-    import time
-    time.sleep(1.0)
-    print a, b, c
-    raise TypeError("abc")
 
 
 class Account(QObject):
