@@ -6,11 +6,12 @@ Rectangle {
     radius: 5
 
     color: "#323436"
-    width: 300
-    height: 120
 
     visible: index != ListView.view.model.rowCount() - 1 || (index == ListView.view.model.rowCount() - 1 && model_busy)
     opacity: visible ? 1.0 : 0.0
+
+    width: 300
+    height: index != ListView.view.model.rowCount() - 1 ? 120 : 30
 
     Rectangle {
         id: load_display
@@ -26,7 +27,7 @@ Rectangle {
         Item {
             anchors.fill: parent
             visible: model_busy
-
+/*
             Text {
                 id: load_text
                 text: "Loading tweets"
@@ -37,7 +38,7 @@ Rectangle {
                 }
                 height: 22
                 color: "white"
-            }
+            }*/
 
             AnimatedImage {
                 id: load_animation
