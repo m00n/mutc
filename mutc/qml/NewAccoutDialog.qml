@@ -12,6 +12,8 @@ Rectangle {
     property string auth_url: ""
     property string waiting_str: "Waiting for authentication url"
 
+    signal authFailed
+    signal authSuccessful
 
     SystemPalette { id: activePalette }
 
@@ -64,21 +66,6 @@ Rectangle {
         wrapMode: Text.Wrap
         text: "If you have a twitter account please visit the url below and paste the verifier code below the url"
     }
-    /*URLText {
-        id: auth_url_text
-
-        anchors {
-            top: auth_text.bottom
-            left: parent.left
-            right: parent.right
-            margins: 3
-
-        }
-        horizontalAlignment: Text.AlignHCenter
-        elide: Text.ElideMiddle
-        wrapMode: Text.Wrap
-        text: "Waiting for authorization url"
-    }*/
 
     Rectangle {
         id: auth_url_border
@@ -113,12 +100,8 @@ Rectangle {
 
             selectByMouse: true
 
-            text: {
-                if (auth_url)
-                    auth_url
-                else
-                    waiting_str
-            }
+            text: auth_url ? auth_url : waiting_str
+
         }
     }
 
@@ -152,6 +135,7 @@ Rectangle {
             Component.onCompleted: {
                 //verfier_input.selectAll()
             }
+
         }
     }
 
@@ -214,14 +198,26 @@ Rectangle {
         account_obj.authURLReady.connect(function (url) {
             new_account_dialog.auth_url = url;
         });
+
+        account_obj.authFailed.connect(function (account) {
+            twitter.dismiss_account(account.get_uuid());
+            authFailed();
+            state = ""
+        })
+
+        account_obj.authSuccessful.connect(function (account) {
+            authSuccessful();
+            state = ""
+        })
+
         account_obj.request_auth();
         console.log(account_obj)
     }
 
     onStateChanged: {
         if (new_account_dialog.state == "") {
-            console.log("hiding")
             new_account_dialog.auth_url = "";
+            verifier_input.text = "";
         }
     }
 }

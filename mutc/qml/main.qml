@@ -37,11 +37,13 @@ Rectangle {
             model: twitter.get_model(uuid, type, args)
 
             onNeedTweets: {
+                /*
                 twitter.need_tweets({
                     "uuid": uuid,
                     "type": type,
                     "args": args,
-                });
+                });*/
+                twitter.get_model(uuid, type, args).needTweets()
             }
         }
         width: parent.width
@@ -119,29 +121,6 @@ Rectangle {
                     main_menu.state = "hidden"
             }
         }
-    }
-
-
-
-
-    ListModel {
-        id: tweet_panel_model
-/*
-        ListElement {
-            type: "friends"
-            screen_name: "boringplanet"
-            uuid: ""
-            args: ""
-        }
-        ListElement {
-            type: "friends"
-            account: "boringplanet"
-        }
-        ListElement {
-            type: "friends"
-            account: "boringplanet"
-        }*/
-
     }
 
     ListModel {
@@ -248,6 +227,29 @@ Rectangle {
                 new_account_dialog.init();
             }
         }
+
+        onAuthFailed: {
+            console.log("authfailed");
+            status_dialog.show("Account", "Authentication failed - please try again");
+        }
+
+        onAuthSuccessful: {
+            status_dialog.show("Account", "Account successfully authenticated")
+        }
+    }
+
+    Dialog {
+        id: status_dialog
+        text: ""
+        state: "hidden"
+
+        anchors.centerIn: parent
+
+        function show(title, msg) {
+            text = msg
+            title = title
+            state = "visible";
+        }
     }
 
     Component.onCompleted: {
@@ -270,9 +272,10 @@ Rectangle {
             }
             Utils.changeEntry(tweet_panel_model, "uuid", data.uuid, "screen_name", data.screen_name);
         })
+        /*
         twitter.newSubscription.connect(function (data) {
             console.log("newSubscription" + data.args);
             tweet_panel_model.append(data);
-        })
+        })*/
     }
 }

@@ -4,20 +4,55 @@ Rectangle {
     id: tweet_delegate
 
     radius: 5
-    opacity: 100
 
     color: "#323436"
-    width: 300
-    height: 120
 
-    //property string author: "No nick"
-    //property string tweet_text: "No text"
-    //property date timestamp
-    property bool in_reply: false
-    property string in_reply_to
-    property bool retweet: false
-    property string retweeted_by
-    property string via: ""
+    visible: index != ListView.view.model.rowCount() - 1 || (index == ListView.view.model.rowCount() - 1 && model_busy)
+    opacity: visible ? 1.0 : 0.0
+
+    width: 300
+    height: index != ListView.view.model.rowCount() - 1 ? 120 : 30
+
+    Rectangle {
+        id: load_display
+        visible: index == ListView.view.model.rowCount() - 1
+
+        z: 2
+
+        color: "#323436"
+        radius: 5
+
+        anchors.fill: parent
+
+        Item {
+            anchors.fill: parent
+            visible: model_busy
+/*
+            Text {
+                id: load_text
+                text: "Loading tweets"
+                anchors {
+                    top: parent.top
+                    horizontalCenter: parent.horizontalCenter
+                    margins: 5
+                }
+                height: 22
+                color: "white"
+            }*/
+
+            AnimatedImage {
+                id: load_animation
+                source: "thobber.gif"
+                playing: model_busy
+
+                anchors {
+                    horizontalCenter: parent.horizontalCenter
+                    verticalCenter: parent.verticalCenter
+                    margins: 5
+                }
+            }
+        }
+    }
 
     Image {
         id: twitter_avatar
@@ -105,5 +140,9 @@ Rectangle {
         }
         height: 22
         font.pointSize: twitter_time.font.pointSize
+    }
+
+    Behavior on opacity {
+        NumberAnimation { duration: 250 }
     }
 }

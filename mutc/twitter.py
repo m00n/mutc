@@ -18,20 +18,18 @@
 
 from __future__ import with_statement, division
 
+import sys
+from uuid import uuid4
 from functools import *
 from itertools import *
 
-from path import path
-
 import tweepy
-from functools import wraps
 
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 
-from uuid import uuid4
+from utils import async
 
-import sys
 
 CK = "owLrhjNm3qUOHA1ybLnZzA"
 CS = "lycIVjOXaALggV18Cgec9mOFkDqC1hNXoFxHet5dEg"
@@ -52,41 +50,13 @@ def test():
     return api
 
 
-def async(func):
-    """
-    This decorator turns `func` on the fly into a QRunnable and enqueues
-    it in the global QThreadPool
-    """
-    @wraps(func)
-    def wrapper(*func_args, **func_kwds):
-        def run(self, *args, **kwds):
-            func(*func_args, **func_kwds)
-
-        runnable = type(
-            func.func_name + "/runnable",
-            (QRunnable,),
-            {
-                'run': run,
-            }
-        )()
-        QThreadPool.globalInstance().start(runnable)
-
-    wrapper.sync = func
-    return wrapper
-
-@async
-def zort(a, b, c):
-    import time
-    time.sleep(1.0)
-    print a, b, c
-    raise TypeError("abc")
-
-
 class Account(QObject):
     authURLReady = pyqtSignal('QVariant')
     ready = pyqtSignal()
     connected = pyqtSignal(QObject)
     connectionFailed = pyqtSignal(QObject)
+    authFailed = pyqtSignal(QObject)
+    authSuccessful = pyqtSignal(QObject)
 
     def __init__(self, oauth_key=None, oauth_secret=None, uuid=None):
         QObject.__init__(self)
@@ -100,6 +70,10 @@ class Account(QObject):
         self.api = None
         self.me = None
 
+    def __repr__(self):
+        return "<Account %s>" % (
+            self.me.screen_name if self.me else self.uuid[:4]
+        )
 
     @pyqtSlot(result="QVariant")
     def get_uuid(self):
@@ -120,15 +94,18 @@ class Account(QObject):
     @async
     def set_verifier(self, code):
         print >>sys.stderr, "set_verifier", code
-        self._auth.get_access_token(code)
-        self.oauth_key = self._auth.access_token.key
-        self.oauth_secret = self._auth.access_token.secret
-        print >>sys.stderr, self.uuid
-        print >>sys.stderr, self._auth.access_token.key
-        print >>sys.stderr, self._auth.access_token.secret
-        self.ready.emit()
+        try:
+            self._auth.get_access_token(code)
+        except tweepy.TweepError as error:
+            self.authFailed.emit(self)
+        else:
+            self.authSuccessful.emit(self)
 
-        self.connect()
+            self.oauth_key = self._auth.access_token.key
+            self.oauth_secret = self._auth.access_token.secret
+            self.ready.emit()
+
+            self.connect()
 
     @async
     def connect(self):

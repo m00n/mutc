@@ -6,7 +6,7 @@ Rectangle {
     height: 480
 
     property alias model: tweet_view.model
-    property bool overlay: true
+
     signal needTweets
 
     gradient: Gradient {
@@ -49,6 +49,63 @@ Rectangle {
 
             anchors.verticalCenter: parent.verticalCenter
         }
+
+        Button {
+            id: move_left_button
+            button_text: "<"
+            height: 15
+            width: 15
+
+            anchors.right: move_right_button.left
+            anchors.verticalCenter: parent.verticalCenter
+
+            border {
+                width: 1
+                color: title_rect.border.color
+            }
+            onButtonClicked: {
+                ListView.view.model.move(index, index - 1);
+            }
+        }
+        Button {
+            id: move_right_button
+            button_text: ">"
+            height: 15
+            width: 15
+
+            anchors.right: close_button.left
+            anchors.verticalCenter: parent.verticalCenter
+
+            border {
+                width: 1
+                color: title_rect.border.color
+            }
+
+            onButtonClicked: {
+                ListView.view.model.move(index, index + 1);
+            }
+        }
+        Button {
+            id: close_button
+            button_text: "x"
+            height: 15
+            width: 15
+
+            anchors.right: parent.right
+            anchors.rightMargin: 3
+            anchors.verticalCenter: parent.verticalCenter
+
+            border {
+                width: 1
+                color: title_rect.border.color
+            }
+
+
+            onButtonClicked: {
+                ListView.view.model.remove(index);
+            }
+        }
+
         z: 1
     }
 
@@ -188,4 +245,71 @@ Rectangle {
             }
         }
     }
+<<<<<<< HEAD
+=======
+
+    Timer {
+        id: new_tweet_timeout
+        interval: 3000
+        repeat: false
+        running: false
+    }
+
+    ListModel {
+        id: tweet_model
+
+        ListElement {
+            author: "boringplanet"
+            tweet_text: "Faketweet test das ist ein test blablubb foo bar baz bazinga zort hoot hoot hoot"
+            avatar: "m00n_s.png"
+        }
+        ListElement {
+            author: "boringplanet a"
+            tweet_text: "Faketweet 2"
+            avatar: "m00n_s.png"
+        }
+        /*
+        ListElement {
+            author: "boringplanet a"
+            tweet_text: "Faketweet 2"
+            avatar: "m00n_s.png"
+        }
+        ListElement {
+            author: "boringplanet a"
+            tweet_text: "Faketweet 2"
+            avatar: "m00n_s.png"
+        }
+        ListElement {
+            author: "boringplanet a"
+            tweet_text: "Faketweet 2"
+            avatar: "m00n_s.png"
+        }
+        ListElement {
+            author: "boringplanet a"
+            tweet_text: "gdfg gfdgf http://foo.bar.baz/zort"
+            avatar: "m00n_s.png"
+        }
+        ListElement {
+            author: "boringplanet a"
+            tweet_text: "Faketweet 2"
+            avatar: "m00n_s.png"
+        }
+        ListElement {
+            author: "boringplanet a"
+            tweet_text: "Faketweet 2"
+            avatar: "m00n_s.png"
+        }
+        ListElement {
+            author: "boringplanet a"
+            tweet_text: "Faketweet 2"
+            avatar: "m00n_s.png"
+        }*/
+    }
+
+    Component.onCompleted: {
+        //console.log("Panel");
+        //console.log("> " + pyobj.get_foo() + "<");
+        //console.log("> " + zort() + "<");
+    }
+>>>>>>> master
 }
