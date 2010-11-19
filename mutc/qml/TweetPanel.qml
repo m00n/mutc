@@ -6,8 +6,13 @@ Rectangle {
     height: 480
 
     property alias model: tweet_view.model
+    property bool model_busy
+    property bool overlay
 
     signal needTweets
+    signal reply(string id)
+    signal retweet(string id)
+    signal destroy(string id)
 
     gradient: Gradient {
         GradientStop {
@@ -29,7 +34,6 @@ Rectangle {
             console.log("!")
             overlay = false
         }
-        //z: 10
     }
 
     Toolbar {
@@ -185,6 +189,8 @@ Rectangle {
                             margins: 15
                         }
                         z: 7
+
+                        onButtonClicked: tweet_panel.retweet()
                     }
 
                     Button {
@@ -202,6 +208,7 @@ Rectangle {
                         }
                         z: 7
 
+                        onButtonClicked: tweet_panel.reply()
                     }
 
                     Button {
@@ -216,6 +223,8 @@ Rectangle {
                             margins: 15
                         }
                         z: 7
+
+                        onButtonClicked: tweet_panel.destroy()
 
                     }
                 }
@@ -245,71 +254,4 @@ Rectangle {
             }
         }
     }
-<<<<<<< HEAD
-=======
-
-    Timer {
-        id: new_tweet_timeout
-        interval: 3000
-        repeat: false
-        running: false
-    }
-
-    ListModel {
-        id: tweet_model
-
-        ListElement {
-            author: "boringplanet"
-            tweet_text: "Faketweet test das ist ein test blablubb foo bar baz bazinga zort hoot hoot hoot"
-            avatar: "m00n_s.png"
-        }
-        ListElement {
-            author: "boringplanet a"
-            tweet_text: "Faketweet 2"
-            avatar: "m00n_s.png"
-        }
-        /*
-        ListElement {
-            author: "boringplanet a"
-            tweet_text: "Faketweet 2"
-            avatar: "m00n_s.png"
-        }
-        ListElement {
-            author: "boringplanet a"
-            tweet_text: "Faketweet 2"
-            avatar: "m00n_s.png"
-        }
-        ListElement {
-            author: "boringplanet a"
-            tweet_text: "Faketweet 2"
-            avatar: "m00n_s.png"
-        }
-        ListElement {
-            author: "boringplanet a"
-            tweet_text: "gdfg gfdgf http://foo.bar.baz/zort"
-            avatar: "m00n_s.png"
-        }
-        ListElement {
-            author: "boringplanet a"
-            tweet_text: "Faketweet 2"
-            avatar: "m00n_s.png"
-        }
-        ListElement {
-            author: "boringplanet a"
-            tweet_text: "Faketweet 2"
-            avatar: "m00n_s.png"
-        }
-        ListElement {
-            author: "boringplanet a"
-            tweet_text: "Faketweet 2"
-            avatar: "m00n_s.png"
-        }*/
-    }
-
-    Component.onCompleted: {
-        //console.log("Panel");
-        //console.log("> " + pyobj.get_foo() + "<");
-        //console.log("> " + zort() + "<");
-    }
->>>>>>> master
 }
