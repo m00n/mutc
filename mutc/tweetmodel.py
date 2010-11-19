@@ -99,6 +99,11 @@ class TweetModel(QAbstractListModel):
         self._busy = value
 
     busy = pyqtProperty(bool, is_busy, set_busy, notify=busyStateChanged)
+    count = pyqtProperty(int, rowCount)
+
+    @pyqtSlot(result=unicode)
+    def idForIndex(self, index):
+        return self.tweets[index].id_str
 
     def oldestId(self):
         return self.tweets[-1].id
@@ -124,6 +129,9 @@ class TweetModel(QAbstractListModel):
             return self.data_null(role)
         else:
             status = self.tweets[index.row()]
+
+            if role == self.IdRole:
+                return status.id_str
 
             if isinstance(status, tweepy.SearchResult):
                 return self.data_search(status, role)
