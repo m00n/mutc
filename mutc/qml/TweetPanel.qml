@@ -8,11 +8,14 @@ Rectangle {
     property alias model: tweet_view.model
     property bool model_busy
     property bool overlay
+    property bool locked
+    property Item tweetView: tweet_view
 
     signal needTweets
-    signal reply(string id)
-    signal retweet(string id)
-    signal destroy(string id)
+    signal reply()
+    signal retweet(bool comment)
+    signal removeTweet()
+    signal panelsLocked
 
     gradient: Gradient {
         GradientStop {
@@ -136,22 +139,26 @@ Rectangle {
             MouseArea {
                 anchors.fill: parent
                 onDoubleClicked: {
-                    var coords = ListView.view.mapFromItem(parent, mouseX, mouseY);
-                    var idx = ListView.view.indexAt(coords.x, coords.y);
+                    if (!locked) {
+                        var coords = ListView.view.mapFromItem(parent, mouseX, mouseY);
+                        var idx = ListView.view.indexAt(coords.x, coords.y);
 
-                    if (idx == ListView.view.currentIndex && overlay) {
-                        overlay = false;
-                    } else {
-                        overlay = true;
-                        ListView.view.currentIndex = idx;
+                        if (idx == ListView.view.currentIndex && overlay) {
+                            overlay = false;
+                        } else {
+                            overlay = true;
+                            ListView.view.currentIndex = idx;
+                        }
                     }
                 }
             }
         }
 
         highlight: Rectangle {
+            id: overlay_item
             color: "#00000000"
             opacity: overlay ? 1 : 0
+            state: "default"
             z: 5
 
             Rectangle {
@@ -170,7 +177,21 @@ Rectangle {
                     verticalCenter: parent.verticalCenter
                 }
 
+                AnimatedImage {
+                    id: thobber
+                    source: "thobber.gif"
+                    anchors {
+                        horizontalCenter: parent.horizontalCenter
+                        verticalCenter: parent.verticalCenter
+                    }
+                    opacity: 0
+                }
+
                 Item {
+                    id: action_panel
+
+                    visible: true
+
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
                     anchors.bottom: parent.bottom
@@ -190,7 +211,7 @@ Rectangle {
                         }
                         z: 7
 
-                        onButtonClicked: tweet_panel.retweet()
+                        onButtonClicked: overlay_item.state = "retweet"
                     }
 
                     Button {
@@ -208,11 +229,14 @@ Rectangle {
                         }
                         z: 7
 
-                        onButtonClicked: tweet_panel.reply()
+                        onButtonClicked: {
+                            overlay = false
+                            tweet_panel.reply()
+                        }
                     }
 
                     Button {
-                        id: delete_button
+                        id: delete_menu_button
                         button_text: "x"
                         default_color: "#000000"
                         width: 30
@@ -224,12 +248,184 @@ Rectangle {
                         }
                         z: 7
 
-                        onButtonClicked: tweet_panel.destroy()
+                        onButtonClicked: {
+                            overlay_item.state = "delete"
+                        }
 
+                    }
+                }
+                Item {
+                    id: rt_panel
+
+                    visible: false
+                    opacity: visible ? 1 : 0
+
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    width: 300
+
+                    z: 7
+                    Button {
+                        id: rt_comment_button
+                        button_text: "with comment"
+                        default_color: "#000000"
+                        width: 120
+                        height: parent.height - 10
+                        anchors {
+                            verticalCenter: parent.verticalCenter
+                            left: parent.horizontalCenter
+                            margins: 15
+                        }
+                        z: 7
+
+                        onButtonClicked: {
+                            overlay = false
+                            tweet_panel.retweet(true)
+                        }
+                    }
+                    Button {
+                        id: rt_default_button
+                        button_text: "normal"
+                        default_color: "#000000"
+                        width: 120
+                        height: parent.height - 10
+                        anchors {
+                            verticalCenter: parent.verticalCenter
+                            right: parent.horizontalCenter
+                            margins: 15
+                        }
+                        z: 7
+
+                        onButtonClicked: {
+                            //overlay = false
+                            overlay_item.state = "busy"
+                            tweet_panel.retweet(false)
+                        }
+                    }
+                }
+
+                Item {
+                    id: delete_panel
+
+                    visible: false
+                    opacity: visible ? 1 : 0
+
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    width: 300
+
+                    z: 7
+                    Button {
+                        id: cancel_delete_button
+                        button_text: "cancel"
+                        default_color: "#000000"
+                        width: 120
+                        height: parent.height - 10
+                        anchors {
+                            verticalCenter: parent.verticalCenter
+                            left: parent.horizontalCenter
+                            margins: 15
+                        }
+                        z: 7
+
+                        onButtonClicked: {
+                            overlay = false
+                        }
+                    }
+                    Button {
+                        id: delete_button
+                        button_text: "delete"
+                        default_color: "#000000"
+                        width: 120
+                        height: parent.height - 10
+                        anchors {
+                            verticalCenter: parent.verticalCenter
+                            right: parent.horizontalCenter
+                            margins: 15
+                        }
+                        z: 7
+
+                        onButtonClicked: {
+                            overlay_item.state = "busy"
+                            tweet_panel.removeTweet()
+                        }
                     }
                 }
 
             }
+
+            states: [
+                State {
+                    name: "default"
+                    when: overlay
+                    PropertyChanges {
+                        target: rt_panel
+                        visible: false
+                    }
+                    PropertyChanges {
+                        target: action_panel
+                        visible: true
+                    }
+                    PropertyChanges {
+                        target: delete_panel
+                        visible: false
+                    }
+
+                },
+                State {
+                    name: "busy"
+                    PropertyChanges {
+                        target: thobber
+                        opacity: 1
+                        playing: true
+                    }
+                    PropertyChanges {
+                        target: rt_panel
+                        opacity: 0
+                    }
+                    PropertyChanges {
+                        target: delete_panel
+                        opacity: 0
+                    }
+                    PropertyChanges {
+                        target: action_panel
+                        opacity: 0
+                    }
+                    PropertyChanges {
+                        target: tweet_panel
+                        locked: true
+                    }
+
+
+                },
+                State {
+                    name: "retweet"
+                    PropertyChanges {
+                        target: rt_panel
+                        visible: true
+                    }
+                    PropertyChanges {
+                        target: action_panel
+                        visible: false
+                    }
+
+                },
+                State {
+                    name: "delete"
+                    PropertyChanges {
+                        target: delete_panel
+                        visible: true
+                    }
+                    PropertyChanges {
+                        target: action_panel
+                        visible: false
+                    }
+
+                }
+            ]
+
 
             Behavior on opacity {
                 NumberAnimation { duration: 250 }
