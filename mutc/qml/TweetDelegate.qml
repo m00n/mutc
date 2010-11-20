@@ -109,7 +109,6 @@ Rectangle {
 
         font.pointSize: twitter_name.font.pointSize - 3
         height: 22
-        width: parent.width / 4
         color: "white"
 
         x: 5
