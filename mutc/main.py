@@ -374,6 +374,8 @@ class Twitter(QObject):
 
     newTweetsForModel = pyqtSignal(TweetModel, list, int)
 
+    requestSent = pyqtSignal()
+
     test = pyqtSignal("QVariant")
 
     def __init__(self):
@@ -425,15 +427,18 @@ class Twitter(QObject):
 
     @pyqtSlot("QVariant")
     @async
-    def tweet(self, tweet):
-        """
-        {
-            text:
-            accounts: []
-        }
-        """
-        for account in imap(self.account, tweet["accounts"]):
-            account.api.update_status(tweet["text"], tweet["in_reply"])
+    def tweet(self, accounts, text, in_reply=None):
+        for account in imap(self.account, accounts):
+            # Try sending messages
+            while True:
+                try:
+                    account.api.update_status(text, in_reply)
+                except tweepy.TweepError:
+                    time.sleep(5.0)
+                else:
+                    break
+
+        requestSent.emit()
 
     def announce_account(self, account):
         print account
