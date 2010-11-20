@@ -8,6 +8,8 @@ Rectangle {
     width: 320
     height: 480
 
+    property bool locked: false
+
     signal guiReady
 
     gradient: Gradient {
@@ -37,15 +39,48 @@ Rectangle {
             model: twitter.get_model(uuid, type, args)
 
             onNeedTweets: {
-                /*
-                twitter.need_tweets({
-                    "uuid": uuid,
-                    "type": type,
-                    "args": args,
-                });*/
                 twitter.get_model(uuid, type, args).needTweets()
             }
+
+            onReply: {
+                var model = twitter.get_model(uuid, type, args)
+                var tweet = model.get(tweet_panel.tweetView.currentIndex)
+
+                twitter_dialog.opacity = 1
+                twitter_dialog.in_reply = tweet.tweet_id
+                twitter_dialog.text = "@" + tweet.author.screen_name + " "
+                twitter_dialog.edit.cursorPosition = twitter_dialog.text.length
+            }
+
+            onRetweet: {
+                var model = twitter.get_model(uuid, type, args)
+                var tweet = model.get(tweet_panel.tweetView.currentIndex)
+                if (comment) {
+                    twitter_dialog.state = "visible"
+                    twitter_dialog.text = "RT @" + tweet.author.screen_name + ": " + tweet.message
+                    twitter_dialog.edit.cursorPosition = 0
+                } else {
+                    //twitter.retweet(tweet.tweet_id)
+                }
+            }
+
+            onRemoveTweet: {
+                var model = twitter.get_model(uuid, type, args)
+                var tweet = model.get(tweet_panel.tweetView.currentIndex)
+                twitter.destroy_tweet(tweet.id)
+            }
+
+            onPanelsLocked: {
+                locked = true
+            }
+            Component.onCompleted: {
+                main_window.lockedChanged.connect(function () {
+                    tweet_panel.locked = locked
+                    tweet_panel.overlay = false
+                })
+            }
         }
+
         width: parent.width
 
         anchors.top: main_window.top
@@ -68,10 +103,10 @@ Rectangle {
             width: 25
             height: toolbar_row.height
             onButtonClicked: {
-                if (twitter_dialog.opacity == 1)
-                    twitter_dialog.opacity = 0;
+                if (twitter_dialog.state == "visible")
+                    twitter_dialog.state = "hidden";
                 else
-                    twitter_dialog.opacity = 1;
+                    twitter_dialog.state = "visible";
             }
             anchors {
                 left: parent.left
@@ -272,10 +307,8 @@ Rectangle {
             }
             Utils.changeEntry(tweet_panel_model, "uuid", data.uuid, "screen_name", data.screen_name);
         })
-        /*
-        twitter.newSubscription.connect(function (data) {
-            console.log("newSubscription" + data.args);
-            tweet_panel_model.append(data);
-        })*/
+        twitter.requestSent.connect(function () {
+            locked = false
+        })
     }
 }
