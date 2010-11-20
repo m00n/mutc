@@ -59,8 +59,10 @@ class TweetModel(QAbstractListModel):
     IsRetweetRole = Qt.UserRole + 3
     RetweetByRole = Qt.UserRole + 4
     ModelBusyRole = Qt.UserRole + 5
+    IdRole = Qt.UserRole + 6
 
     busyStateChanged = pyqtSignal(bool)
+    countChanged = pyqtSignal(int)
 
     def __init__(self, parent, subscription):
         QAbstractListModel.__init__(self, parent)
@@ -84,6 +86,7 @@ class TweetModel(QAbstractListModel):
             self.IsRetweetRole: "is_retweet",
             self.RetweetByRole: "retweet_by",
             self.ModelBusyRole: "model_busy",
+            self.IdRole: "tweet_id",
         })
 
     def _on_old_tweets_recv(self, subscription, tweets):
@@ -99,7 +102,6 @@ class TweetModel(QAbstractListModel):
         self._busy = value
 
     busy = pyqtProperty(bool, is_busy, set_busy, notify=busyStateChanged)
-    count = pyqtProperty(int, rowCount)
 
     @pyqtSlot(result=unicode)
     def idForIndex(self, index):
@@ -116,10 +118,13 @@ class TweetModel(QAbstractListModel):
         for i, tweet in enumerate(tweets):
             self.tweets.insert(pos + i, tweet)
         self.endInsertRows()
+        self.countChanged.emit(len(self.tweets))
 
     @pyqtSlot(result="QVariant")
     def rowCount(self, parent=None):
         return len(self.tweets) + 1
+
+    count = pyqtProperty(int, rowCount, notify=countChanged)
 
     def data(self, index, role):
         if role == self.ModelBusyRole:
@@ -205,6 +210,14 @@ class TweetModel(QAbstractListModel):
 
         async(self.subscription.tweets_before)(self.oldestId())
 
+    @pyqtSlot("QVariant", result="QVariant")
+    def get(self, index):
+        data = {}
+        model_index = self.index(index)
+        for role, name in self.roleNames().iteritems():
+            data[unicode(name)] = self.data(model_index, role)
+        print "YY", data
+        return data
 
 def main():
     import sys
