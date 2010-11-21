@@ -12,9 +12,9 @@ Rectangle {
     property Item tweetView: tweet_view
 
     signal needTweets
-    signal reply()
+    signal reply
     signal retweet(bool comment)
-    signal removeTweet()
+    signal removeTweet
     signal panelsLocked
 
     gradient: Gradient {
