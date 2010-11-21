@@ -18,6 +18,8 @@
 
 from __future__ import with_statement, division
 
+import os
+
 from functools import wraps
 
 from PyQt4.Qt import QThreadPool, QRunnable
@@ -43,3 +45,13 @@ def async(func):
 
     wrapper.sync = func
     return wrapper
+
+def discover_proxy():
+    try:
+        proxy_str = os.environ["HTTP_PROXY"]
+    except KeyError:
+        return None, None
+    else:
+        host, port = proxy_str.split(":")
+        print "proxy", proxy_str
+        return host, int(port)
