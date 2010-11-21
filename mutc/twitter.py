@@ -20,6 +20,7 @@ from __future__ import with_statement, division
 
 import sys
 from uuid import uuid4
+from time import sleep
 from functools import *
 from itertools import *
 
@@ -28,27 +29,10 @@ import tweepy
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 
-from utils import async
-
+from utils import LockableDict, async
 
 CK = "owLrhjNm3qUOHA1ybLnZzA"
 CS = "lycIVjOXaALggV18Cgec9mOFkDqC1hNXoFxHet5dEg"
-
-def test():
-    auth = tweepy.OAuthHandler(CK, CS)
-
-    print auth.get_authorization_url()
-
-    # Get access token
-    auth.get_access_token(raw_input('verifier ~> '))
-
-    print auth.access_token.key
-    print auth.access_token.secret
-
-    # Construct the API instance
-    api = tweepy.API(auth)
-    return api
-
 
 class Account(QObject):
     authURLReady = pyqtSignal('QVariant')
@@ -123,13 +107,10 @@ class Account(QObject):
 
         if self.api.test():
             self.connected.emit(self)
-            print self.me.screen_name, "api.test passed"
         else:
             # XXX
             self.connectionFailed.emit(self)
-            print self.me.screen_name, "api.test faild"
 
-    #@pyqtSlot(result="QVariant")
     def simplify(self):
         print "account.simplify", self.me, bool(self.me)
         return {
@@ -140,4 +121,184 @@ class Account(QObject):
             'connected': self.valid and self.api,
             'active': False
         }
+
+
+class Twitter(QObject):
+    newTweets = pyqtSignal("QVariant")
+    newSubscription = pyqtSignal("QVariant")
+
+    announceAccount = pyqtSignal("QVariant")
+    accountConnected = pyqtSignal("QVariant")
+    accountAuthFailed = pyqtSignal("QVariant")
+    accountCreated = pyqtSignal(QObject)
+
+    newTweetsForModel = pyqtSignal(TweetModel, list, int)
+
+    test = pyqtSignal("QVariant")
+
+    def __init__(self):
+        QObject.__init__(self)
+
+        self.models = {}
+
+        self.accounts = {}
+        self.ordered_accounts = []
+
+        self.subscriptions = LockableDict()
+
+        self.panel_model = PanelModel(
+            self,
+            self.subscriptions,
+        )
+
+        self.thread = TwitterThread(self, self.subscriptions, Logger("thread"))
+        self.thread.start()
+
+    def on_account_connected(self, account):
+        self.accountConnected.emit(account.simplify())
+        self.panel_model.setScreenName(account.uuid, account.me.screen_name)
+
+    @pyqtSlot("QVariant")
+    def subscribe(self, request):
+        subscription = create_subscription(
+            request["type"],
+            self.accounts[request["uuid"]],
+            request.get("args", "")
+        )
+
+        key = (
+            request["uuid"],
+            request["type"],
+            request["args"],
+        )
+
+        self.models[key] = TweetModel(self, subscription)
+
+        if subscription.account.me:
+            request['screen_name'] = subscription.account.me.screen_name
+        else:
+            request['screen_name'] = subscription.account.uuid[:4]
+
+        self.newSubscription.emit(request)
+        self.panel_model.addPanel(subscription)
+        self.thread.force_check.set()
+
+    @pyqtSlot("QVariant")
+    @async
+    def tweet(self, tweet):
+        """
+        {
+            text:
+            accounts: []
+        }
+        """
+        for account in imap(self.account, tweet["accounts"]):
+            account.api.update_status(tweet["text"], tweet["in_reply"])
+
+    def announce_account(self, account):
+        print account
+        print account.simplify()
+        self.announceAccount.emit(account.simplify())
+
+    @pyqtSlot(result=QObject)
+    def new_account(self):
+        account = Account()
+        account.ready.connect(partial(self.announce_account, account))
+        account.authFailed.connect(
+            lambda account: self.accountAuthFailed.emit(account.simplify())
+        )
+        self.add_account(account)
+        self.accountCreated.emit(account)
+        return account
+
+    def add_account(self, account):
+        self.ordered_accounts.append(account)
+        self.accounts[account.uuid] = account
+        account.connected.connect(self.on_account_connected)
+
+    @pyqtSlot("QVariant", result=QObject)
+    def account(self, uuid):
+        return self.accounts[uuid]
+
+    @pyqtSlot("QVariant")
+    def dismiss_account(self, uuid):
+        account = self.accounts.pop(uuid)
+        self.ordered_accounts.remove(account)
+
+    @pyqtSlot("QVariant")
+    @async
+    def need_tweets(self, request):
+        print "need_tweets", request
+        key = (
+            request["uuid"],
+            request["type"],
+            request["args"],
+        )
+        subscription = self.subscriptions[key]
+        model = self.models[key]
+
+        tweets = subscription.tweets_before(model.oldestId())
+        self.newTweetsForModel.emit(model, tweets, -1)
+
+    def start_sync(self):
+        """
+        Emit accounts & saved options to gui
+        """
+        for account in self.ordered_accounts:
+            self.announceAccount.emit(account.simplify())
+            account.connect()
+
+    @pyqtSlot("QVariant", "QVariant", "QVariant", result=QObject)
+    def get_model(self, uuid, panel_type, args):
+        return self.models[uuid, panel_type, args]
+
+
+class TwitterThread(QThread):
+    newTweets = pyqtSignal(object, object)
+
+    def __init__(self, parent, subscriptions, logger=None):
+        QThread.__init__(self, parent)
+        self.subscriptions = subscriptions
+        self.subscriptions_lock = threading.Lock()
+
+        self.ticks = 1
+        self.tick_count = 60
+
+        self.running = True
+        self.force_check = threading.Event()
+
+        self.logger = logger
+
+    def run(self):
+        while self.running:
+            with self.subscriptions:
+                self.check_subscriptions()
+
+            self.stepped_sleep()
+
+    def check_subscriptions(self):
+        for subscription in self.subscriptions.values():
+            if subscription.account.api:
+                try:
+                    tweets = subscription.update()
+                except tweepy.TweepError as error:
+                    if self.logger:
+                        self.logger.exception("Error while fetching tweets")
+                else:
+                    if tweets:
+                        self.logger.debug("{0} new tweets for {1}/{2}",
+                            len(tweets),
+                            subscription.account,
+                            subscription.subscription_type
+                        )
+                        self.newTweets.emit(subscription, tweets)
+
+
+    def stepped_sleep(self):
+        for x in xrange(self.tick_count):
+            sleep(self.ticks)
+            if self.force_check.is_set():
+                self.force_check.clear()
+                break
+
 

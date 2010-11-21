@@ -198,33 +198,101 @@ class TweetModel(QAbstractListModel):
         async(self.subscription.tweets_before)(self.oldestId())
 
 
-def main():
-    import sys
-    app = QApplication(sys.argv)
+class PanelModel(QAbstractListModel):
+    UUIDRole = Qt.UserRole
+    TypeRole = Qt.UserRole + 1
+    ArgsRole = Qt.UserRole + 2
+    ScreenNameRole = Qt.UserRole + 3
+    TweetModelRole = Qt.UserRole + 4
 
-    declarative_view = QDeclarativeView()
-    declarative_view.setViewport(QGLWidget())
-    declarative_view.setResizeMode(QDeclarativeView.SizeRootObjectToView)
+    def __init__(self, parent, subscriptions):
+        QAbstractListModel.__init__(self, parent)
 
-    root_context = declarative_view.rootContext()
+        self.subscriptions = subscriptions
+        self.panels = []
 
-    model = TweetModel()
-    #model.insertTweets([QTweet(FakeStatus)], 0)
+        self.role_to_key = {
+            self.UUIDRole: "uuid",
+            self.TypeRole: "type",
+            self.ArgsRole: "args",
+            self.ScreenNameRole: "screen_name",
+        }
 
-    root_context.setContextProperty('tweetmodel', model)
-    #root_context.setContextProperty('tweethon', app)
-    #root_context.setContextProperty('tweet_store', tweet_store)
+        self.setRoleNames(self.role_to_key)
 
-    declarative_view.setSource(QUrl.fromLocalFile("testmodels.qml"))
+    def rowCount(self, parent=None):
+        return len(self.panels)
 
-    #root_object = declarative_view.rootObject()
-    #root_object.coonect(root_object, SIGNAL('guiReady()'), )
+    def addPanel(self, subscription, pos=-1):
+        if pos == -1:
+            pos = self.rowCount()
 
-    #app.load_accounts()
+        self.beginInsertRows(QModelIndex(), pos, pos)
 
-    declarative_view.show()
+        self.panels.append(subscription)
+        with self.subscriptions:
+            self.subscriptions[subscription.key()] = subscription
 
-    return app.exec_()
+        self.endInsertRows()
 
-if __name__ == '__main__':
-    main()
+    def data(self, index, role):
+        subscription = self.panels[index.row()]
+        account = subscription.account
+
+        if account.me:
+            screen_name = account.me.screen_name
+        else:
+            screen_name = account.uuid[:4]
+
+        return {
+            self.UUIDRole: subscription.account.uuid,
+            self.TypeRole: subscription.subscription_type,
+            self.ArgsRole: subscription.args,
+            self.ScreenNameRole: screen_name
+        }[role]
+
+    @pyqtSlot(int, int)
+    def move(self, idx_from, idx_to):
+        print idx_from, idx_to
+        list_idx_from = idx_from
+        list_idx_to = idx_to
+
+        rows = self.rowCount()
+
+        if idx_from < 0 or idx_to < 0 or idx_from >= rows or idx_to >= rows:
+            return
+
+        if idx_from < idx_to:
+            idx_to, idx_from = idx_from, idx_to
+            list_idx_to, list_idx_from = list_idx_from, list_idx_to
+
+        if self.beginMoveRows(
+            QModelIndex(), idx_from, idx_from,
+            QModelIndex(), idx_to,
+        ):
+            print self.panels
+
+            panel = self.panels[list_idx_from]
+            self.panels[list_idx_from] = self.panels[list_idx_to]
+            self.panels[list_idx_to] = panel
+
+            print self.panels
+
+            self.endMoveRows()
+
+    @pyqtSlot(int)
+    def remove(self, idx):
+        self.beginRemoveRows(QModelIndex(), idx, idx)
+
+        subscription = self.panels.pop(idx)
+        with self.subscriptions:
+            self.subscriptions.pop(subscription.key())
+
+        self.endRemoveRows()
+
+        return subscription
+
+    def setScreenName(self, uuid, screen_name):
+        for row, subscription in enumerate(self.panels):
+            if subscription.account.uuid == uuid:
+                self.dataChanged.emit(self.index(row), self.index(row))
