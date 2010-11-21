@@ -65,7 +65,6 @@ class TwitterThread(QThread):
     def __init__(self, parent, subscriptions, logger=None):
         QThread.__init__(self, parent)
         self.subscriptions = subscriptions
-        self.subscriptions_lock = threading.Lock()
 
         self.ticks = 1
         self.tick_count = 60
@@ -77,13 +76,15 @@ class TwitterThread(QThread):
 
     def run(self):
         while self.running:
-            with self.subscriptions:
-                self.check_subscriptions()
-
+            self.check_subscriptions()
             self.stepped_sleep()
 
     def check_subscriptions(self):
-        for subscription in self.subscriptions.values():
+        # Make a copy of subscription's values while locked
+        with self.subscriptions:
+            subscriptions = self.subscriptions.values()
+
+        for subscription in subscription:
             if subscription.account.api:
                 try:
                     tweets = subscription.update()
@@ -106,7 +107,6 @@ class TwitterThread(QThread):
             if self.force_check.is_set():
                 self.force_check.clear()
                 break
-
 
 
 class Subscription(QObject):
