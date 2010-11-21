@@ -39,7 +39,7 @@ import webbrowser
 from time import sleep, strptime
 from threading import Lock
 from twitter import Account
-from utils import async
+from utils import async, discover_proxy
 
 import json
 
@@ -371,6 +371,7 @@ class Twitter(QObject):
     announceAccount = pyqtSignal("QVariant")
     accountConnected = pyqtSignal("QVariant")
     accountAuthFailed = pyqtSignal("QVariant")
+    accountCreated = pyqtSignal(QObject)
 
     newTweetsForModel = pyqtSignal(TweetModel, list, int)
 
@@ -448,6 +449,7 @@ class Twitter(QObject):
             lambda account: self.accountAuthFailed.emit(account.simplify())
         )
         self.add_account(account)
+        self.accountCreated.emit(account)
         return account
 
     def add_account(self, account):
@@ -498,7 +500,9 @@ class App(QApplication):
     def __init__(self, args, twitter):
         QApplication.__init__(self, args)
 
+        self.proxy_host, self.proxy_port = discover_proxy()
         self.twitter = twitter
+        self.twitter.accountCreated.connect(self.apply_proxy)
 
         self.data_path = path('~/.mutc').expand()
 
@@ -506,6 +510,10 @@ class App(QApplication):
             self.data_path.mkdir()
 
         self.aboutToQuit.connect(self._on_shutdown)
+
+    def apply_proxy(self, account):
+        account.proxy_host = self.proxy_host
+        account.proxy_port = self.proxy_port
 
     def load_accounts(self):
         try:
@@ -515,7 +523,9 @@ class App(QApplication):
             pass
         else:
             for accout_data in accounts:
-                self.twitter.add_account(Account(*accout_data))
+                account = Account(*accout_data)
+                self.apply_proxy(account)
+                self.twitter.add_account(account)
 
     def save_accounts(self):
         accounts = []
@@ -566,6 +576,26 @@ class App(QApplication):
         return webbrowser.open_new_tab(url)
 
 
+class ProxyNetworkAccessManagerFactory(QDeclarativeNetworkAccessManagerFactory):
+    def __init__(self, proxy_host, proxy_port):
+        QDeclarativeNetworkAccessManagerFactory.__init__(self)
+        self.proxy_host, self.proxy_port = proxy_host, proxy_port
+
+    def create(self, parent):
+        network = QNetworkAccessManager(parent)
+
+        if self.proxy_host and self.proxy_port:
+            print "pnacm.create", self.proxy_host, self.proxy_port
+            proxy = QNetworkProxy()
+            proxy.setType(QNetworkProxy.HttpProxy)
+            proxy.setHostName(self.proxy_host)
+            proxy.setPort(self.proxy_port)
+
+            network.setProxy(proxy)
+
+        return network
+
+
 def main():
     twitter = Twitter()
     app = App(sys.argv, twitter)
@@ -573,6 +603,9 @@ def main():
     declarative_view = QDeclarativeView()
     declarative_view.setViewport(QGLWidget())
     declarative_view.setResizeMode(QDeclarativeView.SizeRootObjectToView)
+
+    factory = ProxyNetworkAccessManagerFactory(app.proxy_host, app.proxy_port)
+    declarative_view.engine().setNetworkAccessManagerFactory(factory)
 
     root_context = declarative_view.rootContext()
     root_context.setContextProperty('twitter', twitter)
