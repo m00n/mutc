@@ -67,6 +67,8 @@ class Account(QObject):
 
         self._auth = tweepy.OAuthHandler(CK, CS)
 
+        self.proxy_host, self.proxy_port = None, None
+
         self.api = None
         self.me = None
 
@@ -110,7 +112,11 @@ class Account(QObject):
     @async
     def connect(self):
         self._auth.set_access_token(self.oauth_key, self.oauth_secret)
-        self.api = tweepy.API(self._auth)
+        self.api = tweepy.API(
+            self._auth,
+            proxy_host=self.proxy_host,
+            proxy_port=self.proxy_port
+        )
         self.me = self.api.me()
 
         print self.me.screen_name, "connected ->", self.api.test()
