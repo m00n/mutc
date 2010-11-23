@@ -120,6 +120,7 @@ Rectangle {
         id: tweet_view
         model: tweet_model
         spacing: 2
+        highlightFollowsCurrentItem: false
 
         anchors {
             top: title_rect.bottom
@@ -140,11 +141,13 @@ Rectangle {
                 anchors.fill: parent
                 onDoubleClicked: {
                     if (!locked) {
-                        var coords = ListView.view.mapFromItem(parent, mouseX, mouseY);
+                        var coords = ListView.view.mapFromItem(parent, mouseX, mouseY + tweetView.contentY);
                         var idx = ListView.view.indexAt(coords.x, coords.y);
 
                         if (idx == ListView.view.currentIndex && overlay) {
-                            overlay = false;
+                            overlay = false
+                        } else if (idx != ListView.view.currentIndex && overlay) {
+                            overlay = false
                         } else {
                             overlay = true;
                             ListView.view.currentIndex = idx;
@@ -160,6 +163,9 @@ Rectangle {
             opacity: overlay ? 1 : 0
             state: "default"
             z: 5
+            y: tweet_view.currentItem.y
+            width: tweet_view.width
+            height: tweet_view.currentItem.height
 
             Rectangle {
                 color: "steelblue"
