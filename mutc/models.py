@@ -213,7 +213,6 @@ class TweetModel(QAbstractListModel):
         model_index = self.index(index)
         for role, name in self.roleNames().iteritems():
             data[unicode(name)] = self.data(model_index, role)
-        print "YY", data
         return data
 
 class PanelModel(QAbstractListModel):

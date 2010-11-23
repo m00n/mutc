@@ -136,7 +136,7 @@ class Twitter(QObject):
 
     newTweetsForModel = pyqtSignal(TweetModel, list, int)
 
-    test = pyqtSignal("QVariant")
+    requestSent = pyqtSignal()
 
     def __init__(self):
         QObject.__init__(self)
@@ -194,8 +194,16 @@ class Twitter(QObject):
             accounts: []
         }
         """
-        for account in imap(self.account, tweet["accounts"]):
-            account.api.update_status(tweet["text"], tweet["in_reply"])
+        sleep(1.0)
+        self.requestSent.emit()
+        #for account in imap(self.account, tweet["accounts"]):
+            #account.api.update_status(tweet["text"], tweet["in_reply"])
+
+    @pyqtSlot("QVariant")
+    @async
+    def retweet(self, tweet_id):
+        sleep(6.0)
+        self.requestSent.emit()
 
     def announce_account(self, account):
         print account

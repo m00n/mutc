@@ -60,7 +60,7 @@ Rectangle {
                     twitter_dialog.text = "RT @" + tweet.author.screen_name + ": " + tweet.message
                     twitter_dialog.edit.cursorPosition = 0
                 } else {
-                    //twitter.retweet(tweet.tweet_id)
+                    twitter.retweet(tweet.tweet_id);
                 }
             }
 
@@ -71,12 +71,14 @@ Rectangle {
             }
 
             onPanelsLocked: {
-                locked = true
+                console.log("PANELS LOCKED")
+                main_window.locked = true
             }
             Component.onCompleted: {
                 main_window.lockedChanged.connect(function () {
-                    tweet_panel.locked = locked
-                    tweet_panel.overlay = false
+                    console.log("mw.lockedChanged" + main_window.locked);
+                    tweet_panel.locked = main_window.locked
+                    tweet_panel.overlay = main_window.locked
                 })
             }
         }
@@ -308,6 +310,7 @@ Rectangle {
             Utils.changeEntry(tweet_panel_model, "uuid", data.uuid, "screen_name", data.screen_name);
         })
         twitter.requestSent.connect(function () {
+            console.log("REQ send l=" + locked)
             locked = false
         })
     }

@@ -300,6 +300,7 @@ Rectangle {
                         onButtonClicked: {
                             //overlay = false
                             overlay_item.state = "busy"
+                            tweet_panel.panelsLocked()
                             tweet_panel.retweet(false)
                         }
                     }
