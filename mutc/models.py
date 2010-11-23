@@ -56,8 +56,10 @@ class TweetModel(QAbstractListModel):
     IsRetweetRole = Qt.UserRole + 3
     RetweetByRole = Qt.UserRole + 4
     ModelBusyRole = Qt.UserRole + 5
+    IdRole = Qt.UserRole + 6
 
     busyStateChanged = pyqtSignal(bool)
+    countChanged = pyqtSignal(int)
 
     def __init__(self, parent, subscription):
         QAbstractListModel.__init__(self, parent)
@@ -81,6 +83,7 @@ class TweetModel(QAbstractListModel):
             self.IsRetweetRole: "is_retweet",
             self.RetweetByRole: "retweet_by",
             self.ModelBusyRole: "model_busy",
+            self.IdRole: "tweet_id",
         })
 
     def _on_old_tweets_recv(self, subscription, tweets):
@@ -97,6 +100,10 @@ class TweetModel(QAbstractListModel):
 
     busy = pyqtProperty(bool, is_busy, set_busy, notify=busyStateChanged)
 
+    @pyqtSlot(result=unicode)
+    def idForIndex(self, index):
+        return self.tweets[index].id_str
+
     def oldestId(self):
         return self.tweets[-1].id
 
@@ -108,10 +115,13 @@ class TweetModel(QAbstractListModel):
         for i, tweet in enumerate(tweets):
             self.tweets.insert(pos + i, tweet)
         self.endInsertRows()
+        self.countChanged.emit(len(self.tweets))
 
     @pyqtSlot(result="QVariant")
     def rowCount(self, parent=None):
         return len(self.tweets) + 1
+
+    count = pyqtProperty(int, rowCount, notify=countChanged)
 
     def data(self, index, role):
         if role == self.ModelBusyRole:
@@ -121,6 +131,9 @@ class TweetModel(QAbstractListModel):
             return self.data_null(role)
         else:
             status = self.tweets[index.row()]
+
+            if role == self.IdRole:
+                return status.id_str
 
             if isinstance(status, tweepy.SearchResult):
                 return self.data_search(status, role)
@@ -194,6 +207,14 @@ class TweetModel(QAbstractListModel):
 
         async(self.subscription.tweets_before)(self.oldestId())
 
+    @pyqtSlot("QVariant", result="QVariant")
+    def get(self, index):
+        data = {}
+        model_index = self.index(index)
+        for role, name in self.roleNames().iteritems():
+            data[unicode(name)] = self.data(model_index, role)
+        print "YY", data
+        return data
 
 class PanelModel(QAbstractListModel):
     UUIDRole = Qt.UserRole

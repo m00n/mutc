@@ -7,15 +7,15 @@ Rectangle {
 
     color: "#323436"
 
-    visible: index != ListView.view.model.rowCount() - 1 || (index == ListView.view.model.rowCount() - 1 && model_busy)
+    visible: index != ListView.view.model.count - 1 || (index == ListView.view.model.count - 1 && model_busy)
     opacity: visible ? 1.0 : 0.0
 
     width: 300
-    height: index != ListView.view.model.rowCount() - 1 ? 120 : 30
+    height: index != ListView.view.model.count - 1 ? 120 : 30
 
     Rectangle {
         id: load_display
-        visible: index == ListView.view.model.rowCount() - 1
+        visible: index == ListView.view.model.count - 1
 
         z: 2
 

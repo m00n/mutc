@@ -4,22 +4,18 @@ Rectangle {
     id: tweet_panel
     width: 320
     height: 480
-    //color: "red"
 
-    property int max_tweets: 30
     property alias model: tweet_view.model
     property bool model_busy
-    /*property string account: "no account"
-    property string account_oid: "no oid"
-    property string panel_type: "timeline"*/
-
-    /*
-        "friends"
-        "mentions"
-        "search"
-    */
+    property bool overlay
+    property bool locked
+    property Item tweetView: tweet_view
 
     signal needTweets
+    signal reply
+    signal retweet(bool comment)
+    signal removeTweet
+    signal panelsLocked
 
     gradient: Gradient {
         GradientStop {
@@ -32,6 +28,15 @@ Rectangle {
             color: "#6d7176"
         }
 
+    }
+
+    MouseArea {
+        anchors.fill: parent
+
+        onClicked: {
+            console.log("!")
+            overlay = false
+        }
     }
 
     Toolbar {
@@ -130,12 +135,313 @@ Rectangle {
                 else
                     300
             }
+
+            MouseArea {
+                anchors.fill: parent
+                onDoubleClicked: {
+                    if (!locked) {
+                        var coords = ListView.view.mapFromItem(parent, mouseX, mouseY);
+                        var idx = ListView.view.indexAt(coords.x, coords.y);
+
+                        if (idx == ListView.view.currentIndex && overlay) {
+                            overlay = false;
+                        } else {
+                            overlay = true;
+                            ListView.view.currentIndex = idx;
+                        }
+                    }
+                }
+            }
         }
+
+        highlight: Rectangle {
+            id: overlay_item
+            color: "#00000000"
+            opacity: overlay ? 1 : 0
+            state: "default"
+            z: 5
+
+            Rectangle {
+                color: "steelblue"
+                opacity: 0.9
+                anchors.fill: parent
+            }
+
+            Item {
+                height: parent.height / 3
+                z: 7
+
+                anchors {
+                    left: parent.left
+                    right: parent.right
+                    verticalCenter: parent.verticalCenter
+                }
+
+                AnimatedImage {
+                    id: thobber
+                    source: "thobber.gif"
+                    anchors {
+                        horizontalCenter: parent.horizontalCenter
+                        verticalCenter: parent.verticalCenter
+                    }
+                    opacity: 0
+                }
+
+                Item {
+                    id: action_panel
+
+                    visible: true
+
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    width: 300
+
+                    z: 7
+                    Button {
+                        id: rt_button
+                        button_text: "\u21BA"
+                        default_color: "#000000"
+                        width: 30
+                        height: parent.height - 10
+                        anchors {
+                            verticalCenter: parent.verticalCenter
+                            right: reply_button.left
+                            margins: 15
+                        }
+                        z: 7
+
+                        onButtonClicked: overlay_item.state = "retweet"
+                    }
+
+                    Button {
+                        id: reply_button
+                        button_text: "\u21B7"
+                        default_color: "#000000"
+                        width: 30
+                        height: parent.height - 10
+                        anchors {
+                            verticalCenter: parent.verticalCenter
+                            horizontalCenter: parent.horizontalCenter
+                            //left: rt_button.right
+                            //right: delete_button.left
+                            margins: 15
+                        }
+                        z: 7
+
+                        onButtonClicked: {
+                            overlay = false
+                            tweet_panel.reply()
+                        }
+                    }
+
+                    Button {
+                        id: delete_menu_button
+                        button_text: "x"
+                        default_color: "#000000"
+                        width: 30
+                        height: parent.height - 10
+                        anchors {
+                            verticalCenter: parent.verticalCenter
+                            left: reply_button.right
+                            margins: 15
+                        }
+                        z: 7
+
+                        onButtonClicked: {
+                            overlay_item.state = "delete"
+                        }
+
+                    }
+                }
+                Item {
+                    id: rt_panel
+
+                    visible: false
+                    opacity: visible ? 1 : 0
+
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    width: 300
+
+                    z: 7
+                    Button {
+                        id: rt_comment_button
+                        button_text: "with comment"
+                        default_color: "#000000"
+                        width: 120
+                        height: parent.height - 10
+                        anchors {
+                            verticalCenter: parent.verticalCenter
+                            left: parent.horizontalCenter
+                            margins: 15
+                        }
+                        z: 7
+
+                        onButtonClicked: {
+                            overlay = false
+                            tweet_panel.retweet(true)
+                        }
+                    }
+                    Button {
+                        id: rt_default_button
+                        button_text: "normal"
+                        default_color: "#000000"
+                        width: 120
+                        height: parent.height - 10
+                        anchors {
+                            verticalCenter: parent.verticalCenter
+                            right: parent.horizontalCenter
+                            margins: 15
+                        }
+                        z: 7
+
+                        onButtonClicked: {
+                            //overlay = false
+                            overlay_item.state = "busy"
+                            tweet_panel.retweet(false)
+                        }
+                    }
+                }
+
+                Item {
+                    id: delete_panel
+
+                    visible: false
+                    opacity: visible ? 1 : 0
+
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    width: 300
+
+                    z: 7
+                    Button {
+                        id: cancel_delete_button
+                        button_text: "cancel"
+                        default_color: "#000000"
+                        width: 120
+                        height: parent.height - 10
+                        anchors {
+                            verticalCenter: parent.verticalCenter
+                            left: parent.horizontalCenter
+                            margins: 15
+                        }
+                        z: 7
+
+                        onButtonClicked: {
+                            overlay = false
+                        }
+                    }
+                    Button {
+                        id: delete_button
+                        button_text: "delete"
+                        default_color: "#000000"
+                        width: 120
+                        height: parent.height - 10
+                        anchors {
+                            verticalCenter: parent.verticalCenter
+                            right: parent.horizontalCenter
+                            margins: 15
+                        }
+                        z: 7
+
+                        onButtonClicked: {
+                            overlay_item.state = "busy"
+                            tweet_panel.removeTweet()
+                        }
+                    }
+                }
+
+            }
+
+            states: [
+                State {
+                    name: "default"
+                    when: overlay
+                    PropertyChanges {
+                        target: rt_panel
+                        visible: false
+                    }
+                    PropertyChanges {
+                        target: action_panel
+                        visible: true
+                    }
+                    PropertyChanges {
+                        target: delete_panel
+                        visible: false
+                    }
+
+                },
+                State {
+                    name: "busy"
+                    PropertyChanges {
+                        target: thobber
+                        opacity: 1
+                        playing: true
+                    }
+                    PropertyChanges {
+                        target: rt_panel
+                        opacity: 0
+                    }
+                    PropertyChanges {
+                        target: delete_panel
+                        opacity: 0
+                    }
+                    PropertyChanges {
+                        target: action_panel
+                        opacity: 0
+                    }
+                    PropertyChanges {
+                        target: tweet_panel
+                        locked: true
+                    }
+
+
+                },
+                State {
+                    name: "retweet"
+                    PropertyChanges {
+                        target: rt_panel
+                        visible: true
+                    }
+                    PropertyChanges {
+                        target: action_panel
+                        visible: false
+                    }
+
+                },
+                State {
+                    name: "delete"
+                    PropertyChanges {
+                        target: delete_panel
+                        visible: true
+                    }
+                    PropertyChanges {
+                        target: action_panel
+                        visible: false
+                    }
+
+                }
+            ]
+
+
+            Behavior on opacity {
+                NumberAnimation { duration: 250 }
+            }
+        }
+
+        Timer {
+            id: new_tweet_timeout
+            interval: 3000
+            repeat: false
+            running: false
+        }
+
         onMovementEnded: {
-            //console.log(tweet_view.contentHeight + " " + tweet_view.contentY)
             if (tweet_view.atYEnd) {
-                //console.log("atyend");
-                if (!new_tweet_timeout.running)
+                if (!new_tweet_timeout.running && model.count > 0)
                 {
                     needTweets()
                     new_tweet_timeout.start()
@@ -143,69 +449,5 @@ Rectangle {
 
             }
         }
-    }
-
-    Timer {
-        id: new_tweet_timeout
-        interval: 3000
-        repeat: false
-        running: false
-    }
-
-    ListModel {
-        id: tweet_model
-
-        ListElement {
-            author: "boringplanet"
-            tweet_text: "Faketweet test das ist ein test blablubb foo bar baz bazinga zort hoot hoot hoot"
-            avatar: "m00n_s.png"
-        }
-        ListElement {
-            author: "boringplanet a"
-            tweet_text: "Faketweet 2"
-            avatar: "m00n_s.png"
-        }
-        /*
-        ListElement {
-            author: "boringplanet a"
-            tweet_text: "Faketweet 2"
-            avatar: "m00n_s.png"
-        }
-        ListElement {
-            author: "boringplanet a"
-            tweet_text: "Faketweet 2"
-            avatar: "m00n_s.png"
-        }
-        ListElement {
-            author: "boringplanet a"
-            tweet_text: "Faketweet 2"
-            avatar: "m00n_s.png"
-        }
-        ListElement {
-            author: "boringplanet a"
-            tweet_text: "gdfg gfdgf http://foo.bar.baz/zort"
-            avatar: "m00n_s.png"
-        }
-        ListElement {
-            author: "boringplanet a"
-            tweet_text: "Faketweet 2"
-            avatar: "m00n_s.png"
-        }
-        ListElement {
-            author: "boringplanet a"
-            tweet_text: "Faketweet 2"
-            avatar: "m00n_s.png"
-        }
-        ListElement {
-            author: "boringplanet a"
-            tweet_text: "Faketweet 2"
-            avatar: "m00n_s.png"
-        }*/
-    }
-
-    Component.onCompleted: {
-        //console.log("Panel");
-        //console.log("> " + pyobj.get_foo() + "<");
-        //console.log("> " + zort() + "<");
     }
 }

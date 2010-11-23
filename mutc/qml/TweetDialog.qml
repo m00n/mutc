@@ -6,12 +6,18 @@ Rectangle {
 
     width: 320
     height: 240
+    state: "hidden"
 
     SystemPalette { id: activePalette }
 
     color: "#323436"
 
+    signal sendClicked
+
     property int partition: height / 8
+    property alias text: tweet_area.text
+    property Item edit: tweet_area
+    property string in_reply
 
     Rectangle {
         id: tweet_border
@@ -68,10 +74,7 @@ Rectangle {
 
             button_text: "cancel"
 
-            onButtonClicked: {
-                tweet_area.text = ""
-                tweet_dialog.opacity = 0;
-            }
+            onButtonClicked: tweet_dialog.state = "hidden"
         }
 
         Button {
@@ -86,10 +89,36 @@ Rectangle {
             button_text: "tweet"
 
             onButtonClicked: {
-                tweet_dialog.opacity = 0;
+                console.log(" >> " + tweet_dialog.state)
+                tweet_dialog.state = "hidden"
+                sendClicked()
             }
         }
     }
+
+    states: [
+        State {
+            name: "hidden"
+            PropertyChanges {
+                target: tweet_area
+                text: ""
+            }
+        },
+        State {
+            name: "visible"
+            PropertyChanges {
+                target: tweet_dialog
+                opacity: 1
+                in_reply: ""
+            }
+            PropertyChanges {
+                target: tweet_area
+                text: ""
+            }
+        }
+
+    ]
+
 
     Behavior on opacity {
         NumberAnimation {
@@ -99,5 +128,10 @@ Rectangle {
 
     Component.onCompleted: {
         tweet_area.focus = true;
+    }
+
+    function reset() {
+        tweet_area.text = ""
+        in_reply = ""
     }
 }
