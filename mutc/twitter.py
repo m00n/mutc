@@ -19,16 +19,18 @@
 from __future__ import with_statement, division
 
 import sys
+import threading
+from itertools import imap
 from uuid import uuid4
 from time import sleep
-from functools import *
-from itertools import *
 
 import tweepy
-
+from logbook import Logger
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 
+from models import PanelModel, TweetModel
+from subscriptions import create_subscription
 from utils import LockableDict, async
 
 CK = "owLrhjNm3qUOHA1ybLnZzA"
@@ -259,7 +261,6 @@ class TwitterThread(QThread):
     def __init__(self, parent, subscriptions, logger=None):
         QThread.__init__(self, parent)
         self.subscriptions = subscriptions
-        self.subscriptions_lock = threading.Lock()
 
         self.ticks = 1
         self.tick_count = 60

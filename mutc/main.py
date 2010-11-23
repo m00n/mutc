@@ -18,37 +18,21 @@
 
 from __future__ import with_statement, division
 
-from functools import *
-from itertools import *
-
-from path import path
+import sys
+import json
+import webbrowser
+from time import strptime
 
 import sip
-
 sip.setapi('QString', 2)
 sip.setapi('QVariant', 2)
 sip.setapi('QDateTime', 2)
-
-
 from PyQt4.Qt import *
+from path import path
 
-import sys
-import threading
-import webbrowser
-
-from time import sleep, strptime
 from twitter import Account, Twitter, TwitterThread
-from utils import async, discover_proxy
+from utils import discover_proxy
 
-import json
-
-import tweepy
-
-from models import TweetModel, PanelModel
-
-import datetime
-
-from logbook import Logger
 
 if strptime("12", "%H"):
     """
@@ -191,7 +175,6 @@ def main():
     return app.exec_()
 
 if __name__ == '__main__':
-    import sys
     sys.stdout = sys.stderr
 
     sys.exit(main())

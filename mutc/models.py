@@ -18,17 +18,14 @@
 
 from __future__ import with_statement, division
 
-from functools import *
-from itertools import *
-
-from path import path
-
-from PyQt4.Qt import *
 from datetime import datetime
 
 import tweepy
+from path import path
+from PyQt4.Qt import *
 
 from utils import async
+
 
 def format_datetime(dt):
     delta = datetime.now() - dt
