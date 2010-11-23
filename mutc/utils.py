@@ -18,9 +18,25 @@
 
 from __future__ import with_statement, division
 
+import os
+
 from functools import wraps
+from threading import Lock
 
 from PyQt4.Qt import QThreadPool, QRunnable
+
+
+class LockableDict(dict):
+    def __init__(self, *args, **kwds):
+        dict.__init__(self, *args, **kwds)
+        self._lock = Lock()
+
+    def __enter__(self):
+        self._lock.acquire()
+
+    def __exit__(self, *args):
+        self._lock.release()
+
 
 def async(func):
     """
@@ -43,3 +59,14 @@ def async(func):
 
     wrapper.sync = func
     return wrapper
+
+def discover_proxy():
+    try:
+        proxy_str = os.environ["HTTP_PROXY"]
+    except KeyError:
+        return None, None
+    else:
+        host, port = proxy_str.split(":")
+        print "proxy", proxy_str
+        return host, int(port)
+
