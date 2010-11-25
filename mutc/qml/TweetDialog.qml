@@ -6,7 +6,6 @@ Rectangle {
 
     width: 320
     height: 240
-    state: "hidden"
 
     SystemPalette { id: activePalette }
 
@@ -42,6 +41,33 @@ Rectangle {
         anchors.top: parent.top
     }
 
+    Item {
+        id: thobber_border
+
+        AnimatedImage {
+            id: thobber
+
+            source: "thobber.gif"
+            playing: false
+            visible: false
+
+            height: 11
+            width: 50
+            //height: partition
+            anchors {
+                //verticalCenter: parent.verticalCenter
+                //horizontalCenter: parent.horizontalCenter
+                centerIn: parent
+            }
+        }
+
+        anchors {
+            left: parent.left
+            right: parent.right
+            top: tweet_border.bottom
+        }
+    }
+
     Rectangle {
         id: char_counter_border
 
@@ -52,7 +78,7 @@ Rectangle {
         border.width: 2
         color: "#00000000"
 
-        anchors.top: tweet_border.bottom
+        anchors.top: thobber_border.bottom
 
         Text {
             id: char_counter
@@ -74,7 +100,10 @@ Rectangle {
 
             button_text: "cancel"
 
-            onButtonClicked: tweet_dialog.state = "hidden"
+            onButtonClicked: {
+                if (state != "busy")
+                    tweet_dialog.state = "hidden"
+            }
         }
 
         Button {
@@ -89,8 +118,7 @@ Rectangle {
             button_text: "tweet"
 
             onButtonClicked: {
-                console.log(" >> " + tweet_dialog.state)
-                tweet_dialog.state = "hidden"
+                tweet_dialog.state = "busy"
                 sendClicked()
             }
         }
@@ -102,6 +130,10 @@ Rectangle {
             PropertyChanges {
                 target: tweet_area
                 text: ""
+            }
+            PropertyChanges {
+                target: tweet_dialog
+                opacity: 0
             }
         },
         State {
@@ -115,10 +147,24 @@ Rectangle {
                 target: tweet_area
                 text: ""
             }
+        },
+        State {
+            name: "busy"
+            PropertyChanges {
+                target: thobber_border
+                height: partition
+            }
+            PropertyChanges {
+                target: thobber
+                playing: true
+                visible: true
+            }
+            PropertyChanges {
+                target: tweet_border
+                height: partition * 4
+            }
         }
-
     ]
-
 
     Behavior on opacity {
         NumberAnimation {
