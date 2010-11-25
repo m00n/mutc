@@ -46,7 +46,7 @@ Rectangle {
                 var model = twitter.get_model(uuid, type, args)
                 var tweet = model.get(tweet_panel.tweetView.currentIndex)
 
-                twitter_dialog.opacity = 1
+                twitter_dialog.state = "visible"
                 twitter_dialog.in_reply = tweet.tweet_id
                 twitter_dialog.text = "@" + tweet.author.screen_name + " "
                 twitter_dialog.edit.cursorPosition = twitter_dialog.text.length
@@ -204,7 +204,7 @@ Rectangle {
 
     TweetDialog {
         id: twitter_dialog
-        opacity: 0
+        state: "hidden"
         anchors.bottom: toolbar_row.top
         anchors.left: parent.left
         anchors.margins: 1
