@@ -306,7 +306,7 @@ Rectangle {
                         onButtonClicked: {
                             //overlay = false
                             overlay_item.state = "busy"
-                            tweet_panel.panelsLocked()
+                            //tweet_panel.panelsLocked()
                             tweet_panel.retweet(false)
                         }
                     }
@@ -404,8 +404,9 @@ Rectangle {
                         target: tweet_panel
                         locked: true
                     }
-
-
+                    StateChangeScript {
+                        script: tweet_panel.panelsLocked()
+                    }
                 },
                 State {
                     name: "retweet"
