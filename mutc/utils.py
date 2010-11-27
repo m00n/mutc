@@ -19,11 +19,15 @@
 from __future__ import with_statement, division
 
 import os
+import httplib
+import socket
 
 from functools import wraps
 from threading import Lock
+from time import sleep
 
 from PyQt4.Qt import QThreadPool, QRunnable
+from tweepy import TweepError
 
 
 class LockableDict(dict):
@@ -60,6 +64,16 @@ def async(func):
     wrapper.sync = func
     return wrapper
 
+def locking(func):
+    @wraps(func)
+    def wrapper(self, *args, **kwds):
+        try:
+            func(self, *args, **kwds)
+        except Exception as error:
+            self.requestSent.emit(False, unicode(error))
+        else:
+            self.requestSent.emit(True, None)
+
 def discover_proxy():
     try:
         proxy_str = os.environ["HTTP_PROXY"]
@@ -70,3 +84,29 @@ def discover_proxy():
         print "proxy", proxy_str
         return host, int(port)
 
+def safe_api_request(func, short_wait=False):
+    while True:
+        try:
+            func()
+        except TweepError as error:
+            sleep_time = None
+
+            if isinstance(error.exception, httplib.HTTPError):
+                sleep_time = {
+                    420: 1800 if not short_wait else None,
+                    500: 3,
+                    502: 3,
+                    503: 10,
+                }.get(error.exception.code, None)
+
+            elif isinstance(error.exception, socket.error):
+                sleep_time = 1
+
+            if sleep_time is None:
+                raise
+
+            sleep(sleep_time)
+        except Exception:
+            raise
+        else:
+            break
