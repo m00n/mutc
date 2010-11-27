@@ -91,7 +91,7 @@ def safe_api_request(func, short_wait=False):
         except TweepError as error:
             sleep_time = None
 
-            if isinstance(error.exception, httplib.HTTPError):
+            if isinstance(error.exception, httplib.HTTPException):
                 sleep_time = {
                     420: 1800 if not short_wait else None,
                     500: 3,
