@@ -34,7 +34,6 @@ Rectangle {
 
         Text {
             id: title_text
-            text: "Title bar"
             color: "white"
             anchors {
                 verticalCenter: parent.verticalCenter
