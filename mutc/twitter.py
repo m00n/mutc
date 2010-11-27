@@ -304,13 +304,14 @@ class TwitterThread(QThread):
 
     def run(self):
         while self.running:
-            with self.subscriptions:
-                self.check_subscriptions()
-
+            self.check_subscriptions()
             self.stepped_sleep()
 
     def check_subscriptions(self):
-        for subscription in self.subscriptions.values():
+        with self.subscriptions:
+            subscriptions = self.subscriptions.values()
+
+        for subscription in subscriptions:
             if subscription.account.api:
                 try:
                     tweets = subscription.update()
