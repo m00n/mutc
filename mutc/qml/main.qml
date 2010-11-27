@@ -30,6 +30,8 @@ Rectangle {
         model: tweet_panel_model
         orientation: ListView.Horizontal
         snapMode: ListView.SnapOneItem
+        interactive: !locked
+
         delegate: TweetPanel {
             id: tweet_panel
 
@@ -60,14 +62,15 @@ Rectangle {
                     twitter_dialog.text = "RT @" + tweet.author.screen_name + ": " + tweet.message
                     twitter_dialog.edit.cursorPosition = 0
                 } else {
-                    twitter.retweet(tweet.tweet_id);
+                    console.log("GRT" + tweet.tweet_id)
+                    twitter.retweet(account_model.getActiveAccounts(), tweet.tweet_id);
                 }
             }
 
             onRemoveTweet: {
                 var model = twitter.get_model(uuid, type, args)
                 var tweet = model.get(tweet_panel.tweetView.currentIndex)
-                twitter.destroy_tweet(tweet.id)
+                twitter.destroy_tweet(tweet.tweet_id)
             }
 
             onPanelsLocked: {
@@ -107,7 +110,7 @@ Rectangle {
             onButtonClicked: {
                 if (twitter_dialog.state == "visible")
                     twitter_dialog.state = "hidden";
-                else
+                else if (twitter_dialog.state == "hidden")
                     twitter_dialog.state = "visible";
             }
             anchors {
@@ -179,7 +182,16 @@ Rectangle {
             active: false
         }*/
 
+        function getActiveAccounts() {
+            var accounts = [];
+            for (var i = 0; i < account_model.count; i ++) {
+                var account = account_model.get(i)
+                if (account.active)
+                    accounts.push(account.uuid)
+            }
 
+            return accounts
+        }
     }
 
     ListModel {
@@ -309,9 +321,14 @@ Rectangle {
             }
             Utils.changeEntry(tweet_panel_model, "uuid", data.uuid, "screen_name", data.screen_name);
         })
-        twitter.requestSent.connect(function () {
+        twitter.requestSent.connect(function (success, error_msg) {
             console.log("REQ send l=" + locked)
             locked = false
+            twitter_dialog.state = "hidden"
+
+            if (!success) {
+                status_dialog.show("Request failed", error_msg)
+            }
         })
     }
 }
