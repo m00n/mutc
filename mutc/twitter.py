@@ -191,11 +191,12 @@ class Twitter(QObject):
     @pyqtSlot("QVariant", "QVariant", "QVariant")
     @async
     def tweet(self, accounts, tweet, in_reply=None):
+        in_reply = in_reply if in_reply else None
+
         for account in imap(self.account, accounts):
             safe_api_request(
                 lambda api=account.api: api.update_status(tweet, in_reply)
             )
-            print "->", account, tweet
 
         self.requestSent.emit(True, None)
 
@@ -206,7 +207,6 @@ class Twitter(QObject):
             safe_api_request(
                 lambda api=account.api: api.retweet(tweet_id)
             )
-            print "-> RT", account, tweet_id
 
         self.requestSent.emit(True, None)
 
