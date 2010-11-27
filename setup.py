@@ -29,7 +29,12 @@ setup(
     url='http://github.com/m00n/mutc',
     packages=['mutc'],
     #package_dir={'mutc': 'mutc/'},
-    package_data={'mutc': ['qml/dummydata/*', 'qml/*.gif', 'qml/*.qml']},
+    package_data={'mutc': [
+        'qml/dummydata/*',
+        'qml/*.gif',
+        'qml/*.qml',
+        'qml/*.js'
+    ]},
     scripts=['scripts/mutc'],
 )
 
