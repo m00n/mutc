@@ -91,6 +91,7 @@ Rectangle {
         text: message
         wrapMode: Text.Wrap
         width: tweet_delegate.width - twitter_avatar.width - 10
+        z: 10
 
         anchors {
             top: twitter_name.bottom
