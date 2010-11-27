@@ -100,14 +100,15 @@ class TweetModel(QAbstractListModel):
 
     busy = pyqtProperty(bool, is_busy, set_busy, notify=busyStateChanged)
 
-    @pyqtSlot(result=unicode)
-    def idForIndex(self, index):
-        return self.tweets[index].id_str
-
     def oldestId(self):
         return self.tweets[-1].id
 
     def insertTweets(self, tweets, pos):
+        """
+        inserts one or more tweets at pos
+        if pos is -1 tweets are appended
+        """
+
         if pos == -1:
             pos = len(self.tweets)
 
@@ -115,7 +116,21 @@ class TweetModel(QAbstractListModel):
         for i, tweet in enumerate(tweets):
             self.tweets.insert(pos + i, tweet)
         self.endInsertRows()
-        self.countChanged.emit(len(self.tweets))
+        self.countChanged.emit(len(self.tweets) + 1)
+
+    def removeTweet(self, id_str):
+        """
+        removes a single tweet identified by "id_str"
+        """
+        for index, status in enumerate(self.tweets):
+            if status.id_str == id_str:
+                break
+
+        self.beginRemoveRows(QModelIndex(), index, index)
+        self.tweets.pop(index)
+        self.endRemoveRows()
+
+        self.countChanged.emit(len(self.tweets) + 1)
 
     @pyqtSlot(result="QVariant")
     def rowCount(self, parent=None):
@@ -214,6 +229,7 @@ class TweetModel(QAbstractListModel):
         for role, name in self.roleNames().iteritems():
             data[unicode(name)] = self.data(model_index, role)
         return data
+
 
 class PanelModel(QAbstractListModel):
     UUIDRole = Qt.UserRole
