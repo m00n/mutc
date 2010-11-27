@@ -111,7 +111,6 @@ class App(QApplication):
         with open(self.data_path / 'panels.json', 'w') as fd:
             json.dump(panels, fd)
 
-
     def _on_shutdown(self):
         self.twitter.thread.running = False
         self.twitter.thread = False
