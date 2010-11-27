@@ -118,8 +118,8 @@ Rectangle {
             button_text: "tweet"
 
             onButtonClicked: {
-                tweet_dialog.state = "busy"
                 sendClicked()
+                tweet_dialog.state = "busy"
             }
         }
     }
