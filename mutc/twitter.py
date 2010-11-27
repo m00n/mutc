@@ -31,7 +31,7 @@ from PyQt4.QtCore import *
 
 from models import PanelModel, TweetModel
 from subscriptions import create_subscription
-from utils import LockableDict, async
+from utils import LockableDict, async, safe_api_request
 
 CK = "owLrhjNm3qUOHA1ybLnZzA"
 CS = "lycIVjOXaALggV18Cgec9mOFkDqC1hNXoFxHet5dEg"
@@ -134,9 +134,11 @@ class Twitter(QObject):
     accountAuthFailed = pyqtSignal("QVariant")
     accountCreated = pyqtSignal(QObject)
 
+    tweetRemoved = pyqtSignal("QVariant")
+
     newTweetsForModel = pyqtSignal(TweetModel, list, int)
 
-    requestSent = pyqtSignal()
+    requestSent = pyqtSignal("QVariant", "QVariant")
 
     def __init__(self):
         QObject.__init__(self)
@@ -174,7 +176,8 @@ class Twitter(QObject):
             request["args"],
         )
 
-        self.models[key] = TweetModel(self, subscription)
+        self.models[key] = model = TweetModel(self, subscription)
+        self.tweetRemoved.connect(model.removeTweet)
 
         if subscription.account.me:
             request['screen_name'] = subscription.account.me.screen_name
@@ -185,25 +188,46 @@ class Twitter(QObject):
         self.panel_model.addPanel(subscription)
         self.thread.force_check.set()
 
-    @pyqtSlot("QVariant")
+    @pyqtSlot("QVariant", "QVariant", "QVariant")
     @async
-    def tweet(self, tweet):
-        """
-        {
-            text:
-            accounts: []
-        }
-        """
-        sleep(1.0)
-        self.requestSent.emit()
-        #for account in imap(self.account, tweet["accounts"]):
-            #account.api.update_status(tweet["text"], tweet["in_reply"])
+    def tweet(self, accounts, tweet, in_reply=None):
+        for account in imap(self.account, accounts):
+            safe_api_request(
+                lambda api=account.api: api.update_status(tweet, in_reply)
+            )
+            print "->", account, tweet
+
+        self.requestSent.emit(True, None)
+
+    @pyqtSlot("QVariant", "QVariant")
+    @async
+    def retweet(self, accounts, tweet_id):
+        for account in imap(self.account, accounts):
+            safe_api_request(
+                lambda api=account.api: api.retweet(tweet_id)
+            )
+            print "-> RT", account, tweet_id
+
+        self.requestSent.emit(True, None)
 
     @pyqtSlot("QVariant")
     @async
-    def retweet(self, tweet_id):
-        sleep(6.0)
-        self.requestSent.emit()
+    def destroy_tweet(self, tweet_id):
+        status = self.accounts.values()[0].api.get_status(tweet_id)
+        author_id = status.author.id
+
+        for account in self.accounts.values():
+            if author_id == account.me.id:
+                account.api.destroy_status(tweet_id)
+                self.requestSent.emit(True, None)
+
+                self.tweetRemoved.emit(tweet_id)
+
+                break
+        else:
+            self.requestSent.emit(
+                False, "This tweet doesn't belong to any of your accounts"
+            )
 
     def announce_account(self, account):
         print account
