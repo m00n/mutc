@@ -60,6 +60,7 @@ Rectangle {
                 if (comment) {
                     twitter_dialog.state = "visible"
                     twitter_dialog.text = "RT @" + tweet.author.screen_name + ": " + tweet.message
+                    twitter_dialog.in_reply = tweet.tweet_id
                     twitter_dialog.edit.cursorPosition = 0
                 } else {
                     console.log("GRT" + tweet.tweet_id)
@@ -74,12 +75,10 @@ Rectangle {
             }
 
             onPanelsLocked: {
-                console.log("PANELS LOCKED")
                 main_window.locked = true
             }
             Component.onCompleted: {
                 main_window.lockedChanged.connect(function () {
-                    console.log("mw.lockedChanged" + main_window.locked);
                     tweet_panel.locked = main_window.locked
                     tweet_panel.overlay = main_window.locked
                 })
@@ -220,6 +219,11 @@ Rectangle {
         anchors.bottom: toolbar_row.top
         anchors.left: parent.left
         anchors.margins: 1
+
+        onSendClicked: {
+            locked = true
+            twitter.tweet(account_model.getActiveAccounts(), twitter_dialog.text, in_reply)
+        }
     }
 
     MainMenu {
@@ -290,6 +294,7 @@ Rectangle {
     Dialog {
         id: status_dialog
         text: ""
+        title: ""
         state: "hidden"
 
         anchors.centerIn: parent
@@ -302,12 +307,6 @@ Rectangle {
     }
 
     Component.onCompleted: {
-        /*
-        app.backendReady.connect(function () {
-            console.log("Backend ready");
-            guiReady();
-        })*/
-        //account_model.changeEntry("uuid", "abcd", "screen_name", "itworks");
         twitter.announceAccount.connect(function (data) {
             account_model.append(data);
             console.log(data);
@@ -316,13 +315,11 @@ Rectangle {
             console.log("accountConnected " + data.screen_name);
             var keys = ['screen_name', 'avatar', 'connected'];
             for (var index in keys) {
-                console.log(data.uuid + " " + keys[index] + " " + data[keys[index]]);
                 Utils.changeEntry(account_model, "uuid", data.uuid, keys[index], data[keys[index]]);
             }
             Utils.changeEntry(tweet_panel_model, "uuid", data.uuid, "screen_name", data.screen_name);
         })
         twitter.requestSent.connect(function (success, error_msg) {
-            console.log("REQ send l=" + locked)
             locked = false
             twitter_dialog.state = "hidden"
 
