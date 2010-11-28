@@ -88,8 +88,8 @@ class TweetModel(QAbstractListModel):
 
     def _on_old_tweets_recv(self, subscription, tweets):
         self.busy = False
-        index = self.index(self.rowCount() - 1)
-        self.dataChanged.emit(index, index)
+        #index = self.index(self.rowCount() - 1)
+        #self.dataChanged.emit(index, index)
         self.insertTweets(tweets, -1)
 
     def is_busy(self):
@@ -97,6 +97,7 @@ class TweetModel(QAbstractListModel):
 
     def set_busy(self, value):
         self._busy = value
+        self.busyStateChanged.emit(value)
 
     busy = pyqtProperty(bool, is_busy, set_busy, notify=busyStateChanged)
 
@@ -110,13 +111,13 @@ class TweetModel(QAbstractListModel):
         """
 
         if pos == -1:
-            pos = len(self.tweets)
+            pos = len(self.tweets) - 1
 
         self.beginInsertRows(QModelIndex(), pos, pos + len(tweets) - 1)
         for i, tweet in enumerate(tweets):
             self.tweets.insert(pos + i, tweet)
         self.endInsertRows()
-        self.countChanged.emit(len(self.tweets) + 1)
+        self.countChanged.emit(len(self.tweets))
 
     def removeTweet(self, id_str):
         """
@@ -130,11 +131,11 @@ class TweetModel(QAbstractListModel):
         self.tweets.pop(index)
         self.endRemoveRows()
 
-        self.countChanged.emit(len(self.tweets) + 1)
+        self.countChanged.emit(len(self.tweets))
 
     @pyqtSlot(result="QVariant")
     def rowCount(self, parent=None):
-        return len(self.tweets) + 1
+        return len(self.tweets)
 
     count = pyqtProperty(int, rowCount, notify=countChanged)
 
@@ -142,20 +143,17 @@ class TweetModel(QAbstractListModel):
         if role == self.ModelBusyRole:
             return self.busy
 
-        if index.row() == self.rowCount() - 1:
-            return self.data_null(role)
+        status = self.tweets[index.row()]
+
+        if role == self.IdRole:
+            return status.id_str
+
+        if isinstance(status, tweepy.SearchResult):
+            return self.data_search(status, role)
+        elif hasattr(status, "retweeted_status"):
+            return self.data_retweet(status, role)
         else:
-            status = self.tweets[index.row()]
-
-            if role == self.IdRole:
-                return status.id_str
-
-            if isinstance(status, tweepy.SearchResult):
-                return self.data_search(status, role)
-            elif hasattr(status, "retweeted_status"):
-                return self.data_retweet(status, role)
-            else:
-                return self.data_default(status, role)
+            return self.data_default(status, role)
 
     def data_retweet(self, status, role):
         if role == self.AuthorRole:
@@ -196,29 +194,11 @@ class TweetModel(QAbstractListModel):
         elif role == self.RetweetByRole:
             return None
 
-    def data_null(self, role):
-        if role == self.AuthorRole:
-            return {
-                "screen_name": "",
-                "profile_image_url": ""
-            }
-        elif role == self.MessageRole:
-            return ""
-        elif role == self.CreatedRole:
-            return ""
-        elif role == self.IsRetweetRole:
-            return False
-        elif role == self.RetweetByRole:
-            return {
-                "screen_name": "",
-                "profile_image_url": ""
-            }
-
     @pyqtSlot()
     def needTweets(self):
         self.busy = True
-        index = self.index(self.rowCount() - 1)
-        self.dataChanged.emit(index, index)
+        #index = self.index(self.rowCount() - 1)
+        #self.dataChanged.emit(index, index)
 
         async(self.subscription.tweets_before)(self.oldestId())
 

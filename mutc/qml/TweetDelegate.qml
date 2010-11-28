@@ -7,52 +7,8 @@ Rectangle {
 
     color: "#323436"
 
-    visible: index != ListView.view.model.count - 1 || (index == ListView.view.model.count - 1 && model_busy)
-    opacity: visible ? 1.0 : 0.0
-
     width: 300
-    height: index != ListView.view.model.count - 1 ? 120 : 30
-
-    Rectangle {
-        id: load_display
-        visible: index == ListView.view.model.count - 1
-
-        z: 2
-
-        color: "#323436"
-        radius: 5
-
-        anchors.fill: parent
-
-        Item {
-            anchors.fill: parent
-            visible: model_busy
-/*
-            Text {
-                id: load_text
-                text: "Loading tweets"
-                anchors {
-                    top: parent.top
-                    horizontalCenter: parent.horizontalCenter
-                    margins: 5
-                }
-                height: 22
-                color: "white"
-            }*/
-
-            AnimatedImage {
-                id: load_animation
-                source: "thobber.gif"
-                playing: model_busy
-
-                anchors {
-                    horizontalCenter: parent.horizontalCenter
-                    verticalCenter: parent.verticalCenter
-                    margins: 5
-                }
-            }
-        }
-    }
+    height: 120
 
     Image {
         id: twitter_avatar

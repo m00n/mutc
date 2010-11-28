@@ -157,6 +157,38 @@ Rectangle {
             }
         }
 
+        footer: Item {
+            width: parent.width
+            height: 30
+
+            Rectangle {
+                id: load_display
+                visible: model.busy
+
+                z: 2
+                color: "#323436"
+                radius: 5
+
+                anchors {
+                    topMargin: 2
+                    bottomMargin: 2
+                    fill: parent
+                }
+
+                AnimatedImage {
+                    id: load_animation
+                    source: "thobber.gif"
+                    playing: model.busy
+
+                    anchors {
+                        horizontalCenter: parent.horizontalCenter
+                        verticalCenter: parent.verticalCenter
+                        margins: 5
+                    }
+                }
+            }
+        }
+
         highlight: Rectangle {
             id: overlay_item
             color: "#00000000"
@@ -360,7 +392,6 @@ Rectangle {
                         }
                     }
                 }
-
             }
 
             states: [
