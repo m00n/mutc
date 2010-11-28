@@ -20,6 +20,7 @@ from __future__ import with_statement, division
 
 import sys
 import threading
+from functools import partial
 from itertools import imap
 from uuid import uuid4
 from time import sleep
