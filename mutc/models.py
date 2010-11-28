@@ -55,8 +55,7 @@ class TweetModel(QAbstractListModel):
     CreatedRole =  Qt.UserRole + 2
     IsRetweetRole = Qt.UserRole + 3
     RetweetByRole = Qt.UserRole + 4
-    ModelBusyRole = Qt.UserRole + 5
-    IdRole = Qt.UserRole + 6
+    IdRole = Qt.UserRole + 5
 
     busyStateChanged = pyqtSignal(bool)
     countChanged = pyqtSignal(int)
@@ -82,7 +81,6 @@ class TweetModel(QAbstractListModel):
             self.CreatedRole: "created_at",
             self.IsRetweetRole: "is_retweet",
             self.RetweetByRole: "retweet_by",
-            self.ModelBusyRole: "model_busy",
             self.IdRole: "tweet_id",
         })
 
@@ -140,9 +138,6 @@ class TweetModel(QAbstractListModel):
     count = pyqtProperty(int, rowCount, notify=countChanged)
 
     def data(self, index, role):
-        if role == self.ModelBusyRole:
-            return self.busy
-
         status = self.tweets[index.row()]
 
         if role == self.IdRole:
