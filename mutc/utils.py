@@ -87,10 +87,11 @@ def discover_proxy():
 def safe_api_request(func, short_wait=False):
     while True:
         try:
+            print "trying", func,
             func()
         except TweepError as error:
             sleep_time = None
-
+            print error, error.exception
             if isinstance(error.exception, httplib.HTTPException):
                 sleep_time = {
                     420: 1800 if not short_wait else None,
@@ -109,4 +110,5 @@ def safe_api_request(func, short_wait=False):
         except Exception:
             raise
         else:
+            print "ok"
             break

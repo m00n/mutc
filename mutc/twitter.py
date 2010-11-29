@@ -30,7 +30,7 @@ from logbook import Logger
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 
-from models import PanelModel, TweetModel
+from models import PanelModel, TweetModel, DMTweetModel
 from subscriptions import create_subscription
 from utils import LockableDict, async, safe_api_request
 
@@ -177,7 +177,14 @@ class Twitter(QObject):
             request["args"],
         )
 
-        self.models[key] = model = TweetModel(self, subscription)
+        if request["type"] == "direct messages":
+            model_class = DMTweetModel
+        else:
+            model_class = TweetModel
+
+        print model_class
+
+        self.models[key] = model = model_class(self, subscription)
         self.tweetRemoved.connect(model.removeTweet)
 
         if subscription.account.me:
@@ -211,6 +218,19 @@ class Twitter(QObject):
 
         self.requestSent.emit(True, None)
 
+    @pyqtSlot("QVariant", "QVariant", "QVariant")
+    @async
+    def send_direct_message(self, from_uuid, to_twitter_id, text):
+        account = self.account(from_uuid)
+        safe_api_request(
+            lambda: account.api.send_direct_message(
+                user_id=to_twitter_id,
+                text=text
+            )
+        )
+
+        self.requestSent.emit(True, None)
+
     @pyqtSlot("QVariant")
     @async
     def destroy_tweet(self, tweet_id):
@@ -229,6 +249,17 @@ class Twitter(QObject):
             self.requestSent.emit(
                 False, "This tweet doesn't belong to any of your accounts"
             )
+
+    @pyqtSlot("QVariant", "QVariant")
+    @async
+    def destroy_direct_message(self, uuid, tweet_id):
+        print "DDM", tweet_id
+        account = self.account(uuid)
+        safe_api_request(
+            lambda: account.api.destroy_direct_message(tweet_id)
+        )
+        self.tweetRemoved.emit(tweet_id)
+        self.requestSent.emit(True, None)
 
     def announce_account(self, account):
         print account

@@ -45,7 +45,8 @@ def author_to_dict(user):
         "screen_name",
         "name",
         "description",
-        "profile_image_url"
+        "profile_image_url",
+        "id_str",
     )
 
 
@@ -56,6 +57,8 @@ class TweetModel(QAbstractListModel):
     IsRetweetRole = Qt.UserRole + 3
     RetweetByRole = Qt.UserRole + 4
     IdRole = Qt.UserRole + 5
+    InReplyRole = Qt.UserRole + 6
+    InReplyToIdRole = Qt.UserRole + 7
 
     busyStateChanged = pyqtSignal(bool)
     countChanged = pyqtSignal(int)
@@ -82,7 +85,13 @@ class TweetModel(QAbstractListModel):
             self.IsRetweetRole: "is_retweet",
             self.RetweetByRole: "retweet_by",
             self.IdRole: "tweet_id",
+            self.InReplyRole: "in_reply",
+            self.InReplyToIdRole: "in_reply_id",
         })
+
+    @pyqtProperty(unicode, constant=True)
+    def type(self):
+        return "default"
 
     def _on_old_tweets_recv(self, subscription, tweets):
         self.busy = False
@@ -107,7 +116,6 @@ class TweetModel(QAbstractListModel):
         inserts one or more tweets at pos
         if pos is -1 tweets are appended
         """
-
         if pos == -1:
             pos = len(self.tweets) - 1
 
@@ -203,7 +211,32 @@ class TweetModel(QAbstractListModel):
         model_index = self.index(index)
         for role, name in self.roleNames().iteritems():
             data[unicode(name)] = self.data(model_index, role)
+
         return data
+
+
+class DMTweetModel(TweetModel):
+    @pyqtProperty(unicode, constant=True)
+    def type(self):
+        return "direct messages"
+
+    def data(self, index, role):
+        dm = self.tweets[index.row()]
+
+        if role == self.AuthorRole:
+            return author_to_dict(dm.sender)
+        elif role == self.MessageRole:
+            return dm.text
+        elif role == self.CreatedRole:
+            return format_datetime(dm.created_at)
+        elif role == self.IsRetweetRole:
+            return False
+        elif role == self.RetweetByRole:
+            return None
+        elif role == self.InReplyRole:
+            return author_to_dict(dm.recipient)
+        elif role == self.IdRole:
+            return dm.id_str
 
 
 class PanelModel(QAbstractListModel):

@@ -144,6 +144,8 @@ class OutgoingDirectMessages(Subscription):
         return self.account.api.sent_direct_messages
 
 class DirectMessages(Subscription):
+    subscription_type = "direct messages"
+
     def __init__(self, account, args):
         Subscription.__init__(self, account, args)
         self.incoming_dm = IncomingDirectMessages(account, args)
@@ -159,16 +161,23 @@ class DirectMessages(Subscription):
         )
 
     def update(self):
-        return self.merge_timelines(
+        timeline = self.merge_timelines(
             self.incoming_dm.update(),
             self.outgoing_dm.update()
         )
+        self.newTweetsReceived.emit(self, timeline)
+
+        return timeline
 
     def tweets_before(self, max_id):
-        return self.merge_timelines(
+        timeline = self.merge_timelines(
             self.incoming_dm.tweets_before(max_id),
             self.outgoing_dm.tweets_before(max_id)
         )
+        self.oldTweetsReceived.emit(self, timeline)
+
+        return timeline
+
 
 def create_subscription(name, account, args):
     return {

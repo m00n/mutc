@@ -30,9 +30,21 @@ Rectangle {
 
     Text {
         id: twitter_name
-        text: author.screen_name
+        text: {
+            var you = ListView.view.panel_screen_name
+            //console.log(ListView.view.model.type)
+            if (ListView.view.model.type == "direct messages") {
+                //("<b>" + author.screen_name + "</b> to <b>" + in_reply.screen_name + "</b>").replace(, "you")
+                if (author.screen_name == you)
+                    "to <b>" + in_reply.screen_name
+                else
+                    "from <b>" + author.screen_name
+            } else {
+                "<b>" + author.screen_name + "</b>"
+            }
+        }
         color: "white"
-        font.bold: true
+        //font.bold: true
 
         anchors {
             left: twitter_avatar.right
@@ -46,7 +58,7 @@ Rectangle {
         id: twitter_text
         text: message
         wrapMode: Text.Wrap
-        width: tweet_delegate.width - twitter_avatar.width - 10
+        width: tweet_delegate.width - twitter_avatar.width - 15
         z: 10
 
         anchors {
@@ -70,11 +82,6 @@ Rectangle {
 
         x: 5
         y: parent.height - 18
-        /*anchors {
-            bottom: parent.bottom
-            //left: parent.left
-            margins: 2
-        }*/
     }
 
     Text {
@@ -90,7 +97,6 @@ Rectangle {
         visible: is_retweet
         color: "white"
         anchors {
-            //bottom: parent.bottom
             left: twitter_time.right
             leftMargin: 2
         }

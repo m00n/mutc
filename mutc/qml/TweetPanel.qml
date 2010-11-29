@@ -122,6 +122,9 @@ Rectangle {
         spacing: 2
         highlightFollowsCurrentItem: false
 
+        property string panel_screen_name: screen_name
+
+
         anchors {
             top: title_rect.bottom
             bottom: parent.bottom
