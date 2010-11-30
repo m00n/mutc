@@ -27,14 +27,13 @@ from PyQt4.Qt import *
 from utils import async
 
 
-def format_datetime(dt):
-    delta = datetime.now() - dt
-    if delta.total_seconds() > 60 * 60 * 24:
-        return dt.strftime(u"%d.%m. %H:%M")
-    elif delta.seconds > 3600:
-        return dt.strftime(u"%H:%M:%S")
+def format_datetime(date):
+    midnight = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    if date >= midnight:
+        # tweet from today
+        return date.strftime(u"%H:%M:%S")
     else:
-        return u"{0}m ago".format(delta.seconds / 60)
+        return date.strftime(u"%d.%m. %H:%M")
 
 def pick(dictionary, *keys):
     return dict((key, getattr(dictionary, key)) for key in keys)
