@@ -99,6 +99,11 @@ class TweetModel(QAbstractListModel):
 
     busy = pyqtProperty(bool, is_busy, set_busy, notify=busyStateChanged)
 
+    def index_for_id(self, id_str):
+        for index, status in enumerate(self.tweets):
+            if status.id_str == id_str:
+                return index
+
     def oldestId(self):
         return self.tweets[-1].id
 
@@ -121,10 +126,7 @@ class TweetModel(QAbstractListModel):
         """
         removes a single tweet identified by "id_str"
         """
-        for index, status in enumerate(self.tweets):
-            if status.id_str == id_str:
-                break
-
+        index = self.index_for_id(id_str)
         self.beginRemoveRows(QModelIndex(), index, index)
         self.tweets.pop(index)
         self.endRemoveRows()
