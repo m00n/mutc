@@ -10,6 +10,8 @@ Rectangle {
     width: 300
     height: 120
 
+    property bool dataMyRetweet: my_retweet
+
     Image {
         id: twitter_avatar
         source: author.profile_image_url
@@ -83,7 +85,7 @@ Rectangle {
         y: twitter_time.y
         text: {
             if (is_retweet)
-                "\u21BA" + retweet_by.screen_name
+                "\u21BA" + (my_retweet ? " you" : retweet_by.screen_name)
             else
                 ""
         }
