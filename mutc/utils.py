@@ -84,10 +84,10 @@ def discover_proxy():
         print "proxy", proxy_str
         return host, int(port)
 
-def safe_api_request(func, short_wait=False):
+def safe_api_request(func, on_success=lambda: None, short_wait=False):
     while True:
         try:
-            func()
+            value = func()
         except TweepError as error:
             sleep_time = None
 
@@ -109,4 +109,5 @@ def safe_api_request(func, short_wait=False):
         except Exception:
             raise
         else:
-            break
+            on_success()
+            return value
