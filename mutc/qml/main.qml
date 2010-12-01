@@ -68,6 +68,12 @@ Rectangle {
                 }
             }
 
+            onUndoRetweet: {
+                var model = twitter.get_model(uuid, type, args)
+                var tweet = model.get(tweet_panel.tweetView.currentIndex)
+                twitter.undo_retweet(account_model.getActiveAccounts(), tweet.tweet_id)
+            }
+
             onRemoveTweet: {
                 var model = twitter.get_model(uuid, type, args)
                 var tweet = model.get(tweet_panel.tweetView.currentIndex)
