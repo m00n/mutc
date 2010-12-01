@@ -135,6 +135,17 @@ class TweetModel(QAbstractListModel):
 
         self.countChanged.emit(len(self.tweets))
 
+    def replaceTweet(self, restore, id_str, new_status):
+        index = self.index_for_id(id_str)
+        old_tweet = self.tweets[index]
+
+        if hasattr(old_tweet, "other_retweet") and restore:
+            # This was retweeted by someone into my timeline
+            new_status = old_tweet.other_retweet
+
+        self.tweets[index] = new_status
+        self.dataChanged.emit(self.index(index), self.index(index))
+
     @pyqtSlot(result="QVariant")
     def rowCount(self, parent=None):
         return len(self.tweets)
