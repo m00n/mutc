@@ -56,6 +56,7 @@ class TweetModel(QAbstractListModel):
     IsRetweetRole = Qt.UserRole + 3
     RetweetByRole = Qt.UserRole + 4
     IdRole = Qt.UserRole + 5
+    MyRetweetRole = Qt.UserRole + 6
 
     busyStateChanged = pyqtSignal(bool)
     countChanged = pyqtSignal(int)
@@ -82,6 +83,7 @@ class TweetModel(QAbstractListModel):
             self.IsRetweetRole: "is_retweet",
             self.RetweetByRole: "retweet_by",
             self.IdRole: "tweet_id",
+            self.MyRetweetRole: "my_retweet",
         })
 
     def _on_old_tweets_recv(self, subscription, tweets):
@@ -163,6 +165,8 @@ class TweetModel(QAbstractListModel):
             return True
         elif role == self.RetweetByRole:
             return author_to_dict(status.author)
+        elif role == self.MyRetweetRole:
+            return status.retweeted
 
     def data_default(self, status, role):
         if role == self.AuthorRole:
@@ -174,7 +178,12 @@ class TweetModel(QAbstractListModel):
         elif role == self.IsRetweetRole:
             return False
         elif role == self.RetweetByRole:
-            return None
+            return {
+                "screen_name": "",
+                "profile_image_url": "",
+            }
+        elif role == self.MyRetweetRole:
+            return False
 
     def data_search(self, result, role):
         if role == self.AuthorRole:
@@ -189,14 +198,16 @@ class TweetModel(QAbstractListModel):
         elif role == self.IsRetweetRole:
             return False
         elif role == self.RetweetByRole:
-            return None
+            return {
+                "screen_name": "",
+                "profile_image_url": "",
+            }
+        elif role == self.RetweetByRole:
+            return False
 
     @pyqtSlot()
     def needTweets(self):
         self.busy = True
-        #index = self.index(self.rowCount() - 1)
-        #self.dataChanged.emit(index, index)
-
         async(self.subscription.tweets_before)(self.oldestId())
 
     @pyqtSlot("QVariant", result="QVariant")
