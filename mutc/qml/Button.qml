@@ -9,6 +9,7 @@ Rectangle {
     property string image: ""
 
     property color default_color: "#00000000"
+    property bool disabled
 
     color: {
         /*
@@ -19,8 +20,9 @@ Rectangle {
         } else {
             default_color
         }*/
-
-        if (mouse_area.pressedButtons == Qt.LeftButton && mouse_area.containsMouse) {
+        if (disabled) {
+            default_color
+        } else if (mouse_area.pressedButtons == Qt.LeftButton && mouse_area.containsMouse) {
             Qt.lighter("steelblue", 1.5)
         } else if (mouse_area.containsMouse) {
             "steelblue"
@@ -48,11 +50,8 @@ Rectangle {
         hoverEnabled: true
 
         onClicked: {
-            parent.buttonClicked()
+            if (!disabled)
+                parent.buttonClicked()
         }
-        /*
-        onHoveredChanged: {
-            console.log("hoverch " + hover);
-        }*/
     }
 }
