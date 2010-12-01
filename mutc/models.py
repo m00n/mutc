@@ -260,6 +260,8 @@ class DMTweetModel(TweetModel):
             return author_to_dict(dm.recipient)
         elif role == self.IdRole:
             return dm.id_str
+        elif role == self.MyRetweetRole:
+            return False
 
 
 class PanelModel(QAbstractListModel):
