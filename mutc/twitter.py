@@ -136,6 +136,7 @@ class Twitter(QObject):
     accountCreated = pyqtSignal(QObject)
 
     tweetRemoved = pyqtSignal("QVariant")
+    tweetChanged = pyqtSignal(bool, unicode, object)
 
     newTweetsForModel = pyqtSignal(TweetModel, list, int)
 
@@ -179,6 +180,7 @@ class Twitter(QObject):
 
         self.models[key] = model = TweetModel(self, subscription)
         self.tweetRemoved.connect(model.removeTweet)
+        self.tweetChanged.connect(model.replaceTweet)
 
         if subscription.account.me:
             request['screen_name'] = subscription.account.me.screen_name
@@ -205,9 +207,32 @@ class Twitter(QObject):
     @async
     def retweet(self, accounts, tweet_id):
         for account in imap(self.account, accounts):
-            safe_api_request(
-                lambda api=account.api: api.retweet(tweet_id)
+            status = safe_api_request(
+                lambda api=account.api: api.retweet(tweet_id),
             )
+            old_status = safe_api_request(
+                lambda: account.api.get_status(tweet_id)
+            )
+
+            status.retweeted = True
+            status.created_at = old_status.created_at
+
+            if hasattr(old_status, "retweeted_status"):
+                # RTed a retweet
+                status.other_retweet = old_status
+
+            self.tweetChanged.emit(False, tweet_id, status)
+
+        self.requestSent.emit(True, None)
+
+    @pyqtSlot("QVariant", "QVariant")
+    @async
+    def undo_retweet(self, accounts, tweet_id):
+        for account in imap(self.account, accounts):
+            status = safe_api_request(
+                lambda: account.api.destroy_status(tweet_id)
+            )
+            self.tweetChanged.emit(True, tweet_id, status.retweeted_status)
 
         self.requestSent.emit(True, None)
 
