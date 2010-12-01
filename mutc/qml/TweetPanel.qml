@@ -238,6 +238,7 @@ Rectangle {
                     z: 7
                     Button {
                         id: rt_button
+                        disabled: tweet_view.currentItem.dataMyRetweet
                         button_text: "\u21BA"
                         default_color: "#000000"
                         width: 30
