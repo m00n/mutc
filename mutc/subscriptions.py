@@ -135,13 +135,31 @@ class HomeTimeline(Subscription):
         self.home_timeline = SimpleHomeTimeline(account, args)
 
     def apply_retweets(self, tweets, retweets_by_me):
-        for rt_status in retweets_by_me:
-            for status in tweets:
-                if rt_status.retweeted_status.id == status.id:
-                    status.retweeted = True
-                    status.retweeted_status = rt_status.retweeted_status
+        aggregated = []
+        retweets = dict(
+            (status.retweeted_status.id, status) for status in retweets_by_me
+        )
+        for status in tweets:
+            retweeted_status = getattr(status, "retweeted_status", None)
 
-        return tweets
+            if retweeted_status and retweeted_status.id in retweets:
+                # retweeted a retweet
+                rt_status = retweets[retweeted_status.id]
+                rt_status.retweeted = True
+                rt_status.other_retweet = status
+
+                aggregated.append(rt_status)
+
+            elif status.id in retweets:
+                # retweeted some from timeline
+                rt_status = retweets[status.id]
+                rt_status.retweeted = True
+
+                aggregated.append(rt_status)
+            else:
+                aggregated.append(status)
+
+        return aggregated
 
     def update(self):
         tweets = self.apply_retweets(
