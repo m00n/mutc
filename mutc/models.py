@@ -44,7 +44,8 @@ def author_to_dict(user):
         "screen_name",
         "name",
         "description",
-        "profile_image_url"
+        "profile_image_url",
+        "id_str",
     )
 
 
@@ -55,6 +56,9 @@ class TweetModel(QAbstractListModel):
     IsRetweetRole = Qt.UserRole + 3
     RetweetByRole = Qt.UserRole + 4
     IdRole = Qt.UserRole + 5
+    MyRetweetRole = Qt.UserRole + 6
+    InReplyRole = Qt.UserRole + 7
+    InReplyToIdRole = Qt.UserRole + 8
 
     busyStateChanged = pyqtSignal(bool)
     countChanged = pyqtSignal(int)
@@ -81,7 +85,14 @@ class TweetModel(QAbstractListModel):
             self.IsRetweetRole: "is_retweet",
             self.RetweetByRole: "retweet_by",
             self.IdRole: "tweet_id",
+            self.MyRetweetRole: "my_retweet",
+            self.InReplyRole: "in_reply",
+            self.InReplyToIdRole: "in_reply_id",
         })
+
+    @pyqtProperty(unicode, constant=True)
+    def type(self):
+        return "default"
 
     def _on_old_tweets_recv(self, subscription, tweets):
         self.busy = False
@@ -98,6 +109,11 @@ class TweetModel(QAbstractListModel):
 
     busy = pyqtProperty(bool, is_busy, set_busy, notify=busyStateChanged)
 
+    def index_for_id(self, id_str):
+        for index, status in enumerate(self.tweets):
+            if status.id_str == id_str:
+                return index
+
     def oldestId(self):
         return self.tweets[-1].id
 
@@ -106,7 +122,6 @@ class TweetModel(QAbstractListModel):
         inserts one or more tweets at pos
         if pos is -1 tweets are appended
         """
-
         if pos == -1:
             pos = len(self.tweets)
 
@@ -120,15 +135,23 @@ class TweetModel(QAbstractListModel):
         """
         removes a single tweet identified by "id_str"
         """
-        for index, status in enumerate(self.tweets):
-            if status.id_str == id_str:
-                break
-
+        index = self.index_for_id(id_str)
         self.beginRemoveRows(QModelIndex(), index, index)
         self.tweets.pop(index)
         self.endRemoveRows()
 
         self.countChanged.emit(len(self.tweets))
+
+    def replaceTweet(self, restore, id_str, new_status):
+        index = self.index_for_id(id_str)
+        old_tweet = self.tweets[index]
+
+        if hasattr(old_tweet, "other_retweet") and restore:
+            # This was retweeted by someone into my timeline
+            new_status = old_tweet.other_retweet
+
+        self.tweets[index] = new_status
+        self.dataChanged.emit(self.index(index), self.index(index))
 
     @pyqtSlot(result="QVariant")
     def rowCount(self, parent=None):
@@ -160,6 +183,8 @@ class TweetModel(QAbstractListModel):
             return True
         elif role == self.RetweetByRole:
             return author_to_dict(status.author)
+        elif role == self.MyRetweetRole:
+            return status.retweeted
 
     def data_default(self, status, role):
         if role == self.AuthorRole:
@@ -171,7 +196,12 @@ class TweetModel(QAbstractListModel):
         elif role == self.IsRetweetRole:
             return False
         elif role == self.RetweetByRole:
-            return None
+            return {
+                "screen_name": "",
+                "profile_image_url": "",
+            }
+        elif role == self.MyRetweetRole:
+            return False
 
     def data_search(self, result, role):
         if role == self.AuthorRole:
@@ -186,14 +216,16 @@ class TweetModel(QAbstractListModel):
         elif role == self.IsRetweetRole:
             return False
         elif role == self.RetweetByRole:
-            return None
+            return {
+                "screen_name": "",
+                "profile_image_url": "",
+            }
+        elif role == self.RetweetByRole:
+            return False
 
     @pyqtSlot()
     def needTweets(self):
         self.busy = True
-        #index = self.index(self.rowCount() - 1)
-        #self.dataChanged.emit(index, index)
-
         async(self.subscription.tweets_before)(self.oldestId())
 
     @pyqtSlot("QVariant", result="QVariant")
@@ -202,7 +234,32 @@ class TweetModel(QAbstractListModel):
         model_index = self.index(index)
         for role, name in self.roleNames().iteritems():
             data[unicode(name)] = self.data(model_index, role)
+
         return data
+
+
+class DMTweetModel(TweetModel):
+    @pyqtProperty(unicode, constant=True)
+    def type(self):
+        return "direct messages"
+
+    def data(self, index, role):
+        dm = self.tweets[index.row()]
+
+        if role == self.AuthorRole:
+            return author_to_dict(dm.sender)
+        elif role == self.MessageRole:
+            return dm.text
+        elif role == self.CreatedRole:
+            return format_datetime(dm.created_at)
+        elif role == self.IsRetweetRole:
+            return False
+        elif role == self.RetweetByRole:
+            return None
+        elif role == self.InReplyRole:
+            return author_to_dict(dm.recipient)
+        elif role == self.IdRole:
+            return dm.id_str
 
 
 class PanelModel(QAbstractListModel):

@@ -30,7 +30,7 @@ from logbook import Logger
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 
-from models import PanelModel, TweetModel
+from models import PanelModel, TweetModel, DMTweetModel
 from subscriptions import create_subscription
 from utils import LockableDict, async, safe_api_request
 
@@ -136,6 +136,7 @@ class Twitter(QObject):
     accountCreated = pyqtSignal(QObject)
 
     tweetRemoved = pyqtSignal("QVariant")
+    tweetChanged = pyqtSignal(bool, unicode, object)
 
     newTweetsForModel = pyqtSignal(TweetModel, list, int)
 
@@ -177,8 +178,16 @@ class Twitter(QObject):
             request["args"],
         )
 
-        self.models[key] = model = TweetModel(self, subscription)
+        if request["type"] == "direct messages":
+            model_class = DMTweetModel
+        else:
+            model_class = TweetModel
+
+        print model_class
+
+        self.models[key] = model = model_class(self, subscription)
         self.tweetRemoved.connect(model.removeTweet)
+        self.tweetChanged.connect(model.replaceTweet)
 
         if subscription.account.me:
             request['screen_name'] = subscription.account.me.screen_name
@@ -205,9 +214,45 @@ class Twitter(QObject):
     @async
     def retweet(self, accounts, tweet_id):
         for account in imap(self.account, accounts):
-            safe_api_request(
-                lambda api=account.api: api.retweet(tweet_id)
+            status = safe_api_request(
+                lambda api=account.api: api.retweet(tweet_id),
             )
+            old_status = safe_api_request(
+                lambda: account.api.get_status(tweet_id)
+            )
+
+            status.retweeted = True
+            status.created_at = old_status.created_at
+
+            if hasattr(old_status, "retweeted_status"):
+                # RTed a retweet
+                status.other_retweet = old_status
+
+            self.tweetChanged.emit(False, tweet_id, status)
+
+        self.requestSent.emit(True, None)
+
+    @pyqtSlot("QVariant", "QVariant")
+    @async
+    def undo_retweet(self, accounts, tweet_id):
+        for account in imap(self.account, accounts):
+            status = safe_api_request(
+                lambda: account.api.destroy_status(tweet_id)
+            )
+            self.tweetChanged.emit(True, tweet_id, status.retweeted_status)
+
+        self.requestSent.emit(True, None)
+
+    @pyqtSlot("QVariant", "QVariant", "QVariant")
+    @async
+    def send_direct_message(self, from_uuid, to_twitter_id, text):
+        account = self.account(from_uuid)
+        safe_api_request(
+            lambda: account.api.send_direct_message(
+                user_id=to_twitter_id,
+                text=text
+            )
+        )
 
         self.requestSent.emit(True, None)
 
@@ -229,6 +274,17 @@ class Twitter(QObject):
             self.requestSent.emit(
                 False, "This tweet doesn't belong to any of your accounts"
             )
+
+    @pyqtSlot("QVariant", "QVariant")
+    @async
+    def destroy_direct_message(self, uuid, tweet_id):
+        print "DDM", tweet_id
+        account = self.account(uuid)
+        safe_api_request(
+            lambda: account.api.destroy_direct_message(tweet_id)
+        )
+        self.tweetRemoved.emit(tweet_id)
+        self.requestSent.emit(True, None)
 
     def announce_account(self, account):
         print account

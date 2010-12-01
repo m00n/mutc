@@ -35,6 +35,9 @@ Rectangle {
         delegate: TweetPanel {
             id: tweet_panel
 
+            locked: main_window.locked
+            overlay: main_window.locked
+
             anchors.top: { if (parent) parent.top }
             anchors.bottom: { if (parent) parent.bottom }
 
@@ -49,39 +52,68 @@ Rectangle {
                 var tweet = model.get(tweet_panel.tweetView.currentIndex)
 
                 twitter_dialog.state = "visible"
-                twitter_dialog.in_reply = tweet.tweet_id
-                twitter_dialog.text = "@" + tweet.author.screen_name + " "
-                twitter_dialog.edit.cursorPosition = twitter_dialog.text.length
+
+                if (model.type != "direct messages") {
+                    twitter_dialog.in_reply_id = tweet.tweet_id
+                    twitter_dialog.text = "@" + tweet.author.screen_name + " "
+                    twitter_dialog.edit.cursorPosition = twitter_dialog.text.length
+                } else {
+                    twitter_dialog.in_reply_id = tweet.author.id_str
+                    twitter_dialog.in_reply = tweet.author.screen_name
+                    twitter_dialog.direct_message_from = uuid
+                    twitter_dialog.direct_message = true
+                }
             }
 
             onRetweet: {
                 var model = twitter.get_model(uuid, type, args)
                 var tweet = model.get(tweet_panel.tweetView.currentIndex)
-                if (comment) {
-                    twitter_dialog.state = "visible"
-                    twitter_dialog.text = "RT @" + tweet.author.screen_name + ": " + tweet.message
-                    twitter_dialog.in_reply = tweet.tweet_id
-                    twitter_dialog.edit.cursorPosition = 0
+
+                if (model.type != "direct messages") {
+                    if (comment) {
+                        twitter_dialog.state = "visible"
+                        twitter_dialog.text = "RT @" + tweet.author.screen_name + ": " + tweet.message
+                        twitter_dialog.in_reply = tweet.tweet_id
+                        twitter_dialog.edit.cursorPosition = 0
+                    } else {
+                        twitter.retweet(account_model.getActiveAccounts(), tweet.tweet_id);
+                    }
                 } else {
-                    console.log("GRT" + tweet.tweet_id)
-                    twitter.retweet(account_model.getActiveAccounts(), tweet.tweet_id);
+                    status_dialog.show("Error", "Can't retweet direct messages")
+                    main_window.locked = false
                 }
+            }
+
+            onUndoRetweet: {
+                var model = twitter.get_model(uuid, type, args)
+                var tweet = model.get(tweet_panel.tweetView.currentIndex)
+                twitter.undo_retweet(account_model.getActiveAccounts(), tweet.tweet_id)
             }
 
             onRemoveTweet: {
                 var model = twitter.get_model(uuid, type, args)
                 var tweet = model.get(tweet_panel.tweetView.currentIndex)
-                twitter.destroy_tweet(tweet.tweet_id)
+                if (model.type != "direct messages") {
+                    twitter.destroy_tweet(tweet.tweet_id)
+                } else {
+                    twitter.destroy_direct_message(uuid, tweet.tweet_id)
+                }
             }
 
             onPanelsLocked: {
                 main_window.locked = true
             }
             Component.onCompleted: {
-                main_window.lockedChanged.connect(function () {
-                    tweet_panel.locked = main_window.locked
-                    tweet_panel.overlay = main_window.locked
-                })
+                main_window.lockedChanged.connect(lockCallback)
+            }
+            Component.onDestruction: {
+                main_window.lockedChanged.disconnect(lockCallback)
+            }
+
+            function lockCallback () {
+                tweet_panel.locked = main_window.locked
+                if (tweet_panel.overlay && !main_window.locked)
+                    tweet_panel.overlay = false
             }
         }
 
@@ -145,7 +177,6 @@ Rectangle {
             button_text: "+"
             width: 25
             height: toolbar_row.height
-            //anchors.left: account_view.right
             anchors.right: parent.right
             anchors.top: toolbar_row.top
 
@@ -207,6 +238,11 @@ Rectangle {
             ask_text: ""
         }
         ListElement {
+            type: 'direct messages'
+            args: false
+            ask_text: ""
+        }
+        ListElement {
             type: 'search'
             args: true
             ask_text: "Enter search query"
@@ -221,8 +257,12 @@ Rectangle {
         anchors.margins: 1
 
         onSendClicked: {
-            locked = true
-            twitter.tweet(account_model.getActiveAccounts(), twitter_dialog.text, in_reply)
+            main_window.locked = true
+            if (!direct_message) {
+                twitter.tweet(account_model.getActiveAccounts(), twitter_dialog.text, in_reply)
+            } else {
+                twitter.send_direct_message(direct_message_from, in_reply_id, twitter_dialog.text)
+            }
         }
     }
 
@@ -320,7 +360,7 @@ Rectangle {
             Utils.changeEntry(tweet_panel_model, "uuid", data.uuid, "screen_name", data.screen_name);
         })
         twitter.requestSent.connect(function (success, error_msg) {
-            locked = false
+            main_window.locked = false
             twitter_dialog.state = "hidden"
 
             if (!success) {

@@ -16,13 +16,40 @@ Rectangle {
     property int partition: height / 8
     property alias text: tweet_area.text
     property Item edit: tweet_area
+    property string in_reply_id
     property string in_reply
+    property bool direct_message
+    property string direct_message_from
+
+    Rectangle {
+        id: status
+
+        width: parent.width
+        height: direct_message ? partition : 0
+
+        border.width: 2
+        border.color: activePalette.window
+        color: "#00000000"
+
+        Text {
+            visible: direct_message
+            text: "DM " + in_reply
+            color: "white"
+            anchors {
+                verticalCenter: parent.verticalCenter
+                left: parent.left
+                margins: 2
+            }
+        }
+
+        anchors.top: parent.top
+    }
 
     Rectangle {
         id: tweet_border
 
         width: parent.width
-        height: partition * 5
+        height: partition * (direct_message ? 4 : 5)
 
         border.width: 2
         border.color: activePalette.window
@@ -38,7 +65,7 @@ Rectangle {
             wrapMode: TextEdit.Wrap
         }
 
-        anchors.top: parent.top
+        anchors.top: status.bottom
     }
 
     Item {
@@ -142,6 +169,9 @@ Rectangle {
                 target: tweet_dialog
                 opacity: 1
                 in_reply: ""
+                in_reply_id: ""
+                direct_message: false
+                direct_message_from: ""
             }
             PropertyChanges {
                 target: tweet_area
@@ -163,6 +193,11 @@ Rectangle {
                 target: tweet_border
                 height: partition * 4
             }
+            PropertyChanges {
+                target: status
+                visible: false
+            }
+
         }
     ]
 

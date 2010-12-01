@@ -14,6 +14,7 @@ Rectangle {
     signal needTweets
     signal reply
     signal retweet(bool comment)
+    signal undoRetweet
     signal removeTweet
     signal panelsLocked
 
@@ -121,6 +122,9 @@ Rectangle {
         model: tweet_model
         spacing: 2
         highlightFollowsCurrentItem: false
+
+        property string panel_screen_name: screen_name
+
 
         anchors {
             top: title_rect.bottom
@@ -238,6 +242,7 @@ Rectangle {
                     z: 7
                     Button {
                         id: rt_button
+                        //disabled: tweet_view.currentItem.dataMyRetweet
                         button_text: "\u21BA"
                         default_color: "#000000"
                         width: 30
@@ -249,7 +254,12 @@ Rectangle {
                         }
                         z: 7
 
-                        onButtonClicked: overlay_item.state = "retweet"
+                        onButtonClicked: {
+                            if (tweet_view.currentItem.dataMyRetweet)
+                                overlay_item.state = "undo-retweet"
+                            else
+                                overlay_item.state = "retweet"
+                        }
                     }
 
                     Button {
@@ -345,6 +355,55 @@ Rectangle {
                 }
 
                 Item {
+                    id: rt_undo_panel
+
+                    visible: false
+                    opacity: visible ? 1 : 0
+
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    width: 300
+
+                    z: 7
+                    Button {
+                        id: rt_undo_button
+                        button_text: "undo rt"
+                        default_color: "#000000"
+                        width: 120
+                        height: parent.height - 10
+                        anchors {
+                            verticalCenter: parent.verticalCenter
+                            right: parent.horizontalCenter
+                            margins: 15
+                        }
+                        z: 7
+
+                        onButtonClicked: {
+                            overlay_item.state = "busy"
+                            tweet_panel.undoRetweet()
+                        }
+                    }
+                    Button {
+                        id: rt_cancel_undo_button
+                        button_text: "cancel"
+                        default_color: "#000000"
+                        width: 120
+                        height: parent.height - 10
+                        anchors {
+                            verticalCenter: parent.verticalCenter
+                            left: parent.horizontalCenter
+                            margins: 15
+                        }
+                        z: 7
+
+                        onButtonClicked: {
+                            overlay = false
+                        }
+                    }
+                }
+
+                Item {
                     id: delete_panel
 
                     visible: false
@@ -428,6 +487,10 @@ Rectangle {
                         opacity: 0
                     }
                     PropertyChanges {
+                        target: rt_undo_panel
+                        opacity: 0
+                    }
+                    PropertyChanges {
                         target: action_panel
                         opacity: 0
                     }
@@ -450,6 +513,17 @@ Rectangle {
                         visible: false
                     }
 
+                },
+                State {
+                    name: "undo-retweet"
+                    PropertyChanges {
+                        target: rt_undo_panel
+                        visible: true
+                    }
+                    PropertyChanges {
+                        target: action_panel
+                        visible: false
+                    }
                 },
                 State {
                     name: "delete"
