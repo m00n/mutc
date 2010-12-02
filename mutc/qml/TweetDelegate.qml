@@ -34,9 +34,7 @@ Rectangle {
         id: twitter_name
         text: {
             var you = ListView.view.panel_screen_name
-            //console.log(ListView.view.model.type)
             if (ListView.view.model.type == "direct messages") {
-                //("<b>" + author.screen_name + "</b> to <b>" + in_reply.screen_name + "</b>").replace(, "you")
                 if (author.screen_name == you)
                     "to <b>" + in_reply.screen_name
                 else
@@ -46,7 +44,6 @@ Rectangle {
             }
         }
         color: "white"
-        //font.bold: true
 
         anchors {
             left: twitter_avatar.right
@@ -79,11 +76,22 @@ Rectangle {
         text: created_at
 
         font.pointSize: twitter_name.font.pointSize - 3
+        font.underline: twitter_time_mouse_area.containsMouse
         height: 22
         color: "white"
 
         x: 5
         y: parent.height - 18
+        z: 10
+
+        MouseArea {
+            id: twitter_time_mouse_area
+            anchors.fill: parent
+            hoverEnabled: true
+            onClicked: {
+                app.open_url("http://twitter.com/#!/" + author.screen_name + "/status/" + tweet_id)
+            }
+        }
     }
 
     Text {
@@ -104,6 +112,33 @@ Rectangle {
         }
         height: 22
         font.pointSize: twitter_time.font.pointSize
+    }
+
+    Text {
+        y: parent.height - 18
+        z: 10
+
+        visible: in_reply ? true : false
+
+        text: "In reply to " + in_reply
+        color: "white"
+
+        anchors {
+            right: parent.right
+            rightMargin: 5
+        }
+        font.pointSize: twitter_time.font.pointSize
+        font.underline: mouse_area.containsMouse
+
+        MouseArea {
+            id: mouse_area
+            anchors.fill: parent
+            hoverEnabled: true
+
+            onClicked: {
+                app.open_url("http://twitter.com/#!/" + in_reply + "/status/" + in_reply_id)
+            }
+        }
     }
 
     Behavior on opacity {
