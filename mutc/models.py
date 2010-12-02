@@ -148,6 +148,11 @@ class TweetModel(QAbstractListModel):
 
     def replaceTweet(self, restore, id_str, new_status):
         index = self.index_for_id(id_str)
+
+        if index is None:
+            print "replaceTweet", restore, id_str, new_status, "-> None"
+            return
+
         old_tweet = self.tweets[index]
 
         if hasattr(old_tweet, "other_retweet") and restore:
