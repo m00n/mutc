@@ -128,7 +128,7 @@ Rectangle {
             rightMargin: 5
         }
         font.pointSize: twitter_time.font.pointSize
-        font.underline: mouse_area.containsMouse
+        font.underline: (in_reply_id && mouse_area.containsMouse) ? true : false
 
         MouseArea {
             id: mouse_area
@@ -136,7 +136,8 @@ Rectangle {
             hoverEnabled: true
 
             onClicked: {
-                app.open_url("http://twitter.com/#!/" + in_reply + "/status/" + in_reply_id)
+                if (in_reply_id)
+                    app.open_url("http://twitter.com/#!/" + in_reply + "/status/" + in_reply_id)
             }
         }
     }
