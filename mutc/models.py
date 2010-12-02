@@ -185,6 +185,10 @@ class TweetModel(QAbstractListModel):
             return author_to_dict(status.author)
         elif role == self.MyRetweetRole:
             return status.retweeted
+        elif role == self.InReplyRole:
+            return status.in_reply_to_screen_name
+        elif role == self.InReplyToIdRole:
+            return status.in_reply_to_status_id_str
 
     def data_default(self, status, role):
         if role == self.AuthorRole:
@@ -202,6 +206,10 @@ class TweetModel(QAbstractListModel):
             }
         elif role == self.MyRetweetRole:
             return False
+        elif role == self.InReplyRole:
+            return status.in_reply_to_screen_name
+        elif role == self.InReplyToIdRole:
+            return status.in_reply_to_status_id_str
 
     def data_search(self, result, role):
         if role == self.AuthorRole:
@@ -222,6 +230,10 @@ class TweetModel(QAbstractListModel):
             }
         elif role == self.RetweetByRole:
             return False
+        elif role == self.InReplyRole:
+            return status.in_reply_to_screen_name
+        elif role == self.InReplyToIdRole:
+            return status.in_reply_to_status_id_str
 
     @pyqtSlot()
     def needTweets(self):
