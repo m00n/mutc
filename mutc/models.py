@@ -27,7 +27,11 @@ from PyQt4.Qt import *
 from utils import async
 
 
-def format_datetime(date):
+def format_datetime(date, diff=[]):
+    if not diff:
+        diff.append(datetime.now() - datetime.utcnow())
+    date = date + diff[0]
+
     midnight = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
     if date >= midnight:
         # tweet from today
