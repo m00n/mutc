@@ -259,7 +259,7 @@ Rectangle {
         onSendClicked: {
             main_window.locked = true
             if (!direct_message) {
-                twitter.tweet(account_model.getActiveAccounts(), twitter_dialog.text, in_reply)
+                twitter.tweet(account_model.getActiveAccounts(), twitter_dialog.text, in_reply_id)
             } else {
                 twitter.send_direct_message(direct_message_from, in_reply_id, twitter_dialog.text)
             }
