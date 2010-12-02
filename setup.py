@@ -22,7 +22,7 @@ from distutils.core import setup
 
 setup(
     name='mutc',
-    version='0.0',
+    version='0.1.0',
     description='A twitter client using pyqt & qml',
     author='Yannick "m00n" Schaefer',
     author_email='m00n@chillaz-net.de',
