@@ -20,7 +20,7 @@ from __future__ import with_statement, division
 
 import sys
 import threading
-from functools import partial
+from functools import partial, wraps
 from itertools import imap
 from uuid import uuid4
 from time import sleep
@@ -98,13 +98,21 @@ class Account(QObject):
 
     @async
     def connect(self):
-        self._auth.set_access_token(self.oauth_key, self.oauth_secret)
+        try:
+            self._auth.set_access_token(self.oauth_key, self.oauth_secret)
+        except tweepy.TweepError as error:
+            if isinstance(error.exception, httplib.HTTPException):
+                if error.code == 401:
+                    print "Auth failed:", error
+                    import sys
+                    sys.exit()
+
         self.api = tweepy.API(
             self._auth,
             proxy_host=self.proxy_host,
             proxy_port=self.proxy_port
         )
-        self.me = self.api.me()
+        self.me = safe_api_request(self.api.me)
 
         print self.me.screen_name, "connected ->", self.api.test()
 
@@ -124,6 +132,7 @@ class Account(QObject):
             'connected': self.valid and self.api,
             'active': False
         }
+
 
 
 class Twitter(QObject):
@@ -159,6 +168,18 @@ class Twitter(QObject):
 
         self.thread = TwitterThread(self, self.subscriptions, Logger("thread"))
         self.thread.start()
+
+    def locking(func):
+        @wraps(func)
+        def wrapper(self, *args, **kwds):
+            try:
+                func(self, *args, **kwds)
+            except Exception as error:
+                self.requestSent.emit(False, unicode(errpr))
+            else:
+                self.requestSent.emit(True, None)
+
+        return wrapper
 
     def on_account_connected(self, account):
         self.accountConnected.emit(account.simplify())
@@ -200,6 +221,7 @@ class Twitter(QObject):
 
     @pyqtSlot("QVariant", "QVariant", "QVariant")
     @async
+    @locking
     def tweet(self, accounts, tweet, in_reply=None):
         in_reply = in_reply if in_reply else None
 
@@ -208,10 +230,11 @@ class Twitter(QObject):
                 lambda api=account.api: api.update_status(tweet, in_reply)
             )
 
-        self.requestSent.emit(True, None)
+        #self.requestSent.emit(True, None)
 
     @pyqtSlot("QVariant", "QVariant")
     @async
+    @locking
     def retweet(self, accounts, tweet_id):
         for account in imap(self.account, accounts):
             status = safe_api_request(
@@ -230,10 +253,11 @@ class Twitter(QObject):
 
             self.tweetChanged.emit(False, tweet_id, status)
 
-        self.requestSent.emit(True, None)
+        #self.requestSent.emit(True, None)
 
     @pyqtSlot("QVariant", "QVariant")
     @async
+    @locking
     def undo_retweet(self, accounts, tweet_id):
         for account in imap(self.account, accounts):
             status = safe_api_request(
@@ -241,10 +265,11 @@ class Twitter(QObject):
             )
             self.tweetChanged.emit(True, tweet_id, status.retweeted_status)
 
-        self.requestSent.emit(True, None)
+        #self.requestSent.emit(True, None)
 
     @pyqtSlot("QVariant", "QVariant", "QVariant")
     @async
+    @locking
     def send_direct_message(self, from_uuid, to_twitter_id, text):
         account = self.account(from_uuid)
         safe_api_request(
@@ -254,10 +279,11 @@ class Twitter(QObject):
             )
         )
 
-        self.requestSent.emit(True, None)
+        #self.requestSent.emit(True, None)
 
     @pyqtSlot("QVariant")
     @async
+    @locking
     def destroy_tweet(self, tweet_id):
         status = self.accounts.values()[0].api.get_status(tweet_id)
         author_id = status.author.id
@@ -271,12 +297,14 @@ class Twitter(QObject):
 
                 break
         else:
-            self.requestSent.emit(
-                False, "This tweet doesn't belong to any of your accounts"
-            )
+            #self.requestSent.emit(
+                #False, "This tweet doesn't belong to any of your accounts"
+            #)
+            raise TweepError("This tweet doesn't belong to any of your accounts")
 
     @pyqtSlot("QVariant", "QVariant")
     @async
+    @locking
     def destroy_direct_message(self, uuid, tweet_id):
         print "DDM", tweet_id
         account = self.account(uuid)
@@ -284,7 +312,7 @@ class Twitter(QObject):
             lambda: account.api.destroy_direct_message(tweet_id)
         )
         self.tweetRemoved.emit(tweet_id)
-        self.requestSent.emit(True, None)
+        #self.requestSent.emit(True, None)
 
     def announce_account(self, account):
         print account
