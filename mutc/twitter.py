@@ -114,8 +114,6 @@ class Account(QObject):
         )
         self.me = safe_api_request(self.api.me)
 
-        print self.me.screen_name, "connected ->", self.api.test()
-
         if self.api.test():
             self.connected.emit(self)
         else:
