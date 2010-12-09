@@ -99,7 +99,9 @@ class Account(QObject):
     @async
     def connect(self):
         try:
-            self._auth.set_access_token(self.oauth_key, self.oauth_secret)
+            safe_api_request(
+                self._auth.set_access_token(self.oauth_key, self.oauth_secret)
+            )
         except tweepy.TweepError as error:
             if isinstance(error.exception, httplib.HTTPException):
                 if error.code == 401:
@@ -107,18 +109,15 @@ class Account(QObject):
                     import sys
                     sys.exit()
 
+            self.connectionFailed.emit(self)
+
         self.api = tweepy.API(
             self._auth,
             proxy_host=self.proxy_host,
             proxy_port=self.proxy_port
         )
         self.me = safe_api_request(self.api.me)
-
-        if self.api.test():
-            self.connected.emit(self)
-        else:
-            # XXX
-            self.connectionFailed.emit(self)
+        self.connected.emit(self)
 
     def simplify(self):
         print "account.simplify", self.me, bool(self.me)
