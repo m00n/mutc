@@ -227,8 +227,6 @@ class Twitter(QObject):
                 lambda api=account.api: api.update_status(tweet, in_reply)
             )
 
-        #self.requestSent.emit(True, None)
-
     @pyqtSlot("QVariant", "QVariant")
     @async
     @locking
@@ -250,8 +248,6 @@ class Twitter(QObject):
 
             self.tweetChanged.emit(False, tweet_id, status)
 
-        #self.requestSent.emit(True, None)
-
     @pyqtSlot("QVariant", "QVariant")
     @async
     @locking
@@ -261,8 +257,6 @@ class Twitter(QObject):
                 lambda: account.api.destroy_status(tweet_id)
             )
             self.tweetChanged.emit(True, tweet_id, status.retweeted_status)
-
-        #self.requestSent.emit(True, None)
 
     @pyqtSlot("QVariant", "QVariant", "QVariant")
     @async
@@ -275,8 +269,6 @@ class Twitter(QObject):
                 text=text
             )
         )
-
-        #self.requestSent.emit(True, None)
 
     @pyqtSlot("QVariant")
     @async
@@ -294,22 +286,19 @@ class Twitter(QObject):
 
                 break
         else:
-            #self.requestSent.emit(
-                #False, "This tweet doesn't belong to any of your accounts"
-            #)
-            raise TweepError("This tweet doesn't belong to any of your accounts")
+            raise TweepError(
+                "This tweet doesn't belong to any of your accounts"
+            )
 
     @pyqtSlot("QVariant", "QVariant")
     @async
     @locking
     def destroy_direct_message(self, uuid, tweet_id):
-        print "DDM", tweet_id
         account = self.account(uuid)
         safe_api_request(
             lambda: account.api.destroy_direct_message(tweet_id)
         )
         self.tweetRemoved.emit(tweet_id)
-        #self.requestSent.emit(True, None)
 
     def announce_account(self, account):
         print account
