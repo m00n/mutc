@@ -100,7 +100,11 @@ class Account(QObject):
     def connect(self):
         try:
             safe_api_request(
-                self._auth.set_access_token(self.oauth_key, self.oauth_secret)
+                partial(
+                    self._auth.set_access_token,
+                    self.oauth_key,
+                    self.oauth_secret
+                )
             )
         except tweepy.TweepError as error:
             if isinstance(error.exception, httplib.HTTPException):
