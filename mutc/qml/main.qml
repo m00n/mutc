@@ -36,7 +36,7 @@ Rectangle {
             id: tweet_panel
 
             locked: main_window.locked
-            overlay: main_window.locked
+            //overlay: main_window.locked
 
             anchors.top: { if (parent) parent.top }
             anchors.bottom: { if (parent) parent.bottom }
