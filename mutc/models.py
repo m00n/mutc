@@ -150,17 +150,19 @@ class TweetModel(QAbstractListModel):
         index = self.index_for_id(id_str)
 
         if index is None:
-            print "replaceTweet", restore, id_str, new_status, "-> None"
+            # We are the wrong model, just return
             return
 
         old_tweet = self.tweets[index]
 
-        if hasattr(old_tweet, "other_retweet") and restore:
-            # This was retweeted by someone into my timeline
-            new_status = old_tweet.other_retweet
+        # Only change something if this model is meant
+        if id(old_tweet._api) == id(new_status._api):
+            if hasattr(old_tweet, "other_retweet") and restore:
+                # This was retweeted by someone into my timeline
+                new_status = old_tweet.other_retweet
 
-        self.tweets[index] = new_status
-        self.dataChanged.emit(self.index(index), self.index(index))
+            self.tweets[index] = new_status
+            self.dataChanged.emit(self.index(index), self.index(index))
 
     @pyqtSlot(result="QVariant")
     def rowCount(self, parent=None):
