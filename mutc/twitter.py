@@ -137,7 +137,7 @@ class Account(QObject):
 
 
 class Twitter(QObject):
-    newTweets = pyqtSignal("QVariant")
+    newTweets = pyqtSignal(object, list)
     newSubscription = pyqtSignal("QVariant")
 
     announceAccount = pyqtSignal("QVariant")
@@ -168,6 +168,7 @@ class Twitter(QObject):
         )
 
         self.thread = TwitterThread(self, self.subscriptions, Logger("thread"))
+        self.thread.newTweets.connect(self.newTweets.emit)
         self.thread.start()
 
     def locking(func):
