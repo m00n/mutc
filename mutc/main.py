@@ -142,6 +142,65 @@ class ProxyNetworkAccessManagerFactory(QDeclarativeNetworkAccessManagerFactory):
         return network
 
 
+class TrayIcon(QSystemTrayIcon):
+    TRAY_HEIGHT = 22
+
+    def __init__(self):
+        QSystemTrayIcon.__init__(self)
+
+        self.app_icon = QPixmap(path(__file__).dirname() / "tray_icon.png")
+        self.unread_tweet_count = 0
+
+        self.activated.connect(self.on_activated)
+
+    @pyqtProperty(int)
+    def unread_tweet_count(self):
+        return self._unread_tweet_count
+
+    @unread_tweet_count.setter
+    def unread_tweet_count(self, value):
+        print "sunr_t", value
+        self._unread_tweet_count = value
+        if value == 0:
+            self.setIcon(QIcon(self.app_icon))
+        else:
+            img = self.make_icon(self.unread_tweet_count)
+            img.save("/tmp/z.png")
+            self.setIcon(QIcon(QPixmap(img)))
+
+    def on_new_tweets(self, tweets):
+        print "ont", len(tweets)
+        self.unread_tweet_count += len(tweets)
+
+    def on_activated(self, reason):
+        self.unread_tweet_count = 0
+        print reason
+
+    def make_icon(self, tweet_count):
+        text = unicode(tweet_count)
+        font = QFont()
+        text_width = QFontMetrics(font).boundingRect(text).width()
+        img = QImage(
+            #self.app_icon.width() + text_width + 4,
+            self.TRAY_HEIGHT,
+            self.TRAY_HEIGHT,
+            QImage.Format_ARGB32
+        )
+        img.fill(0)
+        painter = QPainter(img)
+        painter.fillRect(img.rect(), QColor(0, 0, 0, 0))
+        painter.drawPixmap(1, 0, self.app_icon)
+        painter.drawText(
+            #self.app_icon.width() + 1,
+            (self.TRAY_HEIGHT // 2) - (text_width // 2),
+            self.TRAY_HEIGHT - (font.pointSize() // 2) - 1,
+            text
+        )
+        painter.end()
+        print self.geometry().width(), ">>"
+        return img
+
+
 def main():
     twitter = Twitter()
     app = App(sys.argv, twitter)
@@ -170,6 +229,10 @@ def main():
     twitter.start_sync()
 
     declarative_view.show()
+
+    tray_icon = TrayIcon()
+    twitter.newTweets.connect(lambda s, t: tray_icon.on_new_tweets(t))
+    tray_icon.show()
 
     return app.exec_()
 
