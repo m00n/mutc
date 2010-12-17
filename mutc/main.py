@@ -159,7 +159,6 @@ class TrayIcon(QSystemTrayIcon):
 
     @unread_tweet_count.setter
     def unread_tweet_count(self, value):
-        print "sunr_t", value
         self._unread_tweet_count = value
         if value == 0:
             self.setIcon(QIcon(self.app_icon))
@@ -169,7 +168,6 @@ class TrayIcon(QSystemTrayIcon):
             self.setIcon(QIcon(QPixmap(img)))
 
     def on_new_tweets(self, tweets):
-        print "ont", len(tweets)
         self.unread_tweet_count += len(tweets)
 
     def on_activated(self, reason):
@@ -179,9 +177,8 @@ class TrayIcon(QSystemTrayIcon):
     def make_icon(self, tweet_count):
         text = unicode(tweet_count)
         font = QFont()
-        text_width = QFontMetrics(font).boundingRect(text).width()
+
         img = QImage(
-            #self.app_icon.width() + text_width + 4,
             self.TRAY_HEIGHT,
             self.TRAY_HEIGHT,
             QImage.Format_ARGB32
@@ -189,16 +186,23 @@ class TrayIcon(QSystemTrayIcon):
         img.fill(0)
         painter = QPainter(img)
         painter.fillRect(img.rect(), QColor(0, 0, 0, 0))
-        painter.drawPixmap(1, 0, self.app_icon)
+        painter.drawPixmap(0, 0, self.app_icon)
+
+        font.setBold(True)
+        font.setPointSize(11)
+        self._draw_text_centered(painter, font, text)
+        painter.end()
+        return img
+
+    def _draw_text_centered(self, painter, font, text):
+        text_width = QFontMetrics(font).boundingRect(text).width()
+
+        painter.setFont(font)
         painter.drawText(
-            #self.app_icon.width() + 1,
             (self.TRAY_HEIGHT // 2) - (text_width // 2),
             self.TRAY_HEIGHT - (font.pointSize() // 2) - 1,
             text
         )
-        painter.end()
-        print self.geometry().width(), ">>"
-        return img
 
 
 def main():
