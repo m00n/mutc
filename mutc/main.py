@@ -164,7 +164,6 @@ class TrayIcon(QSystemTrayIcon):
             self.setIcon(QIcon(self.app_icon))
         else:
             img = self.make_icon(self.unread_tweet_count)
-            img.save("/tmp/z.png")
             self.setIcon(QIcon(QPixmap(img)))
 
     def on_new_tweets(self, tweets):
@@ -205,38 +204,45 @@ class TrayIcon(QSystemTrayIcon):
         )
 
 
+class MainWindow(QDeclarativeView):
+    def __init__(self, app, twitter):
+        QDeclarativeView.__init__(self)
+
+        self.setViewport(QGLWidget())
+        self.setResizeMode(QDeclarativeView.SizeRootObjectToView)
+
+        factory = self.nam_factory = ProxyNetworkAccessManagerFactory(
+            app.proxy_host,
+            app.proxy_port
+        )
+        self.engine().setNetworkAccessManagerFactory(factory)
+
+        root_context = self.rootContext()
+        root_context.setContextProperty('twitter', twitter)
+        root_context.setContextProperty('app', app)
+        root_context.setContextProperty(
+            'tweet_panel_model', twitter.panel_model
+        )
+
+        self.setSource(
+            QUrl.fromLocalFile(path(__file__).parent / "qml" / "main.qml")
+        )
+
+
 def main():
     twitter = Twitter()
     app = App(sys.argv, twitter)
 
-    declarative_view = QDeclarativeView()
-    declarative_view.setViewport(QGLWidget())
-    declarative_view.setResizeMode(QDeclarativeView.SizeRootObjectToView)
-
-    factory = ProxyNetworkAccessManagerFactory(app.proxy_host, app.proxy_port)
-    declarative_view.engine().setNetworkAccessManagerFactory(factory)
-
-    root_context = declarative_view.rootContext()
-    root_context.setContextProperty('twitter', twitter)
-    root_context.setContextProperty('app', app)
-    root_context.setContextProperty('tweet_panel_model', twitter.panel_model)
-
-    declarative_view.setSource(
-        QUrl.fromLocalFile(path(__file__).parent / "qml" / "main.qml")
-    )
-
-    root_object = declarative_view.rootObject()
-    #root_object.coonect(root_object, SIGNAL('guiReady()'), )
+    main_window = MainWindow(app, twitter)
 
     app.load_accounts()
     app.load_panels()
     twitter.start_sync()
 
-    declarative_view.show()
-
-    tray_icon = TrayIcon()
-    twitter.newTweets.connect(lambda s, t: tray_icon.on_new_tweets(t))
-    tray_icon.show()
+    #tray_icon = TrayIcon()
+    #twitter.newTweets.connect(lambda s, t: tray_icon.on_new_tweets(t))
+    #tray_icon.show()
+    main_window.show()
 
     return app.exec_()
 
