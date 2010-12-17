@@ -145,8 +145,14 @@ class ProxyNetworkAccessManagerFactory(QDeclarativeNetworkAccessManagerFactory):
 class TrayIcon(QSystemTrayIcon):
     TRAY_HEIGHT = 22
 
-    def __init__(self):
+    def __init__(self, twitter, main_window):
         QSystemTrayIcon.__init__(self)
+
+        twitter.newTweets.connect(
+            lambda subscription, tweets: self.on_new_tweets(tweets)
+        )
+
+        self.main_window = main_window
 
         self.app_icon = QPixmap(path(__file__).dirname() / "tray_icon.png")
         self.unread_tweet_count = 0
@@ -167,11 +173,19 @@ class TrayIcon(QSystemTrayIcon):
             self.setIcon(QIcon(QPixmap(img)))
 
     def on_new_tweets(self, tweets):
-        self.unread_tweet_count += len(tweets)
+        if not self.main_window.isVisible():
+            self.unread_tweet_count += len(tweets)
 
     def on_activated(self, reason):
-        self.unread_tweet_count = 0
-        print reason
+        if reason == self.Trigger:
+            self.unread_tweet_count = 0
+
+            if not self.main_window.isVisible():
+                print "show"
+                self.main_window.showAndRestoreGeometry()
+            else:
+                print "hide"
+                self.main_window.hideAndStoreGeometry()
 
     def make_icon(self, tweet_count):
         text = unicode(tweet_count)
@@ -211,7 +225,7 @@ class MainWindow(QDeclarativeView):
         self.setViewport(QGLWidget())
         self.setResizeMode(QDeclarativeView.SizeRootObjectToView)
 
-        factory = self.nam_factory = ProxyNetworkAccessManagerFactory(
+        factory = self.factory = ProxyNetworkAccessManagerFactory(
             app.proxy_host,
             app.proxy_port
         )
@@ -228,6 +242,27 @@ class MainWindow(QDeclarativeView):
             QUrl.fromLocalFile(path(__file__).parent / "qml" / "main.qml")
         )
 
+        self._last_geometry = None
+
+    def changeEvent(self, event):
+        if isinstance(event, QWindowStateChangeEvent):
+            print event, self.isMinimized(), self.geometry()
+            if self.isMinimized():
+                #self.hide()
+                self.hideAndStoreGeometry()
+
+        QDeclarativeView.changeEvent(self, event)
+
+    def hideAndStoreGeometry(self):
+        self._last_geometry = self.geometry()
+        self.hide()
+
+    def showAndRestoreGeometry(self):
+        if self._last_geometry:
+            self.setGeometry(self._last_geometry)
+
+        self.showNormal()
+
 
 def main():
     twitter = Twitter()
@@ -239,9 +274,8 @@ def main():
     app.load_panels()
     twitter.start_sync()
 
-    #tray_icon = TrayIcon()
-    #twitter.newTweets.connect(lambda s, t: tray_icon.on_new_tweets(t))
-    #tray_icon.show()
+    tray_icon = TrayIcon(twitter, main_window)
+    tray_icon.show()
     main_window.show()
 
     return app.exec_()
