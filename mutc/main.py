@@ -181,10 +181,8 @@ class TrayIcon(QSystemTrayIcon):
             self.unread_tweet_count = 0
 
             if not self.main_window.isVisible():
-                print "show"
                 self.main_window.showAndRestoreGeometry()
             else:
-                print "hide"
                 self.main_window.hideAndStoreGeometry()
 
     def make_icon(self, tweet_count):
@@ -248,7 +246,6 @@ class MainWindow(QDeclarativeView):
         if isinstance(event, QWindowStateChangeEvent):
             print event, self.isMinimized(), self.geometry()
             if self.isMinimized():
-                #self.hide()
                 self.hideAndStoreGeometry()
 
         QDeclarativeView.changeEvent(self, event)
