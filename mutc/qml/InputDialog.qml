@@ -48,7 +48,7 @@ Rectangle {
             margins: 5
         }
 
-        TextInput {
+        TextEdit {
             id: input
             anchors.fill: parent
             anchors.margins: 2
@@ -111,10 +111,6 @@ Rectangle {
             }
             PropertyChanges {
                 target: input
-                focus: true
-            }
-            PropertyChanges {
-                target: input
                 text: ""
             }
         }
@@ -126,6 +122,16 @@ Rectangle {
         accepted = true
         state = "hidden"
         dialogAccepted()
+    }
+
+    /*
+    worst hack ever - the textarea seem to can't get focus for some reason - this "fixes" it
+    */
+    Timer {
+        interval: 1
+        repeat: false
+        running: parent.opacity > 0
+        onTriggered: input.focus = true
     }
 
     Behavior on opacity {
