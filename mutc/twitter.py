@@ -206,8 +206,6 @@ class Twitter(QObject):
         else:
             model_class = TweetModel
 
-        print model_class
-
         self.models[key] = model = model_class(self, subscription)
         self.tweetRemoved.connect(model.removeTweet)
         self.tweetChanged.connect(model.replaceTweet)
