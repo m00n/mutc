@@ -241,10 +241,12 @@ class TweetModel(QAbstractListModel):
             }
         elif role == self.RetweetByRole:
             return False
+        elif role == self.MyRetweetRole:
+            return False
         elif role == self.InReplyRole:
-            return status.in_reply_to_screen_name
+            return ""
         elif role == self.InReplyToIdRole:
-            return status.in_reply_to_status_id_str
+            return ""
 
     @pyqtSlot()
     def needTweets(self):
@@ -294,6 +296,8 @@ class PanelModel(QAbstractListModel):
     ScreenNameRole = Qt.UserRole + 3
     TweetModelRole = Qt.UserRole + 4
 
+    countChanged = pyqtSignal(int, int)
+
     def __init__(self, parent, subscriptions):
         QAbstractListModel.__init__(self, parent)
 
@@ -309,8 +313,11 @@ class PanelModel(QAbstractListModel):
 
         self.setRoleNames(self.role_to_key)
 
+    @pyqtSlot(result="QVariant")
     def rowCount(self, parent=None):
         return len(self.panels)
+
+    count = pyqtProperty(int, rowCount, notify=countChanged)
 
     def addPanel(self, subscription, pos=-1):
         if pos == -1:
@@ -323,6 +330,7 @@ class PanelModel(QAbstractListModel):
             self.subscriptions[subscription.key()] = subscription
 
         self.endInsertRows()
+        self.countChanged.emit(self.count, self.count - 1)
 
     def data(self, index, role):
         subscription = self.panels[index.row()]
@@ -378,6 +386,7 @@ class PanelModel(QAbstractListModel):
             self.subscriptions.pop(subscription.key())
 
         self.endRemoveRows()
+        self.countChanged.emit(self.count, self.count + 1)
 
         return subscription
 
