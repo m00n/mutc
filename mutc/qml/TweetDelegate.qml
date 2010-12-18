@@ -55,7 +55,8 @@ Rectangle {
 
     URLText {
         id: twitter_text
-        text: message
+        escapeUrls: false
+        text: twitter.tweet_to_html(message)
         wrapMode: Text.Wrap
         width: tweet_delegate.width - twitter_avatar.width - 15
         z: 10
@@ -67,7 +68,18 @@ Rectangle {
         }
 
         onLinkActivated: {
-           app.open_url(link);
+            var search_url = /search:\/\/(.+)/
+            if (search_url.exec(link)) {
+                twitter.subscribe({
+                    "uuid": uuid,
+                    "type": "search",
+                    "args": RegExp.$1,
+                    "foreground": true
+                })
+            }
+            else {
+                app.open_url(link);
+            }
         }
     }
 
