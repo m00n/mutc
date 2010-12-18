@@ -125,7 +125,6 @@ Rectangle {
 
         property string panel_screen_name: screen_name
 
-
         anchors {
             top: title_rect.bottom
             bottom: parent.bottom
@@ -538,7 +537,6 @@ Rectangle {
 
                 }
             ]
-
 
             Behavior on opacity {
                 NumberAnimation { duration: 250 }
