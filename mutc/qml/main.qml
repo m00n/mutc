@@ -32,11 +32,14 @@ Rectangle {
         snapMode: ListView.SnapOneItem
         interactive: !locked
 
+        function scrollToLast() {
+            tweet_panels.positionViewAtIndex(tweet_panel_model.count - 1, ListView.End)
+        }
+
         delegate: TweetPanel {
             id: tweet_panel
 
             locked: main_window.locked
-            //overlay: main_window.locked
 
             anchors.top: { if (parent) parent.top }
             anchors.bottom: { if (parent) parent.bottom }
@@ -103,6 +106,7 @@ Rectangle {
             onPanelsLocked: {
                 main_window.locked = true
             }
+
             Component.onCompleted: {
                 main_window.lockedChanged.connect(lockCallback)
             }
@@ -302,12 +306,11 @@ Rectangle {
         id: search_dialog
         text: ""
         state: "hidden"
+        anchors.centerIn: main_window
 
         onDialogAccepted: {
             console.log(value);
         }
-
-        anchors.centerIn: main_window
     }
 
     NewAccoutDialog {
@@ -357,7 +360,7 @@ Rectangle {
             for (var index in keys) {
                 Utils.changeEntry(account_model, "uuid", data.uuid, keys[index], data[keys[index]]);
             }
-            Utils.changeEntry(tweet_panel_model, "uuid", data.uuid, "screen_name", data.screen_name);
+            //Utils.changeEntry(tweet_panel_model, "uuid", data.uuid, "screen_name", data.screen_name);
         })
         twitter.requestSent.connect(function (success, error_msg) {
             main_window.locked = false
@@ -366,6 +369,13 @@ Rectangle {
             if (!success) {
                 status_dialog.show("Request failed", error_msg)
             }
+        })
+        tweet_panel_model.countChanged.connect(function (count, old_count) {
+            if (count > old_count) {
+                console.log(count + " " + old_count)
+                tweet_panels.scrollToLast()
+            }
+
         })
     }
 }
