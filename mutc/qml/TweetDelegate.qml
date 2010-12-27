@@ -53,6 +53,7 @@ Rectangle {
 
     }
 
+    /*
     URLText {
         id: twitter_text
         escapeUrls: false
@@ -79,6 +80,76 @@ Rectangle {
             }
             else {
                 app.open_url(link);
+            }
+        }
+    }*/
+
+    Flow {
+        id: text_flow
+
+        property string text: message
+        property color color: "white"
+
+        width: tweet_delegate.width - twitter_avatar.width - 15
+        height: 100
+        z: 10
+        spacing: 3
+
+        anchors {
+            top: twitter_name.bottom
+            left: twitter_avatar.right
+            margins: 5
+        }
+
+        Repeater {
+            id: repeater
+
+            model: ListModel {
+            }
+
+            Text {
+                property string decoration: "none"
+
+                function makeText(t) {
+                    return '<style type="text/css">\n' +
+                            'a:link{ text-decoration: ' + decoration + '; color: ' + text_flow.color + ' }\n' +
+                            '</style>\n' + t
+                }
+
+                color: text_flow.color
+                text: makeText(part)
+
+                MouseArea {
+                    id: part_mousearea
+                    anchors.fill: parent
+                    hoverEnabled: true
+
+                    onHoveredChanged: {
+                        decoration = islink && containsMouse ? "underline" : "none"
+                        parent.text = makeText(part)
+                    }
+                }
+            }
+        }
+
+        Component.onCompleted: {
+            var splitted = text.split(" ")
+            for (var i = 0; i < splitted.length; i++) {
+                var part = splitted[i]
+                var islink = false
+
+                if (part.substr(0, 1) == "@") {
+                    part = "<a href=\"http://twitter.com/" + part.substr(1) + "\">" + part +"</a>"
+                    islink = true
+                } else if (part.substr(0, 1) == "#") {
+                    part = "<a href=\"search://" + part.substr(1) + "\">" + part + "</a>"
+                    islink = true
+                } else if (part.match(/(http:\/\/\S*)/g)) {
+                    part = part.replace(/(http:\/\/\S*)/g, '<a href="$1">$1<\/a>')
+                    islink = true
+                }
+
+                repeater.model.append({"part": part, "islink": islink})
             }
         }
     }
