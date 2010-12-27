@@ -80,6 +80,7 @@ Rectangle {
                 color: text_flow.color
                 font.underline: islink && part_mousearea.containsMouse
                 text: part + " "
+                textFormat: Text.PlainText
 
                 MouseArea {
                     id: part_mousearea
