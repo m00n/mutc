@@ -53,13 +53,16 @@ Rectangle {
 
     }
 
-    URLText {
-        id: twitter_text
-        escapeUrls: false
-        text: twitter.tweet_to_html(message)
-        wrapMode: Text.Wrap
-        width: tweet_delegate.width - twitter_avatar.width - 15
+    Flow {
+        id: text_flow
+
+        property string text: message
+        property color color: "white"
+
         z: 10
+
+        width: tweet_delegate.width - twitter_avatar.width - 15
+        height: 100
 
         anchors {
             top: twitter_name.bottom
@@ -67,18 +70,59 @@ Rectangle {
             margins: 5
         }
 
-        onLinkActivated: {
-            var search_url = /search:\/\/(.+)/
-            if (search_url.exec(link)) {
-                twitter.subscribe({
-                    "uuid": uuid,
-                    "type": "search",
-                    "args": RegExp.$1,
-                    "foreground": true
-                })
+        Repeater {
+            id: repeater
+
+            model: ListModel {
             }
-            else {
-                app.open_url(link);
+
+            Text {
+                color: text_flow.color
+                font.underline: islink && part_mousearea.containsMouse
+                text: part + " "
+
+                MouseArea {
+                    id: part_mousearea
+                    anchors.fill: parent
+                    hoverEnabled: true
+
+                    onClicked: {
+                        var search_url = /search:\/\/(.+)/
+                        if (search_url.exec(url)) {
+                            twitter.subscribe({
+                                "uuid": uuid,
+                                "type": "search",
+                                "args": RegExp.$1,
+                                "foreground": true
+                            })
+                        }
+                        else {
+                            app.open_url(url);
+                        }
+                    }
+                }
+            }
+        }
+
+        Component.onCompleted: {
+            var splitted = text.split(" ")
+            for (var i = 0; i < splitted.length; i++) {
+                var part = splitted[i]
+                var url = null
+                var islink = false
+
+                if (part.substr(0, 1) == "@") {
+                    url = "http://twitter.com/" + part.substr(1)
+                    islink = true
+                } else if (part.substr(0, 1) == "#") {
+                    url = "search://" + part.substr(1)
+                    islink = true
+                } else if (part.match(/(http:\/\/\S*)/g)) {
+                    url = part
+                    islink = true
+                }
+
+                repeater.model.append({"part": part, "islink": islink, "url": url})
             }
         }
     }
