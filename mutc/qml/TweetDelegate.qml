@@ -53,53 +53,24 @@ Rectangle {
 
     }
 
-    /*
-    URLText {
-        id: twitter_text
-        escapeUrls: false
-        text: twitter.tweet_to_html(message)
-        wrapMode: Text.Wrap
-        width: tweet_delegate.width - twitter_avatar.width - 15
-        z: 10
-
-        anchors {
-            top: twitter_name.bottom
-            left: twitter_avatar.right
-            margins: 5
-        }
-
-        onLinkActivated: {
-            var search_url = /search:\/\/(.+)/
-            if (search_url.exec(link)) {
-                twitter.subscribe({
-                    "uuid": uuid,
-                    "type": "search",
-                    "args": RegExp.$1,
-                    "foreground": true
-                })
-            }
-            else {
-                app.open_url(link);
-            }
-        }
-    }*/
-
     Flow {
         id: text_flow
 
         property string text: message
         property color color: "white"
 
+        z: 10
+
         width: tweet_delegate.width - twitter_avatar.width - 15
         height: 100
-        z: 10
-        spacing: 3
 
         anchors {
             top: twitter_name.bottom
             left: twitter_avatar.right
             margins: 5
         }
+
+        spacing: 3
 
         Repeater {
             id: repeater
@@ -110,24 +81,14 @@ Rectangle {
             Text {
                 property string decoration: "none"
 
-                function makeText(t) {
-                    return '<style type="text/css">\n' +
-                            'a:link{ text-decoration: ' + decoration + '; color: ' + text_flow.color + ' }\n' +
-                            '</style>\n' + t
-                }
-
                 color: text_flow.color
-                text: makeText(part)
+                font.underline: islink && part_mousearea.containsMouse
+                text: part
 
                 MouseArea {
                     id: part_mousearea
                     anchors.fill: parent
                     hoverEnabled: true
-
-                    onHoveredChanged: {
-                        decoration = islink && containsMouse ? "underline" : "none"
-                        parent.text = makeText(part)
-                    }
                 }
             }
         }
@@ -136,20 +97,21 @@ Rectangle {
             var splitted = text.split(" ")
             for (var i = 0; i < splitted.length; i++) {
                 var part = splitted[i]
+                var url = null
                 var islink = false
 
                 if (part.substr(0, 1) == "@") {
-                    part = "<a href=\"http://twitter.com/" + part.substr(1) + "\">" + part +"</a>"
+                    url = "http://twitter.com/" + part.substr(1)
                     islink = true
                 } else if (part.substr(0, 1) == "#") {
-                    part = "<a href=\"search://" + part.substr(1) + "\">" + part + "</a>"
+                    url = "search://" + part.substr(1)
                     islink = true
                 } else if (part.match(/(http:\/\/\S*)/g)) {
-                    part = part.replace(/(http:\/\/\S*)/g, '<a href="$1">$1<\/a>')
+                    url = part
                     islink = true
                 }
 
-                repeater.model.append({"part": part, "islink": islink})
+                repeater.model.append({"part": part, "islink": islink, "url": url})
             }
         }
     }
