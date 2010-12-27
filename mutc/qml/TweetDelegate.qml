@@ -70,8 +70,6 @@ Rectangle {
             margins: 5
         }
 
-        spacing: 3
-
         Repeater {
             id: repeater
 
@@ -79,16 +77,29 @@ Rectangle {
             }
 
             Text {
-                property string decoration: "none"
-
                 color: text_flow.color
                 font.underline: islink && part_mousearea.containsMouse
-                text: part
+                text: part + " "
 
                 MouseArea {
                     id: part_mousearea
                     anchors.fill: parent
                     hoverEnabled: true
+
+                    onClicked: {
+                        var search_url = /search:\/\/(.+)/
+                        if (search_url.exec(url)) {
+                            twitter.subscribe({
+                                "uuid": uuid,
+                                "type": "search",
+                                "args": RegExp.$1,
+                                "foreground": true
+                            })
+                        }
+                        else {
+                            app.open_url(url);
+                        }
+                    }
                 }
             }
         }
