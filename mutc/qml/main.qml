@@ -39,6 +39,8 @@ Rectangle {
         delegate: TweetPanel {
             id: tweet_panel
 
+            width: type == "wall" ? 640 : 320
+
             locked: main_window.locked
 
             anchors.top: { if (parent) parent.top }
@@ -250,6 +252,11 @@ Rectangle {
             type: 'search'
             args: true
             ask_text: "Enter search query"
+        }
+        ListElement {
+            type: 'wall'
+            args: true
+            ask_text: "Enter hashtag"
         }
     }
 

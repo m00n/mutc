@@ -193,6 +193,9 @@ class Search(Subscription):
     def get_stream_args(self):
         return {'q': self.args}
 
+class Wall(Search):
+    subscription_type = "wall"
+
 class IncomingDirectMessages(Subscription):
     subscription_type = "incoming_dm"
     def get_stream(self):
@@ -293,7 +296,8 @@ def create_subscription(name, account, args):
         "timeline": HomeTimeline,
         "mentions": Mentions,
         "search": Search,
-        "direct messages": DirectMessages
+        "direct messages": DirectMessages,
+        "wall": Wall
     }[name](account, args)
 
 
