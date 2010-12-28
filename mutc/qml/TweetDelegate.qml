@@ -88,17 +88,19 @@ Rectangle {
                     hoverEnabled: true
 
                     onClicked: {
-                        var search_url = /search:\/\/(.+)/
-                        if (search_url.exec(url)) {
-                            twitter.subscribe({
-                                "uuid": uuid,
-                                "type": "search",
-                                "args": RegExp.$1,
-                                "foreground": true
-                            })
-                        }
-                        else {
-                            app.open_url(url);
+                        if (islink) {
+                            var search_url = /search:\/\/(.+)/
+                            if (search_url.exec(url)) {
+                                twitter.subscribe({
+                                    "uuid": uuid,
+                                    "type": "search",
+                                    "args": RegExp.$1,
+                                    "foreground": true
+                                })
+                            }
+                            else {
+                                app.open_url(url);
+                            }
                         }
                     }
                 }
