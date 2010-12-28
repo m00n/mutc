@@ -355,6 +355,56 @@ Rectangle {
             state = "visible";
         }
     }
+    focus: true
+
+    Keys.onReleased: {
+        console.log(event.key, tweet_panels.currentIndex)
+        if (event.key == Qt.Key_Left) {
+            decCurrentIndex(tweet_panels)
+        }
+        if (event.key == Qt.Key_Right) {
+            incCurrentIndex(tweet_panels)
+        }
+        if (event.key == Qt.Key_Down) {
+            incCurrentIndex(tweet_panels.currentItem.tweetView)
+        }
+        if (event.key == Qt.Key_Up) {
+            decCurrentIndex(tweet_panels.currentItem.tweetView)
+        }
+        if (event.key == Qt.Key_Home) {
+            tweet_panels.currentItem.tweetView.currentIndex = 0
+            console.log(tweet_panels.currentItem.tweetView.currentIndex )
+        }
+        if (event.key == Qt.Key_T) {
+            twitter_dialog.state = "visible"
+        }
+        if (event.key == Qt.Key_M) {
+            main_menu.state = "main_menu"
+        }
+        if (event.key == Qt.Key_Escape) {
+            twitter_dialog.state = "hidden"
+            main_menu.state = "hidden"
+        }
+        if (event.key == Qt.Key_Space) {
+            tweet_panels.currentItem.overlay = !tweet_panels.currentItem.overlay
+        }
+
+        console.log(">>", tweet_panels.currentIndex)
+
+    }
+
+    function incCurrentIndex(view) {
+        if (view.currentIndex + 1 == view.model.count)
+            view.currentIndex = 0
+        else
+            view.currentIndex++
+    }
+
+    function decCurrentIndex(view) {
+        view.currentIndex--
+        if (view.currentIndex < 0)
+            view.currentIndex = view.model.count - 1
+    }
 
     Component.onCompleted: {
         twitter.announceAccount.connect(function (data) {

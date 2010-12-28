@@ -63,6 +63,11 @@ Rectangle {
             color: "white"
 
             wrapMode: TextEdit.Wrap
+
+            Keys.onReturnPressed: {
+                sendClicked()
+                tweet_dialog.state = "busy"
+            }
         }
 
         anchors.top: status.bottom

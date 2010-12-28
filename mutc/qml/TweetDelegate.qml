@@ -199,6 +199,21 @@ Rectangle {
         }
     }
 
+    Rectangle {
+        radius: 10
+        height: 11
+        width: 11
+        color: Qt.lighter("#323436", 2)
+
+        anchors {
+            top: parent.top
+            right: parent.right
+            margins: 5
+        }
+
+        visible: index == ListView.view.currentIndex
+    }
+
     Behavior on opacity {
         NumberAnimation { duration: 250 }
     }

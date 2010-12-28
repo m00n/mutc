@@ -54,6 +54,7 @@ Rectangle {
                     "@" + screen_name + "/" + type
             }
             color: "white"
+            font.underline: index == ListView.view.currentIndex
 
             anchors.verticalCenter: parent.verticalCenter
         }
