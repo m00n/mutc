@@ -175,7 +175,7 @@ Rectangle {
         y: parent.height - 18
         z: 10
 
-        visible: in_reply ? true : false
+        visible: in_reply && ListView.view.model.type != "direct messages" ? true : false
 
         text: "In reply to " + in_reply
         color: "white"
