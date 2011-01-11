@@ -360,10 +360,23 @@ Rectangle {
     Keys.onReleased: {
         console.log(event.key, tweet_panels.currentIndex)
         if (event.key == Qt.Key_Left) {
-            decCurrentIndex(tweet_panels)
+            if (tweet_panels.currentItem.overlay) {
+                var view = tweet_panels.currentItem.tweetView
+                if (view.currentOverlayIndex > 0)
+                    view.currentOverlayIndex--
+            } else {
+                decCurrentIndex(tweet_panels)
+            }
+
         }
         if (event.key == Qt.Key_Right) {
-            incCurrentIndex(tweet_panels)
+            if (tweet_panels.currentItem.overlay) {
+                var view = tweet_panels.currentItem.tweetView
+                if (view.currentOverlayIndex + 1 < view.overlayItemCount)
+                    view.currentOverlayIndex++
+            } else {
+                incCurrentIndex(tweet_panels)
+            }
         }
         if (event.key == Qt.Key_Down) {
             incCurrentIndex(tweet_panels.currentItem.tweetView)
@@ -373,7 +386,6 @@ Rectangle {
         }
         if (event.key == Qt.Key_Home) {
             tweet_panels.currentItem.tweetView.currentIndex = 0
-            console.log(tweet_panels.currentItem.tweetView.currentIndex )
         }
         if (event.key == Qt.Key_T) {
             twitter_dialog.state = "visible"
@@ -388,6 +400,12 @@ Rectangle {
         if (event.key == Qt.Key_Space) {
             tweet_panels.currentItem.overlay = !tweet_panels.currentItem.overlay
         }
+        if (event.key == Qt.Key_Return) {
+            if (twitter_dialog.state != "visible" && tweet_panels.currentItem.overlay) {
+                var view = tweet_panels.currentItem.tweetView
+                view.emulateClick()
+            }
+        }
 
         console.log(">>", tweet_panels.currentIndex)
 
@@ -401,9 +419,10 @@ Rectangle {
     }
 
     function decCurrentIndex(view) {
-        view.currentIndex--
-        if (view.currentIndex < 0)
+        if (view.currentIndex - 1 < 0)
             view.currentIndex = view.model.count - 1
+        else
+            view.currentIndex--
     }
 
     Component.onCompleted: {

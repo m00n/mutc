@@ -65,8 +65,10 @@ Rectangle {
             wrapMode: TextEdit.Wrap
 
             Keys.onReturnPressed: {
-                sendClicked()
-                tweet_dialog.state = "busy"
+                if (tweet_dialog.state == "visible") {
+                    sendClicked()
+                    tweet_dialog.state = "busy"
+                }
             }
         }
 
