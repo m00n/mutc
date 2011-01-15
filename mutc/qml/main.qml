@@ -394,6 +394,10 @@ Rectangle {
         if (event.key == Qt.Key_Home) {
             tweet_panels.currentItem.tweetView.currentIndex = 0
         }
+        if (event.key == Qt.Key_End) {
+            var view = tweet_panels.currentItem.tweetView
+            view.currentIndex = view.model.count - 1
+        }
         if (event.key == Qt.Key_T) {
             twitter_dialog.state = "visible"
         }
