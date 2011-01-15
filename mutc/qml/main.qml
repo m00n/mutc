@@ -358,7 +358,6 @@ Rectangle {
     focus: true
 
     Keys.onReleased: {
-        console.log(event.key, tweet_panels.currentIndex)
         if (event.key == Qt.Key_Left) {
             if (tweet_panels.currentItem.overlay) {
                 var view = tweet_panels.currentItem.tweetView
@@ -406,9 +405,6 @@ Rectangle {
                 view.emulateClick()
             }
         }
-
-        console.log(">>", tweet_panels.currentIndex)
-
     }
 
     function incCurrentIndex(view) {
