@@ -235,8 +235,7 @@ Rectangle {
             Component.onDestruction: {
                 tweet_overlay.view.currentIndexChanged.disconnect(set_index_in_view)
                 tweet_overlay.view.modelChanged.disconnect(on_view_model_changed)
-                if (parent)
-                    parent.currentOverlayIndexChanged.disconnect(set_index_in_overlay)
+                tweet_view.currentOverlayIndexChanged.disconnect(set_index_in_overlay)
             }
         }
 
