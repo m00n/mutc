@@ -378,7 +378,15 @@ Rectangle {
             }
         }
         if (event.key == Qt.Key_Down) {
-            incCurrentIndex(tweet_panels.currentItem.tweetView)
+            var view = tweet_panels.currentItem.tweetView
+            if (view.currentIndex + 1 == view.model.count) {
+                if (!view.model.busy) {
+                    tweet_panels.currentItem.needTweets()
+                    view.positionViewAtIndex(view.model.count - 1, ListView.Beginning)
+                }
+            } else {
+                view.currentIndex++
+            }
         }
         if (event.key == Qt.Key_Up) {
             decCurrentIndex(tweet_panels.currentItem.tweetView)
