@@ -389,6 +389,8 @@ class TwitterThread(QThread):
         with self.subscriptions:
             subscriptions = self.subscriptions.values()
 
+        self.logger.debug("Checking {0} subscriptions", len(subscriptions))
+
         for subscription in subscriptions:
             if subscription.account.api:
                 try:
@@ -396,6 +398,8 @@ class TwitterThread(QThread):
                 except tweepy.TweepError as error:
                     if self.logger:
                         self.logger.exception("Error while fetching tweets")
+                except Exception as exc:
+                    self.logger.exception("Unexpected exception")
                 else:
                     if tweets:
                         self.logger.debug("{0} new tweets for {1}/{2}",
@@ -404,7 +408,6 @@ class TwitterThread(QThread):
                             subscription.subscription_type
                         )
                         self.newTweets.emit(subscription, tweets)
-
 
     def stepped_sleep(self):
         for x in xrange(self.tick_count):
