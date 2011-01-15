@@ -206,8 +206,6 @@ Rectangle {
             onUndoRetweet: tweet_panel.undoRetweet()
             onLock: tweet_panel.panelsLocked()
 
-            //currentIndex: parent.currentOverlayIndex
-
             function set_index_in_view () {
                 tweet_view.currentOverlayIndex = tweet_overlay.view.currentIndex
             }
@@ -223,7 +221,6 @@ Rectangle {
             }
 
             Component.onCompleted: {
-                console.log("newhl", tweet_overlay.view, view.model.count)
                 tweet_overlay.view.currentIndexChanged.connect(set_index_in_view)
                 tweet_overlay.view.modelChanged.connect(on_view_model_changed)
                 tweet_view.currentOverlayIndexChanged.connect(set_index_in_overlay)
