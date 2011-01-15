@@ -54,6 +54,7 @@ Rectangle {
                     "@" + screen_name + "/" + type
             }
             color: "white"
+            font.underline: index == ListView.view.currentIndex
 
             anchors.verticalCenter: parent.verticalCenter
         }
@@ -123,7 +124,11 @@ Rectangle {
         spacing: 2
         highlightFollowsCurrentItem: false
 
+        signal emulateClick
+
         property string panel_screen_name: screen_name
+        property int currentOverlayIndex: 0
+        property int overlayItemCount: 0
 
         anchors {
             top: title_rect.bottom
@@ -192,370 +197,50 @@ Rectangle {
             }
         }
 
-        highlight: Rectangle {
-            id: overlay_item
-            color: "#00000000"
-            opacity: overlay ? 1 : 0
-            state: "default"
-            z: 5
-            y: tweet_view.currentItem.y
-            width: tweet_view.width
-            height: tweet_view.currentItem.height
+        highlight: TweetOverlay {
+            id: tweet_overlay
 
-            Rectangle {
-                color: "steelblue"
-                opacity: 0.9
-                anchors.fill: parent
+            onRetweet: tweet_panel.retweet(comment)
+            onReply: tweet_panel.reply()
+            onRemoveTweet: tweet_panel.removeTweet()
+            onUndoRetweet: tweet_panel.undoRetweet()
+            onLock: tweet_panel.panelsLocked()
+
+            function set_index_in_view () {
+                tweet_view.currentOverlayIndex = tweet_overlay.view.currentIndex
+            }
+            function set_index_in_overlay () {
+                tweet_overlay.view.currentIndex = tweet_view.currentOverlayIndex
+            }
+            function on_view_model_changed () {
+                console.log("vmc", view.model.count)
+                tweet_view.overlayItemCount = view.model.count
+            }
+            function f () {
+                tweet_overlay.view.currentItem.buttonClicked()
             }
 
-            Item {
-                height: parent.height / 3
-                z: 7
+            Component.onCompleted: {
+                tweet_overlay.view.currentIndexChanged.connect(set_index_in_view)
+                tweet_overlay.view.modelChanged.connect(on_view_model_changed)
+                tweet_view.currentOverlayIndexChanged.connect(set_index_in_overlay)
+                tweet_view.emulateClick.connect(f)
 
-                anchors {
-                    left: parent.left
-                    right: parent.right
-                    verticalCenter: parent.verticalCenter
-                }
+                tweet_view.overlayItemCount = view.model.count
 
-                AnimatedImage {
-                    id: thobber
-                    source: "thobber.gif"
-                    anchors {
-                        horizontalCenter: parent.horizontalCenter
-                        verticalCenter: parent.verticalCenter
-                    }
-                    opacity: 0
-                }
-
-                Item {
-                    id: action_panel
-
-                    visible: true
-
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.top: parent.top
-                    anchors.bottom: parent.bottom
-                    width: 300
-
-                    z: 7
-                    Button {
-                        id: rt_button
-                        //disabled: tweet_view.currentItem.dataMyRetweet
-                        button_text: "\u21BA"
-                        default_color: "#000000"
-                        width: 30
-                        height: parent.height - 10
-                        anchors {
-                            verticalCenter: parent.verticalCenter
-                            right: reply_button.left
-                            margins: 15
-                        }
-                        z: 7
-
-                        onButtonClicked: {
-                            if (tweet_view.currentItem.dataMyRetweet)
-                                overlay_item.state = "undo-retweet"
-                            else
-                                overlay_item.state = "retweet"
-                        }
-                    }
-
-                    Button {
-                        id: reply_button
-                        button_text: "\u21B7"
-                        default_color: "#000000"
-                        width: 30
-                        height: parent.height - 10
-                        anchors {
-                            verticalCenter: parent.verticalCenter
-                            horizontalCenter: parent.horizontalCenter
-                            //left: rt_button.right
-                            //right: delete_button.left
-                            margins: 15
-                        }
-                        z: 7
-
-                        onButtonClicked: {
-                            overlay = false
-                            tweet_panel.reply()
-                        }
-                    }
-
-                    Button {
-                        id: delete_menu_button
-                        button_text: "x"
-                        default_color: "#000000"
-                        width: 30
-                        height: parent.height - 10
-                        anchors {
-                            verticalCenter: parent.verticalCenter
-                            left: reply_button.right
-                            margins: 15
-                        }
-                        z: 7
-
-                        onButtonClicked: {
-                            overlay_item.state = "delete"
-                        }
-
-                    }
-                }
-                Item {
-                    id: rt_panel
-
-                    visible: false
-                    opacity: visible ? 1 : 0
-
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.top: parent.top
-                    anchors.bottom: parent.bottom
-                    width: 300
-
-                    z: 7
-                    Button {
-                        id: rt_comment_button
-                        button_text: "with comment"
-                        default_color: "#000000"
-                        width: 120
-                        height: parent.height - 10
-                        anchors {
-                            verticalCenter: parent.verticalCenter
-                            left: parent.horizontalCenter
-                            margins: 15
-                        }
-                        z: 7
-
-                        onButtonClicked: {
-                            overlay = false
-                            tweet_panel.retweet(true)
-                        }
-                    }
-                    Button {
-                        id: rt_default_button
-                        button_text: "normal"
-                        default_color: "#000000"
-                        width: 120
-                        height: parent.height - 10
-                        anchors {
-                            verticalCenter: parent.verticalCenter
-                            right: parent.horizontalCenter
-                            margins: 15
-                        }
-                        z: 7
-
-                        onButtonClicked: {
-                            //overlay = false
-                            overlay_item.state = "busy"
-                            //tweet_panel.panelsLocked()
-                            tweet_panel.retweet(false)
-                        }
-                    }
-                }
-
-                Item {
-                    id: rt_undo_panel
-
-                    visible: false
-                    opacity: visible ? 1 : 0
-
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.top: parent.top
-                    anchors.bottom: parent.bottom
-                    width: 300
-
-                    z: 7
-                    Button {
-                        id: rt_undo_button
-                        button_text: "undo rt"
-                        default_color: "#000000"
-                        width: 120
-                        height: parent.height - 10
-                        anchors {
-                            verticalCenter: parent.verticalCenter
-                            right: parent.horizontalCenter
-                            margins: 15
-                        }
-                        z: 7
-
-                        onButtonClicked: {
-                            overlay_item.state = "busy"
-                            tweet_panel.undoRetweet()
-                        }
-                    }
-                    Button {
-                        id: rt_cancel_undo_button
-                        button_text: "cancel"
-                        default_color: "#000000"
-                        width: 120
-                        height: parent.height - 10
-                        anchors {
-                            verticalCenter: parent.verticalCenter
-                            left: parent.horizontalCenter
-                            margins: 15
-                        }
-                        z: 7
-
-                        onButtonClicked: {
-                            overlay = false
-                        }
-                    }
-                }
-
-                Item {
-                    id: delete_panel
-
-                    visible: false
-                    opacity: visible ? 1 : 0
-
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.top: parent.top
-                    anchors.bottom: parent.bottom
-                    width: 300
-
-                    z: 7
-                    Button {
-                        id: cancel_delete_button
-                        button_text: "cancel"
-                        default_color: "#000000"
-                        width: 120
-                        height: parent.height - 10
-                        anchors {
-                            verticalCenter: parent.verticalCenter
-                            left: parent.horizontalCenter
-                            margins: 15
-                        }
-                        z: 7
-
-                        onButtonClicked: {
-                            overlay = false
-                        }
-                    }
-                    Button {
-                        id: delete_button
-                        button_text: "delete"
-                        default_color: "#000000"
-                        width: 120
-                        height: parent.height - 10
-                        anchors {
-                            verticalCenter: parent.verticalCenter
-                            right: parent.horizontalCenter
-                            margins: 15
-                        }
-                        z: 7
-
-                        onButtonClicked: {
-                            overlay_item.state = "busy"
-                            tweet_panel.removeTweet()
-                        }
-                    }
-                }
             }
-
-            states: [
-                State {
-                    name: "default"
-                    when: overlay
-                    PropertyChanges {
-                        target: rt_panel
-                        visible: false
-                    }
-                    PropertyChanges {
-                        target: action_panel
-                        visible: true
-                    }
-                    PropertyChanges {
-                        target: delete_panel
-                        visible: false
-                    }
-
-                },
-                State {
-                    name: "busy"
-                    PropertyChanges {
-                        target: thobber
-                        opacity: 1
-                        playing: true
-                    }
-                    PropertyChanges {
-                        target: rt_panel
-                        opacity: 0
-                    }
-                    PropertyChanges {
-                        target: delete_panel
-                        opacity: 0
-                    }
-                    PropertyChanges {
-                        target: rt_undo_panel
-                        opacity: 0
-                    }
-                    PropertyChanges {
-                        target: action_panel
-                        opacity: 0
-                    }
-                    PropertyChanges {
-                        target: tweet_panel
-                        locked: true
-                    }
-                    StateChangeScript {
-                        script: tweet_panel.panelsLocked()
-                    }
-                },
-                State {
-                    name: "retweet"
-                    PropertyChanges {
-                        target: rt_panel
-                        visible: true
-                    }
-                    PropertyChanges {
-                        target: action_panel
-                        visible: false
-                    }
-
-                },
-                State {
-                    name: "undo-retweet"
-                    PropertyChanges {
-                        target: rt_undo_panel
-                        visible: true
-                    }
-                    PropertyChanges {
-                        target: action_panel
-                        visible: false
-                    }
-                },
-                State {
-                    name: "delete"
-                    PropertyChanges {
-                        target: delete_panel
-                        visible: true
-                    }
-                    PropertyChanges {
-                        target: action_panel
-                        visible: false
-                    }
-
-                }
-            ]
-
-            Behavior on opacity {
-                NumberAnimation { duration: 250 }
+            Component.onDestruction: {
+                tweet_overlay.view.currentIndexChanged.disconnect(set_index_in_view)
+                tweet_overlay.view.modelChanged.disconnect(on_view_model_changed)
+                tweet_view.currentOverlayIndexChanged.disconnect(set_index_in_overlay)
             }
-        }
-
-        Timer {
-            id: new_tweet_timeout
-            interval: 3000
-            repeat: false
-            running: false
         }
 
         onMovementEnded: {
             if (tweet_view.atYEnd) {
-                if (!new_tweet_timeout.running && model.count > 0)
+                if (!model.busy && model.count > 0)
                 {
                     needTweets()
-                    new_tweet_timeout.start()
                 }
 
             }

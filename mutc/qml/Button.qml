@@ -4,6 +4,7 @@ Rectangle {
     id: button
 
     signal buttonClicked
+    signal buttonHovered(bool hovered)
 
     property string button_text
     property string image: ""
@@ -48,6 +49,10 @@ Rectangle {
         id: mouse_area
         anchors.fill: parent
         hoverEnabled: true
+
+        onHoveredChanged: {
+            button.buttonHovered(containsMouse)
+        }
 
         onClicked: {
             if (!disabled)
