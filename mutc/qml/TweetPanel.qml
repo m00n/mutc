@@ -239,19 +239,11 @@ Rectangle {
             }
         }
 
-        Timer {
-            id: new_tweet_timeout
-            interval: 3000
-            repeat: false
-            running: false
-        }
-
         onMovementEnded: {
             if (tweet_view.atYEnd) {
-                if (!new_tweet_timeout.running && model.count > 0)
+                if (!model.busy && model.count > 0)
                 {
                     needTweets()
-                    new_tweet_timeout.start()
                 }
 
             }
