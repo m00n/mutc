@@ -31,6 +31,7 @@ Rectangle {
         orientation: ListView.Horizontal
         snapMode: ListView.SnapOneItem
         interactive: !locked
+        keyNavigationWraps: true
 
         function scrollToLast() {
             tweet_panels.positionViewAtIndex(tweet_panel_model.count - 1, ListView.End)
@@ -275,6 +276,11 @@ Rectangle {
                 twitter.send_direct_message(direct_message_from, in_reply_id, twitter_dialog.text)
             }
         }
+
+        onStateChanged: {
+            if (state == "visible")
+                twitter_dialog.edit.focus = true
+        }
     }
 
     MainMenu {
@@ -364,7 +370,7 @@ Rectangle {
                 if (view.currentOverlayIndex > 0)
                     view.currentOverlayIndex--
             } else {
-                decCurrentIndex(tweet_panels)
+                tweet_panels.decrementCurrentIndex()
             }
 
         }
@@ -374,7 +380,7 @@ Rectangle {
                 if (view.currentOverlayIndex + 1 < view.overlayItemCount)
                     view.currentOverlayIndex++
             } else {
-                incCurrentIndex(tweet_panels)
+                tweet_panels.incrementCurrentIndex()
             }
         }
         if (event.key == Qt.Key_Down) {
@@ -385,11 +391,11 @@ Rectangle {
                     view.positionViewAtIndex(view.model.count - 1, ListView.Beginning)
                 }
             } else {
-                view.currentIndex++
+                view.incrementCurrentIndex()
             }
         }
         if (event.key == Qt.Key_Up) {
-            decCurrentIndex(tweet_panels.currentItem.tweetView)
+            tweet_panels.currentItem.tweetView.decrementCurrentIndex()
         }
         if (event.key == Qt.Key_Home) {
             tweet_panels.currentItem.tweetView.currentIndex = 0
@@ -399,22 +405,28 @@ Rectangle {
             view.currentIndex = view.model.count - 1
         }
         if (event.key == Qt.Key_T) {
-            twitter_dialog.state = "visible"
+            if (main_menu.state == "hidden" && twitter_dialog.state == "hidden")
+                twitter_dialog.state = "visible"
         }
         if (event.key == Qt.Key_M) {
-            main_menu.state = "main_menu"
+            if (main_menu.state == "hidden" && twitter_dialog.state == "hidden")
+                main_menu.state = "main_menu"
         }
         if (event.key == Qt.Key_Escape) {
             twitter_dialog.state = "hidden"
             main_menu.state = "hidden"
         }
         if (event.key == Qt.Key_Space) {
-            tweet_panels.currentItem.overlay = !tweet_panels.currentItem.overlay
+            if (main_menu.state == "hidden" && twitter_dialog.state == "hidden")
+                tweet_panels.currentItem.overlay = !tweet_panels.currentItem.overlay
         }
         if (event.key == Qt.Key_Return) {
             if (twitter_dialog.state != "visible" && tweet_panels.currentItem.overlay) {
                 var view = tweet_panels.currentItem.tweetView
                 view.emulateClick()
+            }
+            if (twitter_dialog.state == "visible") {
+                twitter_dialog.sendClicked()
             }
         }
     }
