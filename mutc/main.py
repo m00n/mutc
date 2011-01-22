@@ -168,7 +168,9 @@ class TrayIcon(QSystemTrayIcon):
         self._unread_tweet_count = value
         if value == 0:
             self.setIcon(QIcon(self.app_icon))
+            self.setToolTip("mutc")
         else:
+            self.setToolTip("mutc - {0} unread tweets".format(value))
             img = self.make_icon(self.unread_tweet_count)
             self.setIcon(QIcon(QPixmap(img)))
 
@@ -186,7 +188,15 @@ class TrayIcon(QSystemTrayIcon):
                 self.main_window.hideAndStoreGeometry()
 
     def make_icon(self, tweet_count):
-        text = unicode(tweet_count)
+        if tweet_count < 100:
+            text = unicode(tweet_count)
+        elif tweet_count >= 1000:
+            text = u"M"
+        elif tweet_count >= 500:
+            text = u"D"
+        elif tweet_count >= 100:
+            text = u"C"
+
         font = QFont()
 
         img = QImage(
