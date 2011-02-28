@@ -396,8 +396,7 @@ class TwitterThread(QThread):
                 try:
                     tweets = subscription.update()
                 except tweepy.TweepError as error:
-                    if self.logger:
-                        self.logger.exception("Error while fetching tweets")
+                    self.logger.exception("Error while fetching tweets")
                 except Exception as exc:
                     self.logger.exception("Unexpected exception")
                 else:
