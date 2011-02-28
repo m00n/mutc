@@ -288,6 +288,10 @@ def main():
     return app.exec_()
 
 if __name__ == '__main__':
+    import socket
+    # Set timeout to 45s, otherwise the twitter thread will hang forever
+    socket.setdefaulttimeout(45)
+
     sys.stdout = sys.stderr
 
     sys.exit(main())
