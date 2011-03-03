@@ -177,7 +177,7 @@ class Twitter(QObject):
             try:
                 func(self, *args, **kwds)
             except Exception as error:
-                self.requestSent.emit(False, unicode(errpr))
+                self.requestSent.emit(False, unicode(error))
             else:
                 self.requestSent.emit(True, None)
 
