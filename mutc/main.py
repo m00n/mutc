@@ -52,7 +52,7 @@ class App(QApplication):
         self.data_path = self.setup_data_path()
         self.load_config()
 
-        self.twitter = Twitter()
+        self.twitter = Twitter(self.config)
         self.load_accounts()
         self.load_panels()
 

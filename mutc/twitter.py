@@ -154,7 +154,7 @@ class Twitter(QObject):
 
     requestSent = pyqtSignal("QVariant", "QVariant")
 
-    def __init__(self):
+    def __init__(self, config):
         QObject.__init__(self)
 
         self.models = {}
@@ -169,7 +169,7 @@ class Twitter(QObject):
             self.subscriptions,
         )
 
-        self.thread = TwitterThread(self, self.subscriptions)
+        self.thread = TwitterThread(self, self.subscriptions, config["limits"])
         self.thread.newTweets.connect(self.newTweets.emit)
 
     def locking(func):
@@ -373,9 +373,11 @@ class TwitterThread(QThread):
 
     RATE_CHECK_INTERVAL = 60 * 10
 
-    def __init__(self, parent, subscriptions):
+    def __init__(self, parent, subscriptions, limit_config):
         QThread.__init__(self, parent)
+
         self.subscriptions = subscriptions
+        self.limit_config = limit_config
 
         self.ticks = 1
         self.tick_count = 60
@@ -390,7 +392,6 @@ class TwitterThread(QThread):
         self.last_rate_check = time()
         self.ticks_for_account = {}
         self.tick_counter = {}
-
 
     def run(self):
         while self.running:
@@ -434,12 +435,12 @@ class TwitterThread(QThread):
         for account, calls in calls_per_account.iteritems():
             if account.me:
                 rate_info = safe_api_request(account.api.rate_limit_status)
-                ticks = calc_ticks(rate_info, calls)
+                ticks = calc_ticks(rate_info, calls, **self.limit_config)
                 self.ticks_for_account[account] = ticks
                 self.tick_counter[account] = ticks
 
-                self.rate_logger.info(
-                    "{0}; calls: {1}({2}); ticks: {3};",
+                self.rate_logger.debug(
+                    "{0}; calls: {1}({2}); ticks: {3}",
                     account.me.name, calls, rate_info["remaining_hits"], ticks
                 )
 
@@ -477,9 +478,9 @@ class TwitterThread(QThread):
                 self.force_check.clear()
                 break
 
-def calc_ticks(rate_limit, calls, client_count=1, buffer=10):
+def calc_ticks(rate_limit, calls, clients=1, buffer=10):
     next_reset = datetime.fromtimestamp(rate_limit["reset_time_in_seconds"])
     delta = (next_reset - datetime.now()).total_seconds()
 
     ticks =  (delta / (rate_limit["remaining_hits"] - buffer)) * calls
-    return int(ticks * client_count)
+    return int(ticks * clients)
