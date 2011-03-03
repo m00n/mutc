@@ -384,6 +384,7 @@ class TwitterThread(QThread):
         self.force_check = threading.Event()
 
         self.logger = Logger("twitter-thread")
+        self.rate_logger = Logger("twitter-limits")
 
         #
         self.last_rate_check = time()
@@ -396,6 +397,7 @@ class TwitterThread(QThread):
             self.check_intervals()
 
             if time() - self.last_rate_check > self.RATE_CHECK_INTERVAL:
+                self.rate_logger.info("Recalculating ticks")
                 self.calc_rates()
 
             sleep(self.ticks)
@@ -406,14 +408,15 @@ class TwitterThread(QThread):
                         if subscription.account.me)
 
         for account in accounts:
-            print >>sys.stderr, account, self.tick_counter.get(account)
+            __rticks = self.tick_counter.get(account)
+            if __rticks and __rticks % 4 == 0:
+                print >>sys.stderr, account, self.tick_counter.get(account)
 
             if account not in self.tick_counter:
                 self.calc_rates()
 
             self.tick_counter[account] -= 1
             if self.tick_counter[account] == 0:
-                print
                 self.tick_counter[account] = self.ticks_for_account[account]
                 self.check_subscriptions(account)
 
@@ -435,8 +438,8 @@ class TwitterThread(QThread):
                 self.ticks_for_account[account] = ticks
                 self.tick_counter[account] = ticks
 
-                self.logger.debug(
-                    "rates: {0}; calls: {1}({2}); ticks: {3};",
+                self.rate_logger.info(
+                    "{0}; calls: {1}({2}); ticks: {3};",
                     account.me.name, calls, rate_info["remaining_hits"], ticks
                 )
 
