@@ -169,7 +169,7 @@ class Twitter(QObject):
             self.subscriptions,
         )
 
-        self.thread = TwitterThread(self, self.subscriptions, Logger("thread"))
+        self.thread = TwitterThread(self, self.subscriptions)
         self.thread.newTweets.connect(self.newTweets.emit)
 
     def locking(func):
@@ -373,7 +373,7 @@ class TwitterThread(QThread):
 
     RATE_CHECK_INTERVAL = 60 * 10
 
-    def __init__(self, parent, subscriptions, logger=None):
+    def __init__(self, parent, subscriptions):
         QThread.__init__(self, parent)
         self.subscriptions = subscriptions
 
@@ -383,7 +383,7 @@ class TwitterThread(QThread):
         self.running = True
         self.force_check = threading.Event()
 
-        self.logger = logger
+        self.logger = Logger("twitter-thread")
 
         #
         self.last_rate_check = time()
