@@ -20,10 +20,12 @@ from __future__ import with_statement, division
 
 import sys
 import threading
+from collections import defaultdict
+from datetime import datetime
 from functools import partial, wraps
 from itertools import imap
 from uuid import uuid4
-from time import sleep
+from time import sleep, time
 
 import tweepy
 from logbook import Logger
@@ -169,7 +171,6 @@ class Twitter(QObject):
 
         self.thread = TwitterThread(self, self.subscriptions, Logger("thread"))
         self.thread.newTweets.connect(self.newTweets.emit)
-        self.thread.start()
 
     def locking(func):
         @wraps(func)
@@ -356,6 +357,8 @@ class Twitter(QObject):
             self.announceAccount.emit(account.simplify())
             account.connect()
 
+        self.thread.start()
+
     @pyqtSlot("QVariant", "QVariant", "QVariant", result=QObject)
     def get_model(self, uuid, panel_type, args):
         return self.models[uuid, panel_type, args]
@@ -367,6 +370,8 @@ class Twitter(QObject):
 
 class TwitterThread(QThread):
     newTweets = pyqtSignal(object, object)
+
+    RATE_CHECK_INTERVAL = 60 * 10
 
     def __init__(self, parent, subscriptions, logger=None):
         QThread.__init__(self, parent)
@@ -380,18 +385,72 @@ class TwitterThread(QThread):
 
         self.logger = logger
 
+        #
+        self.last_rate_check = time()
+        self.ticks_for_account = {}
+        self.tick_counter = {}
+
+
     def run(self):
         while self.running:
-            self.check_subscriptions()
-            self.stepped_sleep()
+            self.check_intervals()
 
-    def check_subscriptions(self):
+            if time() - self.last_rate_check > self.RATE_CHECK_INTERVAL:
+                self.calc_rates()
+
+            sleep(self.ticks)
+
+    def check_intervals(self):
+        subscriptions = self.get_subscriptions()
+        accounts = set(subscription.account for subscription in subscriptions
+                        if subscription.account.me)
+
+        for account in accounts:
+            print >>sys.stderr, account, self.tick_counter.get(account)
+
+            if account not in self.tick_counter:
+                self.calc_rates()
+
+            self.tick_counter[account] -= 1
+            if self.tick_counter[account] == 0:
+                print
+                self.tick_counter[account] = self.ticks_for_account[account]
+                self.check_subscriptions(account)
+
+    def get_subscriptions(self):
         with self.subscriptions:
-            subscriptions = self.subscriptions.values()
+            return self.subscriptions.values()
+
+    def calc_rates(self):
+        subscriptions = self.get_subscriptions()
+        calls_per_account = defaultdict(int)
+
+        for subscription in subscriptions:
+            calls_per_account[subscription.account] += subscription.calls
+
+        for account, calls in calls_per_account.iteritems():
+            if account.me:
+                rate_info = safe_api_request(account.api.rate_limit_status)
+                ticks = calc_ticks(rate_info, calls)
+                self.ticks_for_account[account] = ticks
+                self.tick_counter[account] = ticks
+
+                self.logger.debug(
+                    "rates: {0}; calls: {1}({2}); ticks: {3};",
+                    account.me.name, calls, rate_info["remaining_hits"], ticks
+                )
+
+        self.last_rate_check = time()
+
+    def check_subscriptions(self, account=None):
+        subscriptions = self.get_subscriptions()
 
         self.logger.debug("Checking {0} subscriptions", len(subscriptions))
 
         for subscription in subscriptions:
+            if account and subscription.account != account:
+                continue
+
             if subscription.account.api:
                 try:
                     tweets = subscription.update()
@@ -415,4 +474,9 @@ class TwitterThread(QThread):
                 self.force_check.clear()
                 break
 
+def calc_ticks(rate_limit, calls, client_count=1, buffer=10):
+    next_reset = datetime.fromtimestamp(rate_limit["reset_time_in_seconds"])
+    delta = (next_reset - datetime.now()).total_seconds()
 
+    ticks =  (delta / (rate_limit["remaining_hits"] - buffer)) * calls
+    return int(ticks * client_count)
