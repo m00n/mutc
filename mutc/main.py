@@ -309,6 +309,7 @@ class MainWindow(QDeclarativeView):
         )
 
         self.tray_icon = TrayIcon(app.twitter, self)
+        self.tray_icon.show()
 
         self._last_geometry = None
 
