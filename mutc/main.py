@@ -20,6 +20,7 @@ from __future__ import with_statement, division
 
 import sys
 import json
+import shutil
 import webbrowser
 from time import strptime
 
@@ -45,23 +46,46 @@ if strptime("12", "%H"):
 class App(QApplication):
     backendReady = pyqtSignal()
 
-    def __init__(self, args, twitter):
+    def __init__(self, args):
         QApplication.__init__(self, args)
 
-        self.proxy_host, self.proxy_port = discover_proxy()
-        self.twitter = twitter
+        self.data_path = self.setup_data_path()
+        self.load_config()
+
+        self.twitter = Twitter()
+        self.load_accounts()
+        self.load_panels()
+
         self.twitter.accountCreated.connect(self.apply_proxy)
 
-        self.data_path = path('~/.mutc').expand()
-
-        if not self.data_path.exists():
-            self.data_path.mkdir()
+        self.twitter.start_sync()
 
         self.aboutToQuit.connect(self._on_shutdown)
+
+    def setup_data_path(self):
+        data_path = path('~/.mutc').expand()
+        if not data_path.exists():
+            data_path.mkdir()
+            config_filename = path(__file__).parent / "config.default.json"
+            shutil.copy(config_filename, data_path / "config.json")
+
+        return data_path
 
     def apply_proxy(self, account):
         account.proxy_host = self.proxy_host
         account.proxy_port = self.proxy_port
+
+    def load_config(self):
+        with open(self.data_path / 'config.json') as fd:
+            self.config = json.load(fd)
+
+        proxy = self.config["proxy"]
+
+        if proxy["host"] and proxy["port"]:
+            self.proxy_host = proxy["host"]
+            self.proxy_port = proxy["port"]
+        else:
+            self.proxy_host, self.proxy_port = discover_proxy()
 
     def load_accounts(self):
         try:
@@ -227,7 +251,7 @@ class TrayIcon(QSystemTrayIcon):
 
 
 class MainWindow(QDeclarativeView):
-    def __init__(self, app, twitter):
+    def __init__(self, app):
         QDeclarativeView.__init__(self)
 
         self.setViewport(QGLWidget())
@@ -240,15 +264,17 @@ class MainWindow(QDeclarativeView):
         self.engine().setNetworkAccessManagerFactory(factory)
 
         root_context = self.rootContext()
-        root_context.setContextProperty('twitter', twitter)
+        root_context.setContextProperty('twitter', app.twitter)
         root_context.setContextProperty('app', app)
         root_context.setContextProperty(
-            'tweet_panel_model', twitter.panel_model
+            'tweet_panel_model', app.twitter.panel_model
         )
 
         self.setSource(
             QUrl.fromLocalFile(path(__file__).parent / "qml" / "main.qml")
         )
+
+        self.tray_icon = TrayIcon(app.twitter, self)
 
         self._last_geometry = None
 
@@ -272,17 +298,9 @@ class MainWindow(QDeclarativeView):
 
 
 def main():
-    twitter = Twitter()
-    app = App(sys.argv, twitter)
+    app = App(sys.argv)
 
-    main_window = MainWindow(app, twitter)
-
-    app.load_accounts()
-    app.load_panels()
-    twitter.start_sync()
-
-    tray_icon = TrayIcon(twitter, main_window)
-    tray_icon.show()
+    main_window = MainWindow(app)
     main_window.show()
 
     return app.exec_()

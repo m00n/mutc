@@ -1,0 +1,10 @@
+{
+    "proxy": {
+        "host": null,
+        "port": null
+    },
+    "limits": {
+        "buffer": 15,
+        "clients": 1
+    }
+}
