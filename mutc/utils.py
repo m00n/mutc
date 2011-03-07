@@ -102,6 +102,8 @@ def safe_api_request(func, on_success=lambda: None, short_wait=False):
 
             elif isinstance(error.exception, socket.error):
                 sleep_time = 1
+            elif "timeout" in error.reason:
+                sleep_time = 1
 
             if sleep_time is None:
                 raise
