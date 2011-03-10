@@ -77,7 +77,7 @@ def locking(func):
 
 def discover_proxy():
     try:
-        proxy_str = os.environ["HTTP_PROXY"]
+        proxy_str = os.environ["http_proxy"]
     except KeyError:
         return None, None
     else:
