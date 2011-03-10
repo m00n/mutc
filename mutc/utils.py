@@ -26,6 +26,7 @@ from cgi import escape
 from functools import wraps
 from threading import Lock
 from time import sleep
+from urlparse import urlparse
 
 from PyQt4.Qt import QThreadPool, QRunnable
 from tweepy import TweepError
@@ -81,9 +82,9 @@ def discover_proxy():
     except KeyError:
         return None, None
     else:
-        host, port = proxy_str.split(":")
         print "proxy", proxy_str
-        return host, int(port)
+        proxy_url = urlparse(proxy_str)
+        return proxy_url.hostname, proxy_url.port
 
 def safe_api_request(func, on_success=lambda: None, short_wait=False):
     while True:
