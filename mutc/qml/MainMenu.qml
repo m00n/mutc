@@ -52,68 +52,80 @@ Rectangle {
         }
     }
 
-    ListView {
-        id: account_menu_view
-
-        //model: account_model
-
-        delegate: Button {
-            button_text: "Create panel for `" + screen_name + "` >"
-            height: 22
-            width: 320
-            border {
-                width: title.border.width
-                color: title.border.color
-            }
-            onButtonClicked: {
-                panel_view.for_account = uuid
-                main_menu.state = "panel_menu"
-            }
-        }
-
+    Item {
+        id: view_container
         anchors {
             top: add_account_button.bottom
-            bottom: parent.bottom
+            bottom: options_button.top
             left: parent.left
             right: parent.right
             topMargin: 5
+        }
+        ListView {
+            id: account_menu_view
+
+            delegate: Button {
+                button_text: "Create panel for `" + screen_name + "` >"
+                height: 22
+                width: 320
+                border {
+                    width: title.border.width
+                    color: title.border.color
+                }
+                onButtonClicked: {
+                    panel_view.for_account = uuid
+                    main_menu.state = "panel_menu"
+                }
+            }
+        }
+
+        ListView {
+            id: panel_view
+            model: panel_model
+
+            property string for_account
+            property string panel_type
+            property string need_args
+
+            delegate: Button {
+                button_text: type
+                height: 22
+                width: 320
+
+                border {
+                    width: title.border.width
+                    color: title.border.color
+                }
+
+                onButtonClicked: {
+                    main_menu.state = "hidden";
+                    panel_view.panel_type = type;
+                    panel_view.need_args = ask_text;
+                    if (!args)
+                        addPanel();
+                    else
+                        needArgs(panel_view.for_account, type, ask_text);
+                }
+            }
         }
     }
 
-    ListView {
-        id: panel_view
-        model: panel_model
-
-        property string for_account
-        property string panel_type
-        property string need_args
-
-        delegate: Button {
-            button_text: type
-            height: 22
-            width: 320
-
-            border {
-                width: title.border.width
-                color: title.border.color
-            }
-
-            onButtonClicked: {
-                main_menu.state = "hidden";
-                panel_view.panel_type = type;
-                panel_view.need_args = ask_text;
-                if (!args)
-                    addPanel();
-                else
-                    needArgs(panel_view.for_account, type, ask_text);
-            }
+    Button {
+        id: options_button
+        button_text: "Options"
+        height: 22
+        width: parent.width
+        border {
+            width: title.border.width
+            color: title.border.color
         }
         anchors {
-            top: add_account_button.bottom
             bottom: parent.bottom
             left: parent.left
             right: parent.right
             topMargin: 5
+        }
+        onButtonClicked: {
         }
     }
 
