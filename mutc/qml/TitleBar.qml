@@ -13,10 +13,12 @@ Toolbar {
     }
     height:22
 
+    Style { id: style }
+
     Text {
         id: title
         text: ""
-        color: "white"
+        color: style.textColor
         anchors {
             verticalCenter: parent.verticalCenter
             horizontalCenter: parent.horizontalCenter

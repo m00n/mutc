@@ -14,9 +14,11 @@ Item {
 
     height: 22
 
+    Style { id: style }
+
     Text {
         id: text_item
-        color: "white"
+        color: style.textColor
         anchors.fill: parent
 
         function setText(txt) {

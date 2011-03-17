@@ -2,13 +2,14 @@ import Qt 4.7
 
 Rectangle {
     SystemPalette { id: activePalette }
+    Style { id: style }
 
     width: parent.width
 
     border.width: 2
-    border.color: activePalette.shadow
+    border.color: style.darkBorderColor
 
-    color: "#323436"
+    color: style.backgroundColor
 
     z: 100
 

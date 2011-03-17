@@ -6,7 +6,7 @@ Rectangle {
 
     id: new_account_dialog
 
-    color: "#323436"
+    color: style.backgroundColor
 
     property string account /* uuid */
     property string auth_url: ""
@@ -16,9 +16,10 @@ Rectangle {
     signal authSuccessful
 
     SystemPalette { id: activePalette }
+    Style { id: style }
 
     border.width: 2
-    border.color: activePalette.shadow
+    border.color: { style.darkBorderColor }
 
     Toolbar {
         id: title_bar
@@ -33,7 +34,7 @@ Rectangle {
 
         Text {
             text: "Add account"
-            color: "white"
+            color: style.textColor
             anchors {
                 verticalCenter: parent.verticalCenter
                 horizontalCenter: parent.horizontalCenter
@@ -83,12 +84,12 @@ Rectangle {
 
         border {
             width: 1
-            color: "white"
+            color: style.borderColor
         }
 
         TextEdit {
             id: auth_url_text
-            color: "white"
+            color: style.textColor
 
             anchors {
                 fill: parent
@@ -117,14 +118,14 @@ Rectangle {
         }
         border {
             width: 1
-            color: "white"
+            color: style.borderColor
         }
 
         TextInput {
             id: verifier_input
 
             text: "enter verifier code"
-            color: "white"
+            color: style.textColor
             horizontalAlignment: Text.AlignHCenter
             anchors {
                 fill: parent

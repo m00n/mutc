@@ -5,7 +5,9 @@ Rectangle {
 
     radius: 5
 
-    color: "#323436"
+    Style { id: style }
+
+    color: style.backgroundColor
 
     width: 300
     height: 120
@@ -43,7 +45,7 @@ Rectangle {
                 "<b>" + author.screen_name + "</b>"
             }
         }
-        color: "white"
+        color: style.textColor
 
         anchors {
             left: twitter_avatar.right
@@ -57,7 +59,7 @@ Rectangle {
         id: text_flow
 
         property string text: message
-        property color color: "white"
+        property color color: style.textColor
 
         z: 10
 
@@ -137,7 +139,7 @@ Rectangle {
         font.pointSize: twitter_name.font.pointSize - 3
         font.underline: twitter_time_mouse_area.containsMouse
         height: 22
-        color: "white"
+        color: style.textColor
 
         x: 5
         y: parent.height - 18
@@ -164,7 +166,7 @@ Rectangle {
                 ""
         }
         visible: is_retweet
-        color: "white"
+        color: style.textColor
         anchors {
             left: twitter_time.right
             leftMargin: 2
@@ -180,7 +182,7 @@ Rectangle {
         visible: in_reply && ListView.view.model.type != "direct messages" ? true : false
 
         text: "In reply to " + in_reply
-        color: "white"
+        color: style.textColor
 
         anchors {
             right: parent.right
@@ -205,7 +207,7 @@ Rectangle {
         radius: 10
         height: 11
         width: 11
-        color: Qt.lighter("#323436", 2)
+        color: style.indexPointColor
 
         anchors {
             top: parent.top

@@ -4,6 +4,8 @@ Rectangle {
     width: 320
     height: 90
 
+    Style { id: style }
+
     signal dialogAccepted
 
     property bool accepted: false
@@ -11,18 +13,18 @@ Rectangle {
 
     id: input_dialog
 
-    color: "#323436"
+    color: style.backgroundColor
 
     property alias text: prompt_text.text
     border {
         width: 1
-        color: "white"
+        color: style.borderColor
     }
 
     Text {
         id: prompt_text
         text: "Enter value"
-        color: "white"
+        color: style.textColor
         anchors {
             left: parent.left
             right: parent.right
@@ -38,7 +40,7 @@ Rectangle {
         color: "#00000000"
         border {
             width: 1
-            color: "white"
+            color: style.borderColor
         }
         height: 22
         anchors {
@@ -53,7 +55,7 @@ Rectangle {
             anchors.fill: parent
             anchors.margins: 2
             horizontalAlignment: Text.AlignHCenter
-            color: "white"
+            color: style.textColor
             focus: true
             Keys.onPressed: {
                 if (event.key == Qt.Key_Return) {

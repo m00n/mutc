@@ -3,6 +3,8 @@ import Qt 4.7
 Rectangle {
     id: button
 
+    Style { id: style }
+
     signal buttonClicked
     signal buttonHovered(bool hovered)
 
@@ -13,20 +15,12 @@ Rectangle {
     property bool disabled
 
     color: {
-        /*
-        if (mouse_area.containsMouse) {
-            "steelblue"
-        } else if (mouse_area.pressedButtons == Qt.LeftButton && mouse_area.containsMouse) {
-            Qt.lighter("steelblue", 1.5)
-        } else {
-            default_color
-        }*/
         if (disabled) {
             default_color
         } else if (mouse_area.pressedButtons == Qt.LeftButton && mouse_area.containsMouse) {
-            Qt.lighter("steelblue", 1.5)
+            style.activatedColor
         } else if (mouse_area.containsMouse) {
-            "steelblue"
+            style.highlightColor
         } else {
             default_color
         }
@@ -36,13 +30,13 @@ Rectangle {
         ColorAnimation { duration: 250 }
     }
 
-    border.color: "white"
+    border.color: style.borderColor
     border.width: 2
 
     Text {
         text: button_text
         anchors.centerIn: parent
-        color: "white"
+        color: style.textColor
     }
 
     MouseArea {

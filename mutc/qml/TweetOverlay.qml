@@ -18,9 +18,10 @@ Rectangle {
     signal removeTweet
     signal lock
 
+    Style { id: style }
 
     Rectangle {
-        color: "steelblue"
+        color: style.highlightColor
         opacity: 0.9
         anchors.fill: parent
     }
@@ -192,7 +193,7 @@ Rectangle {
 
                 border {
                     width: 2
-                    color: "black"
+                    color: style.overlayButtonHighlight
                 }
 
                 function safe_get(prop, offset) {

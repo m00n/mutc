@@ -15,15 +15,16 @@ Rectangle {
     gradient: Gradient {
         GradientStop {
             position: 0.0
-            color: "#4d5053"
+            color: style.gradientStart
 
         }
         GradientStop {
             position: 1.0
-            color: "#6d7176"
+            color: style.gradientStop
         }
-
     }
+
+    Style { id: style }
 
     ListView {
         id: tweet_panels

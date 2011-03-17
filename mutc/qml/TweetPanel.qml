@@ -21,15 +21,17 @@ Rectangle {
     gradient: Gradient {
         GradientStop {
             position: 0.0
-            color: "#4d5053"
+            color: style.gradientStart
 
         }
         GradientStop {
             position: 1.0
-            color: "#6d7176"
+            color: style.gradientStop
         }
 
     }
+
+    Style { id: style }
 
     MouseArea {
         anchors.fill: parent
@@ -53,7 +55,7 @@ Rectangle {
                 else
                     "@" + screen_name + "/" + type
             }
-            color: "white"
+            color: style.textColor
             font.underline: index == ListView.view.currentIndex
 
             anchors.verticalCenter: parent.verticalCenter
@@ -174,7 +176,7 @@ Rectangle {
                 visible: model.busy
 
                 z: 2
-                color: "#323436"
+                color: style.backgroundColor
                 radius: 5
 
                 anchors {

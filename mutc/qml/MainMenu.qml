@@ -7,8 +7,10 @@ Rectangle {
     width: 320
     height: 240
 
-    color: "#323436"
+    color: style.backgroundColor
     state: "hidden"
+
+    Style { id: style }
 
     signal addAccount
     signal addPanel

@@ -9,6 +9,8 @@ Component {
 
         color: "#00000000"
 
+        Style { id: style }
+
         Rectangle {
             id: highlight_rectangle
 
@@ -17,7 +19,7 @@ Component {
             y: avatar_border.y + 1
             width: avatar_border.width + screen_name_text.width + 3
             height: avatar_border.height - 3
-            color: "steelblue"
+            color: style.highlightColor
             z: -1
             Behavior on opacity {
                 NumberAnimation { duration: 250 }
@@ -32,7 +34,7 @@ Component {
             anchors.fill: highlight_rectangle
 
             border {
-                color: "steelblue"
+                color: style.highlightColor
                 width: 1
             }
 
@@ -69,7 +71,7 @@ Component {
         Text {
             id: screen_name_text
             text: screen_name
-            color: "white"
+            color: style.textColor
 
             anchors {
                 left: avatar.right
