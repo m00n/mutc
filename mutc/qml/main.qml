@@ -449,7 +449,7 @@ Rectangle {
     Component.onCompleted: {
         twitter.announceAccount.connect(function (data) {
             account_model.append(data);
-            console.log(data);
+            console.log("announceAccount", data);
         })
         twitter.accountConnected.connect(function (data) {
             console.log("accountConnected " + data.screen_name);

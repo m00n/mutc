@@ -58,8 +58,6 @@ class App(QApplication):
 
         self.twitter.accountCreated.connect(self.apply_proxy)
 
-        self.twitter.start_sync()
-
         self.aboutToQuit.connect(self._on_shutdown)
 
     def setup_data_path(self):
@@ -302,6 +300,8 @@ def main():
 
     main_window = MainWindow(app)
     main_window.show()
+
+    app.twitter.start_sync()
 
     return app.exec_()
 
