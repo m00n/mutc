@@ -15,6 +15,7 @@ Rectangle {
     signal addAccount
     signal addPanel
     signal needArgs(string uuid, string panel_type, string ask_text)
+    signal optionsButtonClicked
 
     property alias accountModel: account_menu_view.model
     property alias panelModel: panel_view.model
@@ -128,6 +129,8 @@ Rectangle {
             topMargin: 5
         }
         onButtonClicked: {
+            main_menu.state = "hidden"
+            main_menu.optionsButtonClicked()
         }
     }
 

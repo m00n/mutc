@@ -305,6 +305,10 @@ Rectangle {
             search_dialog.text = main_menu.need_args
             search_dialog.state = "visible"
         }
+        onOptionsButtonClicked: {
+            options_dialog.show()
+        }
+
         Component.onCompleted: {
             search_dialog.dialogAccepted.connect(function () {
                 twitter.subscribe({
@@ -362,6 +366,19 @@ Rectangle {
             state = "visible";
         }
     }
+
+    OptionsDialog {
+        id: options_dialog
+        opacity: 0
+        anchors {
+            left: parent.left
+            right: parent.right
+            top: parent.top
+            bottom: toolbar_row.top
+            bottomMargin: 2
+        }
+    }
+
     focus: true
 
     Keys.onReleased: {
