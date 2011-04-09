@@ -85,6 +85,10 @@ class App(QApplication):
         else:
             self.proxy_host, self.proxy_port = discover_proxy()
 
+    def save_config(self):
+        with open(self.data_path / 'config.json', 'w') as fd:
+            json.dump(self.config, fd)
+
     def load_accounts(self):
         try:
             with open(self.data_path / 'accounts.json') as fd:
@@ -139,6 +143,7 @@ class App(QApplication):
 
         self.save_accounts()
         self.save_panels()
+        self.save_config()
 
     @pyqtSlot("QVariant")
     def open_url(self, url):
@@ -248,6 +253,36 @@ class TrayIcon(QSystemTrayIcon):
         )
 
 
+class Config(QObject):
+    conversions = {
+        "limits.buffer": int,
+        "limits.clients": int,
+        "proxy.port": int
+    }
+
+    def __init__(self, parent, config):
+        QObject.__init__(self, parent)
+        self.config = config
+
+    @pyqtSlot("QVariant", "QVariant")
+    def set(self, key, value):
+        parts = key.split(".")
+        dict_= self.config
+        for part in parts[:-1]:
+            dict_ = dict_[part]
+        dict_[parts[-1]] = self.conversions.get(
+            key, lambda x: x
+        )(value)
+
+    @pyqtSlot("QVariant", result="QVariant")
+    def get(self, key):
+        dict_ = self.config
+        for part in key.split("."):
+            dict_ = dict_[part]
+
+        return dict_
+
+
 class MainWindow(QDeclarativeView):
     def __init__(self, app):
         QDeclarativeView.__init__(self)
@@ -267,6 +302,7 @@ class MainWindow(QDeclarativeView):
         root_context.setContextProperty(
             'tweet_panel_model', app.twitter.panel_model
         )
+        root_context.setContextProperty('config', Config(self, app.config))
 
         self.setSource(
             QUrl.fromLocalFile(path(__file__).parent / "qml" / "main.qml")
