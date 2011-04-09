@@ -1,7 +1,7 @@
 {
     "proxy": {
-        "host": null,
-        "port": null
+        "host": "",
+        "port": 0
     },
     "limits": {
         "buffer": 15,
