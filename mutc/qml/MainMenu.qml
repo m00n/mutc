@@ -67,6 +67,8 @@ Rectangle {
         ListView {
             id: account_menu_view
 
+            anchors { fill: parent }
+
             delegate: Button {
                 button_text: "Create panel for `" + screen_name + "` >"
                 height: 22
@@ -89,6 +91,10 @@ Rectangle {
             property string for_account
             property string panel_type
             property string need_args
+
+            anchors { fill: parent }
+
+            //height: main_menu.height / 2
 
             delegate: Button {
                 button_text: type
