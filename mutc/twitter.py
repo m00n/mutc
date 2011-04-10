@@ -410,12 +410,14 @@ class TwitterThread(QThread):
 
         for account in accounts:
             __rticks = self.tick_counter.get(account)
-            if __rticks and __rticks % 4 == 0:
+            if __rticks and __rticks % 5 == 0:
                 print >>sys.stderr, account, self.tick_counter.get(account)
 
             if account not in self.tick_counter:
                 self.calc_rates()
+                self.tick_counter[account] = 1 # force checking
 
+            #print account, self.tick_counter[account]
             self.tick_counter[account] -= 1
             if self.tick_counter[account] == 0:
                 self.tick_counter[account] = self.ticks_for_account[account]
@@ -478,9 +480,9 @@ class TwitterThread(QThread):
                 self.force_check.clear()
                 break
 
-def calc_ticks(rate_limit, calls, clients=1, buffer=10):
+def calc_ticks(rate_limit, calls, clients=1, buffer=10, min_seconds=55):
     next_reset = datetime.fromtimestamp(rate_limit["reset_time_in_seconds"])
     delta = (next_reset - datetime.now()).total_seconds()
 
     ticks =  (delta / (rate_limit["remaining_hits"] - buffer)) * calls
-    return int(ticks * clients)
+    return max(int(ticks * clients), min_seconds)
