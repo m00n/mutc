@@ -8,6 +8,7 @@ Item {
 
     Style { id: style }
 
+    signal linkActivated(string link)
     property alias text: tweet_text.text
     property variant _indexmap
 
@@ -17,7 +18,7 @@ Item {
         anchors.fill: parent
 
         property string text: "&gt;&lt; foo #bar @zort baz http://foo.bar/baz foo"
-        signal linkActivated(string url)
+
 
         TextEdit {
             id: text_storage
@@ -57,7 +58,7 @@ Item {
                     if (array_position > -1) {
                         var item = model.get(array_position)
                         if (item.islink) {
-                            tweet_text.linkActivated(item.url)
+                            container.linkActivated(item.url)
                         }
                     }
                 }

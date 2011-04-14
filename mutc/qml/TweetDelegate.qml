@@ -69,6 +69,21 @@ Rectangle {
             left: twitter_avatar.right
             margins: 5
         }
+
+        onLinkActivated: {
+            var search_url = /search:\/\/(.+)/
+            if (search_url.exec(link)) {
+                twitter.subscribe({
+                    "uuid": uuid,
+                    "type": "search",
+                    "args": RegExp.$1,
+                    "foreground": true
+                })
+            }
+            else {
+                app.open_url(link)
+            }
+        }
     }
 
     Text {
