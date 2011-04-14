@@ -188,7 +188,7 @@ class TweetModel(QAbstractListModel):
         if role == self.AuthorRole:
             return author_to_dict(status.retweeted_status.author)
         elif role == self.MessageRole:
-            return escape(status.retweeted_status.text)
+            return status.retweeted_status.text
         elif role == self.CreatedRole:
             return format_datetime(status.created_at)
         elif role == self.IsRetweetRole:
@@ -206,7 +206,8 @@ class TweetModel(QAbstractListModel):
         if role == self.AuthorRole:
             return author_to_dict(status.author)
         elif role == self.MessageRole:
-            return escape(status.text)
+            print "s", status.text
+            return status.text
         elif role == self.CreatedRole:
             return format_datetime(status.created_at)
         elif role == self.IsRetweetRole:
@@ -230,7 +231,7 @@ class TweetModel(QAbstractListModel):
                 "profile_image_url": result.profile_image_url
             }
         elif role == self.MessageRole:
-            return escape(result.text)
+            return result.text
         elif role == self.CreatedRole:
             return format_datetime(result.created_at)
         elif role == self.IsRetweetRole:
