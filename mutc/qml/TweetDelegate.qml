@@ -55,11 +55,9 @@ Rectangle {
 
     }
 
-    Flow {
-        id: text_flow
-
-        property string text: message
-        property color color: style.textColor
+    TweetText {
+        id: tweet_text
+        text: message
 
         z: 10
 
@@ -70,65 +68,6 @@ Rectangle {
             top: twitter_name.bottom
             left: twitter_avatar.right
             margins: 5
-        }
-
-        Repeater {
-            id: repeater
-
-            model: ListModel {
-            }
-
-            Text {
-                color: text_flow.color
-                font.underline: islink && part_mousearea.containsMouse
-                text: part + " "
-                textFormat: Text.StyledText
-
-                MouseArea {
-                    id: part_mousearea
-                    anchors.fill: parent
-                    hoverEnabled: true
-
-                    onClicked: {
-                        if (islink) {
-                            var search_url = /search:\/\/(.+)/
-                            if (search_url.exec(url)) {
-                                twitter.subscribe({
-                                    "uuid": uuid,
-                                    "type": "search",
-                                    "args": RegExp.$1,
-                                    "foreground": true
-                                })
-                            }
-                            else {
-                                app.open_url(url);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        Component.onCompleted: {
-            var splitted = text.split(" ")
-            for (var i = 0; i < splitted.length; i++) {
-                var part = splitted[i]
-                var url = null
-                var islink = false
-
-                if (part.substr(0, 1) == "@") {
-                    url = "http://twitter.com/" + part.substr(1)
-                    islink = true
-                } else if (part.substr(0, 1) == "#") {
-                    url = "search://" + part.substr(1)
-                    islink = true
-                } else if (part.match(/(http:\/\/\S*)/g)) {
-                    url = part
-                    islink = true
-                }
-
-                repeater.model.append({"part": part, "islink": islink, "url": url})
-            }
         }
     }
 
