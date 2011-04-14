@@ -88,12 +88,13 @@ Item {
                 else
                     tokens.push(text_part.part)
             }
-            text_display.text = tokens.join(" ")
+            text_display.text = "<html><head></head><body>" + tokens.join(" ") + "</body></html>"
         }
 
         Component.onCompleted: {
             var splitted = text.split(" ")
             var unescaped_splitted = text.replace(/&([^\s]+?);/g, 'X').split(" ")
+            //console.log(text.replace(/&([^ ;]+;)/g, "x"))
             var indexmap = {}
             var text_index = 0
             for (var i = 0; i < splitted.length; i++) {
@@ -111,6 +112,8 @@ Item {
                     url = part
                     islink = true
                 }
+
+                //if (part.substr(0, 1) == "&")
 
                 for (var ix = text_index; ix < text_index + unescaped_splitted[i].length; ix++) {
                     indexmap[ix] = i
