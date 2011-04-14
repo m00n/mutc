@@ -14,14 +14,14 @@ ListModel {
 
     ListElement {
         created_at: "13:37"
-        message: "&lt; &gt; #foo Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor"
+        message: "&lt; &gt; &lt;3 #foo Lorem &ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor"
         is_retweet: true
         retweet_by: "lorem"
 
     }
     ListElement {
         created_at: "13:37"
-        message: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor"
+        message: "Lorem ipsum dolor sit amet, http://foo.de/zort/123 consectetur adipisicing elit, sed do eiusmod tempor"
         is_retweet: true
         retweet_by: "lorem"
 
