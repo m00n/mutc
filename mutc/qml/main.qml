@@ -382,62 +382,58 @@ Rectangle {
     focus: true
 
     Keys.onReleased: {
-        if (event.key == Qt.Key_Left) {
-            if (tweet_panels.currentItem.overlay) {
-                var view = tweet_panels.currentItem.tweetView
-                if (view.currentOverlayIndex > 0)
-                    view.currentOverlayIndex--
-            } else {
-                tweet_panels.decrementCurrentIndex()
-            }
-
-        }
-        if (event.key == Qt.Key_Right) {
-            if (tweet_panels.currentItem.overlay) {
-                var view = tweet_panels.currentItem.tweetView
-                if (view.currentOverlayIndex + 1 < view.overlayItemCount)
-                    view.currentOverlayIndex++
-            } else {
-                tweet_panels.incrementCurrentIndex()
-            }
-        }
-        if (event.key == Qt.Key_Down) {
-            var view = tweet_panels.currentItem.tweetView
-            if (view.currentIndex + 1 == view.model.count) {
-                if (!view.model.busy) {
-                    tweet_panels.currentItem.needTweets()
-                    view.positionViewAtIndex(view.model.count - 1, ListView.Beginning)
+        if (main_menu.state == "hidden" && twitter_dialog.state == "hidden") {
+            if (event.key == Qt.Key_Left) {
+                if (tweet_panels.currentItem.overlay) {
+                    var view = tweet_panels.currentItem.tweetView
+                    if (view.currentOverlayIndex > 0)
+                        view.currentOverlayIndex--
+                } else {
+                    tweet_panels.decrementCurrentIndex()
                 }
-            } else {
-                view.incrementCurrentIndex()
+
+            }
+            if (event.key == Qt.Key_Right) {
+                if (tweet_panels.currentItem.overlay) {
+                    var view = tweet_panels.currentItem.tweetView
+                    if (view.currentOverlayIndex + 1 < view.overlayItemCount)
+                        view.currentOverlayIndex++
+                } else {
+                    tweet_panels.incrementCurrentIndex()
+                }
+            }
+            if (event.key == Qt.Key_Down) {
+                var view = tweet_panels.currentItem.tweetView
+                if (view.currentIndex + 1 == view.model.count) {
+                    if (!view.model.busy) {
+                        tweet_panels.currentItem.needTweets()
+                        view.positionViewAtIndex(view.model.count - 1, ListView.Beginning)
+                    }
+                } else {
+                    view.incrementCurrentIndex()
+                }
+            }
+            if (event.key == Qt.Key_Up) {
+                tweet_panels.currentItem.tweetView.decrementCurrentIndex()
+            }
+            if (event.key == Qt.Key_Home) {
+                tweet_panels.currentItem.tweetView.currentIndex = 0
+            }
+            if (event.key == Qt.Key_End) {
+                var view = tweet_panels.currentItem.tweetView
+                view.currentIndex = view.model.count - 1
+            }
+            if (event.key == Qt.Key_T) {
+                twitter_dialog.state = "visible"
+            }
+            if (event.key == Qt.Key_M) {
+                main_menu.state = "main_menu"
+            }
+            if (event.key == Qt.Key_Space) {
+                tweet_panels.currentItem.overlay = !tweet_panels.currentItem.overlay
             }
         }
-        if (event.key == Qt.Key_Up) {
-            tweet_panels.currentItem.tweetView.decrementCurrentIndex()
-        }
-        if (event.key == Qt.Key_Home) {
-            tweet_panels.currentItem.tweetView.currentIndex = 0
-        }
-        if (event.key == Qt.Key_End) {
-            var view = tweet_panels.currentItem.tweetView
-            view.currentIndex = view.model.count - 1
-        }
-        if (event.key == Qt.Key_T) {
-            if (main_menu.state == "hidden" && twitter_dialog.state == "hidden")
-                twitter_dialog.state = "visible"
-        }
-        if (event.key == Qt.Key_M) {
-            if (main_menu.state == "hidden" && twitter_dialog.state == "hidden")
-                main_menu.state = "main_menu"
-        }
-        if (event.key == Qt.Key_Escape) {
-            twitter_dialog.state = "hidden"
-            main_menu.state = "hidden"
-        }
-        if (event.key == Qt.Key_Space) {
-            if (main_menu.state == "hidden" && twitter_dialog.state == "hidden")
-                tweet_panels.currentItem.overlay = !tweet_panels.currentItem.overlay
-        }
+
         if (event.key == Qt.Key_Return) {
             if (twitter_dialog.state != "visible" && tweet_panels.currentItem.overlay) {
                 var view = tweet_panels.currentItem.tweetView
@@ -446,6 +442,10 @@ Rectangle {
             if (twitter_dialog.state == "visible") {
                 twitter_dialog.sendClicked()
             }
+        }
+        if (event.key == Qt.Key_Escape) {
+            twitter_dialog.state = "hidden"
+            main_menu.state = "hidden"
         }
     }
 
