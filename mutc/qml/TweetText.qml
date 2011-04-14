@@ -22,6 +22,7 @@ Item {
         TextEdit {
             id: text_storage
             text: tweet_text.text
+            textFormat: Text.StyledText
             visible: false
             width: parent.width
             height: parent.height
@@ -36,6 +37,7 @@ Item {
             height: parent.height
 
             wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+            textFormat: Text.StyledText
 
             color: style.textColor
 
@@ -51,11 +53,13 @@ Item {
 
                 onClicked: {
                     var textpos = text_storage.positionAt(mouse.x, mouse.y)
-                    var array_position = findArrayPosition(textpos)
-                    var item = model.get(array_position)
+                    var array_position = container._indexmap[textpos]
+                    if (array_position > -1) {
+                        var item = model.get(array_position)
 
-                    if (item.islink) {
-                        tweet_text.linkActivated(item.url)
+                        if (item.islink) {
+                            tweet_text.linkActivated(item.url)
+                        }
                     }
                 }
 
@@ -106,7 +110,6 @@ Item {
                     url = "search://" + part.substr(1)
                     islink = true
                 } else if (part.match(/(http:\/\/\S*)/g)) {
-                    console.log("urlmatch", part)
                     url = part
                     islink = true
                 }
