@@ -206,7 +206,6 @@ class TweetModel(QAbstractListModel):
         if role == self.AuthorRole:
             return author_to_dict(status.author)
         elif role == self.MessageRole:
-            print "s", status.text
             return status.text
         elif role == self.CreatedRole:
             return format_datetime(status.created_at)
