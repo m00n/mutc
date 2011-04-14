@@ -14,7 +14,7 @@ ListModel {
 
     ListElement {
         created_at: "13:37"
-        message: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor"
+        message: "&lt; &gt; #foo Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor"
         is_retweet: true
         retweet_by: "lorem"
 
