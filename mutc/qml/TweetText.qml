@@ -3,7 +3,7 @@ import QtQuick 1.0
 Item {
     id: container
 
-    width: 100
+    width: 300
     height: 62
 
     Style { id: style }
@@ -16,13 +16,13 @@ Item {
 
         anchors.fill: parent
 
-        property string text: "foo #bar @zort baz http://foo.bar/baz foo"
+        property string text: "&gt;&lt; foo #bar @zort baz http://foo.bar/baz foo"
         signal linkActivated(string url)
 
         TextEdit {
             id: text_storage
             text: tweet_text.text
-            textFormat: Text.StyledText
+            //textFormat: Text.PlainText
             visible: false
             width: parent.width
             height: parent.height
@@ -32,12 +32,12 @@ Item {
 
         Text {
             id: text_display
-
+            z: 5
             width: parent.width
             height: parent.height
 
             wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-            textFormat: Text.StyledText
+            //textFormat: Text.StyledText
 
             color: style.textColor
 
@@ -56,7 +56,6 @@ Item {
                     var array_position = container._indexmap[textpos]
                     if (array_position > -1) {
                         var item = model.get(array_position)
-
                         if (item.islink) {
                             tweet_text.linkActivated(item.url)
                         }
@@ -66,7 +65,7 @@ Item {
                 onMousePositionChanged: {
                     var textpos = text_storage.positionAt(mouse.x, mouse.y)
                     var array_position = container._indexmap[textpos]
-
+                    //console.log(textpos, array_position)
                     if (array_position > -1 && model.get(array_position).islink)
                         tweet_text.renderText(array_position)
                     else
@@ -94,14 +93,13 @@ Item {
 
         Component.onCompleted: {
             var splitted = text.split(" ")
-
+            var unescaped_splitted = text.replace(/&([^\s]+?);/g, 'X').split(" ")
             var indexmap = {}
             var text_index = 0
             for (var i = 0; i < splitted.length; i++) {
                 var part = splitted[i]
                 var url = null
                 var islink = false
-
 
                 if (part.substr(0, 1) == "@") {
                     url = "http://twitter.com/" + part.substr(1)
@@ -113,19 +111,16 @@ Item {
                     url = part
                     islink = true
                 }
-                for (var ix = text_index; ix < text_index + part.length; ix++) {
+
+                for (var ix = text_index; ix < text_index + unescaped_splitted[i].length; ix++) {
                     indexmap[ix] = i
                 }
                 indexmap[ix] = -1
-                text_index += part.length + 1
+                text_index += unescaped_splitted[i].length + 1
 
                 model.append({"part": part, "islink": islink, "url": url})
             }
             container._indexmap = indexmap
-
-            /*for (var i in container._indexmap) {
-                console.log(i, "->", container._indexmap[i])
-            }*/
 
             renderText(-1)
         }
