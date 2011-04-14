@@ -18,6 +18,7 @@
 
 from __future__ import with_statement, division
 
+from cgi import escape
 from datetime import datetime
 
 import tweepy
@@ -187,7 +188,7 @@ class TweetModel(QAbstractListModel):
         if role == self.AuthorRole:
             return author_to_dict(status.retweeted_status.author)
         elif role == self.MessageRole:
-            return status.retweeted_status.text
+            return escape(status.retweeted_status.text)
         elif role == self.CreatedRole:
             return format_datetime(status.created_at)
         elif role == self.IsRetweetRole:
@@ -205,7 +206,7 @@ class TweetModel(QAbstractListModel):
         if role == self.AuthorRole:
             return author_to_dict(status.author)
         elif role == self.MessageRole:
-            return status.text
+            return escape(status.text)
         elif role == self.CreatedRole:
             return format_datetime(status.created_at)
         elif role == self.IsRetweetRole:
@@ -229,7 +230,7 @@ class TweetModel(QAbstractListModel):
                 "profile_image_url": result.profile_image_url
             }
         elif role == self.MessageRole:
-            return result.text
+            return escape(result.text)
         elif role == self.CreatedRole:
             return format_datetime(result.created_at)
         elif role == self.IsRetweetRole:
@@ -274,7 +275,7 @@ class DMTweetModel(TweetModel):
         if role == self.AuthorRole:
             return author_to_dict(dm.sender)
         elif role == self.MessageRole:
-            return dm.text
+            return escape(dm.text)
         elif role == self.CreatedRole:
             return format_datetime(dm.created_at)
         elif role == self.IsRetweetRole:
