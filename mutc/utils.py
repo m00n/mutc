@@ -107,6 +107,9 @@ def safe_api_request(func, on_success=lambda: None, short_wait=False):
             elif "timeout" in error.reason or "Failed to send" in error.reason:
                 sleep_time = 1
 
+            else:
+                sleep_time = 60
+
             if sleep_time is None:
                 raise
 
