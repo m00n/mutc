@@ -409,9 +409,9 @@ class TwitterThread(QThread):
                         if subscription.account.me)
 
         for account in accounts:
-            __rticks = self.tick_counter.get(account)
-            if __rticks and __rticks % 5 == 0:
-                print >>sys.stderr, account, self.tick_counter.get(account)
+            #__rticks = self.tick_counter.get(account)
+            #if __rticks and __rticks % 5 == 0:
+                #print >>sys.stderr, account, self.tick_counter.get(account)
 
             if account not in self.tick_counter:
                 self.calc_rates()
@@ -443,7 +443,10 @@ class TwitterThread(QThread):
 
                 self.rate_logger.debug(
                     "{0}; calls: {1}({2}); ticks: {3}",
-                    account.me.name, calls, rate_info["remaining_hits"], ticks
+                    repr(account.me.screen_name),
+                    calls,
+                    rate_info["remaining_hits"],
+                    ticks
                 )
 
         self.last_rate_check = time()
