@@ -33,7 +33,8 @@ setup(
         'qml/dummydata/*',
         'qml/*.gif',
         'qml/*.qml',
-        'qml/*.js'
+        'qml/*.js',
+        'tray_icon.png',
     ]},
     scripts=['scripts/mutc'],
 )
