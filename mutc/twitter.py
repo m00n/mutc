@@ -39,6 +39,11 @@ from utils import LockableDict, async, safe_api_request, tweet_to_html
 CK = "owLrhjNm3qUOHA1ybLnZzA"
 CS = "lycIVjOXaALggV18Cgec9mOFkDqC1hNXoFxHet5dEg"
 
+
+class NoAccountSelectedException(Exception):
+    pass
+
+
 class Account(QObject):
     authURLReady = pyqtSignal('QVariant')
     ready = pyqtSignal()
@@ -184,6 +189,12 @@ class Twitter(QObject):
 
         return wrapper
 
+    def check_selected_accounts(self, accounts):
+        if not accounts:
+            raise NoAccountSelectedException(
+                "You have to select at least one account"
+            )
+
     def on_account_connected(self, account):
         self.accountConnected.emit(account.simplify())
         self.panel_model.setScreenName(account.uuid, account.me.screen_name)
@@ -224,6 +235,8 @@ class Twitter(QObject):
     @async
     @locking
     def tweet(self, accounts, tweet, in_reply=None):
+        self.check_selected_accounts(accounts)
+
         in_reply = in_reply if in_reply else None
 
         for account in imap(self.account, accounts):
@@ -235,6 +248,8 @@ class Twitter(QObject):
     @async
     @locking
     def retweet(self, accounts, tweet_id):
+        self.check_selected_accounts(accounts)
+
         for account in imap(self.account, accounts):
             status = safe_api_request(
                 lambda api=account.api: api.retweet(tweet_id),
@@ -256,6 +271,8 @@ class Twitter(QObject):
     @async
     @locking
     def undo_retweet(self, accounts, tweet_id):
+        self.check_selected_accounts(accounts)
+
         for account in imap(self.account, accounts):
             status = safe_api_request(
                 lambda: account.api.destroy_status(tweet_id)
