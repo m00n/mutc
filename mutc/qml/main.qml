@@ -435,12 +435,13 @@ Rectangle {
         }
 
         if (event.key == Qt.Key_Return) {
+            if (twitter_dialog.state == "visible") {
+                twitter_dialog.sendClicked()
+            }
+
             if (twitter_dialog.state != "visible" && tweet_panels.currentItem.overlay) {
                 var view = tweet_panels.currentItem.tweetView
                 view.emulateClick()
-            }
-            if (twitter_dialog.state == "visible") {
-                twitter_dialog.sendClicked()
             }
         }
         if (event.key == Qt.Key_Escape) {
