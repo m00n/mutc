@@ -361,9 +361,9 @@ Rectangle {
         anchors.centerIn: parent
 
         function show(title, msg) {
-            text = msg
-            title = title
-            state = "visible";
+            status_dialog.text = msg
+            status_dialog.title = title
+            status_dialog.state = "visible"
         }
     }
 
