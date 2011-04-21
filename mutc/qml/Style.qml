@@ -11,4 +11,5 @@ QtObject {
     property color gradientStop: "#6d7176"
     property color darkBorderColor: "#b7b3af"
     property color overlayButtonHighlight: "black"
+    property color dialogBackground: "#323436"
 }
