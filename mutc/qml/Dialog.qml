@@ -11,19 +11,21 @@ Rectangle {
 
     id: dialog
 
-    color: "#323436"
+    color: style.dialogBackground
 
     property alias text: prompt_text.text
     property alias title: title_text.text
 
     border {
         width: 1
-        color: "white"
+        color: style.borderColor
     }
+
+    Style { id: style }
 
     Toolbar {
         id: title_bar
-
+        color: style.dialogBackground
         anchors {
             top: parent.top
             left: parent.left
@@ -35,9 +37,9 @@ Rectangle {
         Text {
             id: title_text
             color: "white"
+            text: "Title text"
             anchors {
-                verticalCenter: parent.verticalCenter
-                horizontalCenter: parent.horizontalCenter
+                centerIn: parent
             }
         }
     }
