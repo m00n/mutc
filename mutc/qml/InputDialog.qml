@@ -58,7 +58,7 @@ Rectangle {
             color: style.textColor
             focus: true
             Keys.onPressed: {
-                if (event.key == Qt.Key_Return) {
+                if (event.key == Qt.Key_Return && input_dialog.state == "visible") {
                     accept()
                 }
             }
