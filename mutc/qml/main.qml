@@ -381,8 +381,8 @@ Rectangle {
 
     focus: true
 
-    Keys.onReleased: {
-        if (main_menu.state == "hidden" && twitter_dialog.state == "hidden") {
+    Keys.onReleased: {       
+        if (main_menu.state == "hidden" && twitter_dialog.state == "hidden" && search_dialog.state == "hidden") {
             if (event.key == Qt.Key_Left) {
                 if (tweet_panels.currentItem.overlay) {
                     var view = tweet_panels.currentItem.tweetView
