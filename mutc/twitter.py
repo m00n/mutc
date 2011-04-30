@@ -34,7 +34,7 @@ from PyQt4.QtCore import *
 
 from models import PanelModel, TweetModel, DMTweetModel
 from subscriptions import create_subscription
-from utils import LockableDict, async, safe_api_request, tweet_to_html
+from utils import LockableDict, async, safe_api_request
 
 CK = "owLrhjNm3qUOHA1ybLnZzA"
 CS = "lycIVjOXaALggV18Cgec9mOFkDqC1hNXoFxHet5dEg"
@@ -379,10 +379,6 @@ class Twitter(QObject):
     @pyqtSlot("QVariant", "QVariant", "QVariant", result=QObject)
     def get_model(self, uuid, panel_type, args):
         return self.models[uuid, panel_type, args]
-
-    @pyqtSlot("QVariant", result="QVariant")
-    def tweet_to_html(self, text):
-        return tweet_to_html(text)
 
 
 class TwitterThread(QThread):
