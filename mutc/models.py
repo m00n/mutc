@@ -275,7 +275,7 @@ class DMTweetModel(TweetModel):
         if role == self.AuthorRole:
             return author_to_dict(dm.sender)
         elif role == self.MessageRole:
-            return escape(dm.text)
+            return dm.text
         elif role == self.CreatedRole:
             return format_datetime(dm.created_at)
         elif role == self.IsRetweetRole:
