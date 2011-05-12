@@ -78,7 +78,7 @@ Rectangle {
                     color: title.border.color
                 }
                 onButtonClicked: {
-                    panel_view.for_account = uuid
+                    panel_view.for_account = account_obj
                     main_menu.state = "panel_menu"
                 }
             }
@@ -88,7 +88,7 @@ Rectangle {
             id: panel_view
             model: panel_model
 
-            property string for_account
+            property variant for_account
             property string panel_type
             property string need_args
 
