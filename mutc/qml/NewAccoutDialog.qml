@@ -11,6 +11,7 @@ Rectangle {
     property string account /* uuid */
     property string auth_url: ""
     property string waiting_str: "Waiting for authentication url"
+    property variant account_obj
 
     signal authFailed
     signal authSuccessful
@@ -154,7 +155,7 @@ Rectangle {
         }
 
         onButtonClicked: {
-            twitter.account(account).set_verifier(verifier_input.text);
+            account_obj.set_verifier(verifier_input.text)
         }
     }
 
@@ -172,8 +173,7 @@ Rectangle {
         }
 
         onButtonClicked: {
-            twitter.dismiss_account(account);
-            new_account_dialog.state = "";
+            new_account_dialog.state = ""
         }
     }
 
@@ -212,7 +212,7 @@ Rectangle {
         })
 
         account_obj.request_auth();
-        console.log(account_obj)
+        new_account_dialog.account_obj = account_obj
     }
 
     onStateChanged: {
