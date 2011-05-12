@@ -60,7 +60,8 @@ class AccountModel(QAbstractListModel):
     StateRole = Qt.UserRole + 3
     AvatarRole = Qt.UserRole + 4
     SelectedRole = Qt.UserRole + 5
-    ServiceIdRole = Qt.UserRole + 6
+    ObjectRole = Qt.UserRole + 6
+    ServiceIdRole = Qt.UserRole + 7
 
     DisconnectedState = 0
     ConnectedState = 1
@@ -75,6 +76,7 @@ class AccountModel(QAbstractListModel):
             self.StateRole: "state",
             self.AvatarRole: "avatar",
             self.SelectedRole: "is_selected",
+            self.ObjectRole: "account_obj"
         })
 
         self.accounts = []
@@ -121,6 +123,7 @@ class AccountModel(QAbstractListModel):
                 self.UUIDRole: account.uuid,
                 self.StateRole: bool(account.me),
                 self.SelectedRole: account in self.selected,
+                self.ObjectRole: account
             }[role]
         except KeyError:
             if account.me:
@@ -221,6 +224,11 @@ class TweetModel(QAbstractListModel):
         removes a single tweet identified by "id_str"
         """
         index = self.index_for_id(id_str)
+
+        if index is None:
+            # We are the wrong model, just return
+            return
+
         self.beginRemoveRows(QModelIndex(), index, index)
         self.tweets.pop(index)
         self.endRemoveRows()
@@ -231,7 +239,6 @@ class TweetModel(QAbstractListModel):
         index = self.index_for_id(id_str)
 
         if index is None:
-            # We are the wrong model, just return
             return
 
         old_tweet = self.tweets[index]
@@ -376,6 +383,7 @@ class PanelModel(QAbstractListModel):
     ArgsRole = Qt.UserRole + 2
     ScreenNameRole = Qt.UserRole + 3
     TweetModelRole = Qt.UserRole + 4
+    AccountRole = Qt.UserRole + 5
 
     countChanged = pyqtSignal(int, int)
 
@@ -390,6 +398,8 @@ class PanelModel(QAbstractListModel):
             self.TypeRole: "type",
             self.ArgsRole: "args",
             self.ScreenNameRole: "screen_name",
+            self.TweetModelRole: "tweet_model",
+            self.AccountRole: "account_obj"
         }
 
         self.setRoleNames(self.role_to_key)
@@ -406,15 +416,24 @@ class PanelModel(QAbstractListModel):
 
         self.beginInsertRows(QModelIndex(), pos, pos)
 
-        self.panels.append(subscription)
         with self.subscriptions:
             self.subscriptions[subscription.key()] = subscription
+
+        if subscription.subscription_type == "direct messages":
+            model_class = DMTweetModel
+        else:
+            model_class = TweetModel
+
+        model = model_class(self, subscription)
+        self.panels.append((subscription, model))
 
         self.endInsertRows()
         self.countChanged.emit(self.count, self.count - 1)
 
+        return model
+
     def data(self, index, role):
-        subscription = self.panels[index.row()]
+        subscription, model = self.panels[index.row()]
         account = subscription.account
 
         if account.me:
@@ -426,7 +445,9 @@ class PanelModel(QAbstractListModel):
             self.UUIDRole: subscription.account.uuid,
             self.TypeRole: subscription.subscription_type,
             self.ArgsRole: subscription.args,
-            self.ScreenNameRole: screen_name
+            self.ScreenNameRole: screen_name,
+            self.TweetModelRole: model,
+            self.AccountRole: subscription.account
         }[role]
 
     @pyqtSlot(int, int)
@@ -462,7 +483,7 @@ class PanelModel(QAbstractListModel):
     def remove(self, idx):
         self.beginRemoveRows(QModelIndex(), idx, idx)
 
-        subscription = self.panels.pop(idx)
+        subscription, model = self.panels.pop(idx)
         with self.subscriptions:
             self.subscriptions.pop(subscription.key())
 
@@ -472,6 +493,6 @@ class PanelModel(QAbstractListModel):
         return subscription
 
     def setScreenName(self, uuid, screen_name):
-        for row, subscription in enumerate(self.panels):
+        for row, (subscription, model) in enumerate(self.panels):
             if subscription.account.uuid == uuid:
                 self.dataChanged.emit(self.index(row), self.index(row))
