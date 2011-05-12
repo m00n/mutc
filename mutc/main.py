@@ -103,7 +103,7 @@ class App(QApplication):
 
     def save_accounts(self):
         accounts = []
-        for account in self.twitter.ordered_accounts:
+        for account in self.twitter.account_model.accounts:
             accounts.append(
                 (account.oauth_key, account.oauth_secret, account.uuid)
             )
@@ -303,6 +303,9 @@ class MainWindow(QDeclarativeView):
             'tweet_panel_model', app.twitter.panel_model
         )
         root_context.setContextProperty('config', Config(self, app.config))
+        root_context.setContextProperty(
+            'account_model', app.twitter.account_model
+        )
 
         self.setSource(
             QUrl.fromLocalFile(path(__file__).parent / "qml" / "main.qml")

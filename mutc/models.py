@@ -53,6 +53,86 @@ def author_to_dict(user):
         "id_str",
     )
 
+class AccountModel(QAbstractListModel):
+    ServiceRole = Qt.UserRole
+    NameRole = Qt.UserRole + 1
+    UUIDRole = Qt.UserRole + 2
+    StateRole = Qt.UserRole + 3
+    AvatarRole = Qt.UserRole + 4
+    SelectedRole = Qt.UserRole + 5
+    ServiceIdRole = Qt.UserRole + 6
+
+    DisconnectedState = 0
+    ConnectedState = 1
+
+    def __init__(self, parent):
+        QAbstractListModel.__init__(self, parent)
+
+        self.setRoleNames({
+            self.ServiceRole: "service",
+            self.NameRole: "screen_name",
+            self.UUIDRole: "uuid",
+            self.StateRole: "state",
+            self.AvatarRole: "avatar",
+            self.SelectedRole: "is_selected",
+        })
+
+        self.accounts = []
+        self.selected = set()
+
+    def _on_connected(self, account):
+        model_index = self.index(self.accounts.index(account))
+        self.dataChanged.emit(model_index, model_index)
+
+    @pyqtSlot(QObject)
+    def addAccount(self, account):
+        account.connected.connect(self._on_connected)
+        self.beginInsertRows(QModelIndex(), self.rowCount(), self.rowCount())
+        self.accounts.append(account)
+        self.endInsertRows()
+
+    #def removeAccount(self, account):
+        #self.accounts.remove(account)
+
+    @pyqtSlot(int)
+    def select(self, index):
+        model_index = self.index(index)
+        self.selected.add(self.accounts[index])
+        self.dataChanged.emit(model_index, model_index)
+
+    @pyqtSlot(int)
+    def deselect(self, index):
+        model_index = self.index(index)
+        self.selected.remove(self.accounts[index])
+        self.dataChanged.emit(model_index, model_index)
+
+    @pyqtSlot(result="QVariant")
+    def getActiveAccounts(self):
+        return self.selected
+
+    def rowCount(self, _parent=None):
+        return len(self.accounts)
+
+    def data(self, index, role):
+        account = self.accounts[index.row()]
+
+        try:
+            return {
+                self.UUIDRole: account.uuid,
+                self.StateRole: bool(account.me),
+                self.SelectedRole: account in self.selected,
+            }[role]
+        except KeyError:
+            if account.me:
+                return {
+                    self.ServiceRole: account.service,
+                    self.NameRole: account.me.screen_name,
+                    self.AvatarRole: account.me.profile_image_url,
+                    self.ServiceIdRole: account.me.id_str,
+                }[role]
+            else:
+                return ""
+
 
 class TweetModel(QAbstractListModel):
     AuthorRole = Qt.UserRole

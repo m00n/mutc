@@ -14,7 +14,7 @@ Component {
         Rectangle {
             id: highlight_rectangle
 
-            opacity: active ? 1.0 : 0.0
+            opacity: is_selected ? 1.0 : 0.0
             x: avatar_border.x
             y: avatar_border.y + 1
             width: avatar_border.width + screen_name_text.width + 3
@@ -94,9 +94,10 @@ Component {
             onClicked: {
                 var coords = ListView.view.mapFromItem(screen_name_text, mouseX, mouseY);
                 var idx = ListView.view.indexAt(coords.x, coords.y);
-                var data = account_model.get(idx);
-                data.active = !data.active;
-                ListView.view.model.set(idx, data);
+                if (is_selected)
+                    ListView.view.model.deselect(idx)
+                else
+                    ListView.view.model.select(idx)
             }
         }
     }

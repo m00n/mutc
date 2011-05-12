@@ -8,19 +8,18 @@ Rectangle {
 
     color: style.backgroundColor
 
-    property string account /* uuid */
     property string auth_url: ""
     property string waiting_str: "Waiting for authentication url"
     property variant account_obj
 
-    signal authFailed
-    signal authSuccessful
+    signal authFailed(variant account)
+    signal authSuccessful(variant account)
 
     SystemPalette { id: activePalette }
     Style { id: style }
 
     border.width: 2
-    border.color: { style.darkBorderColor }
+    border.color: style.darkBorderColor
 
     Toolbar {
         id: title_bar
@@ -194,24 +193,24 @@ Rectangle {
     ]
 
     function init () {
+        console.debug("a")
         var account_obj = twitter.new_account();
-        new_account_dialog.account = account_obj.get_uuid();
+
         account_obj.authURLReady.connect(function (url) {
             new_account_dialog.auth_url = url;
         });
 
         account_obj.authFailed.connect(function (account) {
-            twitter.dismiss_account(account.get_uuid());
-            authFailed();
+            authFailed(account_obj)
             state = ""
         })
 
         account_obj.authSuccessful.connect(function (account) {
-            authSuccessful();
+            authSuccessful(account_obj)
             state = ""
         })
 
-        account_obj.request_auth();
+        account_obj.request_auth()
         new_account_dialog.account_obj = account_obj
     }
 
