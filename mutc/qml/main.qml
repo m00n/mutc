@@ -48,14 +48,15 @@ Rectangle {
             anchors.top: { if (parent) parent.top }
             anchors.bottom: { if (parent) parent.bottom }
 
-            model: twitter.get_model(uuid, type, args)
+            model: tweet_model //twitter.get_model(uuid, type, args)
 
             onNeedTweets: {
-                twitter.get_model(uuid, type, args).needTweets()
+                //twitter.get_model(uuid, type, args).needTweets()
+                tweet_model.needTweets()
             }
 
             onReply: {
-                var model = twitter.get_model(uuid, type, args)
+                //var model = twitter.get_model(uuid, type, args)
                 var tweet = model.get(tweet_panel.tweetView.currentIndex)
 
                 twitter_dialog.state = "visible"
@@ -64,16 +65,17 @@ Rectangle {
                     twitter_dialog.in_reply_id = tweet.tweet_id
                     twitter_dialog.text = "@" + tweet.author.screen_name + " "
                     twitter_dialog.edit.cursorPosition = twitter_dialog.text.length
+                    twitter_dialog.direct_message = false
                 } else {
                     twitter_dialog.in_reply_id = tweet.author.id_str
                     twitter_dialog.in_reply = tweet.author.screen_name
-                    twitter_dialog.direct_message_from = uuid
+                    twitter_dialog.direct_message_from = account_obj
                     twitter_dialog.direct_message = true
                 }
             }
 
             onRetweet: {
-                var model = twitter.get_model(uuid, type, args)
+                //var model = twitter.get_model(uuid, type, args)
                 var tweet = model.get(tweet_panel.tweetView.currentIndex)
 
                 if (model.type != "direct messages") {
@@ -92,18 +94,18 @@ Rectangle {
             }
 
             onUndoRetweet: {
-                var model = twitter.get_model(uuid, type, args)
+                //var model = twitter.get_model(uuid, type, args)
                 var tweet = model.get(tweet_panel.tweetView.currentIndex)
                 twitter.undo_retweet(account_model.getActiveAccounts(), tweet.tweet_id)
             }
 
             onRemoveTweet: {
-                var model = twitter.get_model(uuid, type, args)
+                //var model = twitter.get_model(uuid, type, args)
                 var tweet = model.get(tweet_panel.tweetView.currentIndex)
                 if (model.type != "direct messages") {
                     twitter.destroy_tweet(tweet.tweet_id)
                 } else {
-                    twitter.destroy_direct_message(uuid, tweet.tweet_id)
+                    twitter.destroy_direct_message(account_obj, tweet.tweet_id)
                 }
             }
 
@@ -266,7 +268,7 @@ Rectangle {
 
         onAddPanel: {
             twitter.subscribe({
-                'uuid': main_menu.for_account,
+                'account': main_menu.for_account,
                 'type': main_menu.panel_type,
                 'args': "",
             });
@@ -282,7 +284,7 @@ Rectangle {
         Component.onCompleted: {
             search_dialog.dialogAccepted.connect(function () {
                 twitter.subscribe({
-                    'uuid': main_menu.for_account,
+                    'account': main_menu.for_account,
                     'type': main_menu.panel_type,
                     'args': search_dialog.value,
                 })
