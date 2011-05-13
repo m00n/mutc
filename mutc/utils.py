@@ -30,6 +30,7 @@ from urlparse import urlparse
 
 from PyQt4.Qt import QThreadPool, QRunnable
 from tweepy import TweepError
+from logbook import Logger
 
 
 class LockableDict(dict):
@@ -92,29 +93,33 @@ def safe_api_request(func, on_success=lambda: None, short_wait=False):
             value = func()
         except TweepError as error:
             sleep_time = None
-            print error, error.exception
+
             if isinstance(error.exception, httplib.HTTPException):
                 sleep_time = {
                     420: 1800 if not short_wait else None,
                     500: 3,
                     502: 3,
                     503: 10,
-                }.get(error.exception.code, None)
+                }.get(error.exception.code, 60)
 
             elif isinstance(error.exception, socket.error):
                 sleep_time = 1
-
-            elif "timeout" in error.reason or "Failed to send" in error.reason:
-                sleep_time = 1
-
+            elif "Not found" in unicode(error) or "OAuth" in unicode(error):
+                raise
             else:
                 sleep_time = 60
+
+            Logger('api_request').warn(
+                "Request failed: {} ({}) -> {}s sleep",
+                error, error.exception
+            )
 
             if sleep_time is None:
                 raise
 
             sleep(sleep_time)
         except Exception:
+            Logger('api_request').exception()
             raise
         else:
             on_success()
