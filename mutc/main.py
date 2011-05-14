@@ -20,6 +20,7 @@ from __future__ import with_statement, division
 
 import sys
 import json
+import pickle
 import shutil
 import webbrowser
 from time import strptime
@@ -30,6 +31,7 @@ sip.setapi('QVariant', 2)
 sip.setapi('QDateTime', 2)
 from PyQt4.Qt import *
 from path import path
+from logbook import Logger
 
 from twitter import Account, Twitter, TwitterThread
 from utils import discover_proxy
@@ -53,8 +55,7 @@ class App(QApplication):
         self.load_config()
 
         self.twitter = Twitter(self.config)
-        self.load_accounts()
-        self.load_panels()
+        self.load_state()
 
         self.twitter.accountCreated.connect(self.apply_proxy)
 
@@ -89,60 +90,47 @@ class App(QApplication):
         with open(self.data_path / 'config.json', 'w') as fd:
             json.dump(self.config, fd)
 
-    def load_accounts(self):
+    def save_state(self):
+        panels = [(s.subscription_type, s.account, s.args)
+                    for s, _ in self.twitter.panel_model.panels]
+        state = {
+            "accounts": self.twitter.account_model.accounts,
+            "accounts_selected": self.twitter.account_model.selected,
+            "panels": panels,
+        }
+        import pprint
+        pprint.pprint(state)
+        with open(self.data_path / 'state.pickle', 'wb') as fd:
+            pickle.dump(state, fd)
+
+    def load_state(self):
         try:
-            with open(self.data_path / 'accounts.json') as fd:
-                accounts = json.load(fd)
+            with open(self.data_path / 'state.pickle', 'rb') as fd:
+                state = pickle.load(fd)
+        except EOFError:
+            Logger("app").warn("statefile corrupted")
+            return
         except IOError:
-            pass
-        else:
-            for accout_data in accounts:
-                account = Account(*accout_data)
-                self.apply_proxy(account)
-                self.twitter.add_account(account)
+            return
 
-    def save_accounts(self):
-        accounts = []
-        for account in self.twitter.ordered_accounts:
-            accounts.append(
-                (account.oauth_key, account.oauth_secret, account.uuid)
-            )
+        for account in state["accounts"]:
+            self.apply_proxy(account)
+            self.twitter.add_account(account)
 
-        with open(self.data_path / 'accounts.json', 'w') as fd:
-            json.dump(accounts, fd)
+        self.twitter.account_model.selected = state["accounts_selected"]
 
-    def load_panels(self):
-        try:
-            with open(self.data_path / 'panels.json') as fd:
-                panels = json.load(fd)
-        except IOError:
-            pass
-        else:
-            for ptype, uuid, args in panels:
-                self.twitter.subscribe({
-                    "uuid": uuid,
-                    "type": ptype,
-                    "args": args
-                })
-
-    def save_panels(self):
-        panels = []
-        for subscription in self.twitter.panel_model.panels:
-            panels.append(
-                (subscription.subscription_type,
-                 subscription.account.uuid,
-                 subscription.args)
-            )
-
-        with open(self.data_path / 'panels.json', 'w') as fd:
-            json.dump(panels, fd)
+        for subscription_type, account, args in state["panels"]:
+            self.twitter.subscribe({
+                "account": account,
+                "type": subscription_type,
+                "args": args,
+            })
 
     def _on_shutdown(self):
         self.twitter.thread.running = False
         self.twitter.thread = False
 
-        self.save_accounts()
-        self.save_panels()
+        self.save_state()
         self.save_config()
 
     @pyqtSlot("QVariant")
@@ -303,6 +291,9 @@ class MainWindow(QDeclarativeView):
             'tweet_panel_model', app.twitter.panel_model
         )
         root_context.setContextProperty('config', Config(self, app.config))
+        root_context.setContextProperty(
+            'account_model', app.twitter.account_model
+        )
 
         self.setSource(
             QUrl.fromLocalFile(path(__file__).parent / "qml" / "main.qml")
@@ -338,7 +329,7 @@ def main():
     main_window = MainWindow(app)
     main_window.show()
 
-    app.twitter.start_sync()
+    app.twitter.connect()
 
     return app.exec_()
 

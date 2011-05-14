@@ -215,7 +215,6 @@ Rectangle {
                 tweet_overlay.view.currentIndex = tweet_view.currentOverlayIndex
             }
             function on_view_model_changed () {
-                console.log("vmc", view.model.count)
                 tweet_view.overlayItemCount = view.model.count
             }
             function f () {

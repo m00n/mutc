@@ -32,9 +32,9 @@ from logbook import Logger
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 
-from models import PanelModel, TweetModel, DMTweetModel
+from models import PanelModel, TweetModel, DMTweetModel, AccountModel
 from subscriptions import create_subscription
-from utils import LockableDict, async, safe_api_request, tweet_to_html
+from utils import LockableDict, async, safe_api_request
 
 CK = "owLrhjNm3qUOHA1ybLnZzA"
 CS = "lycIVjOXaALggV18Cgec9mOFkDqC1hNXoFxHet5dEg"
@@ -55,6 +55,8 @@ class Account(QObject):
     def __init__(self, oauth_key=None, oauth_secret=None, uuid=None):
         QObject.__init__(self)
 
+        self.service = "twitter"
+
         self.uuid = uuid or uuid4().get_hex()
         self.oauth_key = oauth_key
         self.oauth_secret = oauth_secret
@@ -66,18 +68,37 @@ class Account(QObject):
         self.api = None
         self.me = None
 
+    def __reduce__(self):
+        return (Account, (), self.__getstate__())
+
+    def __getstate__(self):
+        print "GETSTATE"
+        state = {}
+        attributes = [
+            "service",
+            "uuid",
+            "oauth_key",
+            "oauth_secret",
+            "proxy_host",
+            "proxy_port",
+        ]
+        for attr in attributes:
+            state[attr] = getattr(self, attr)
+
+        return state
+
+    def __setstate__(self, state):
+        print "SETSTATE"
+        for attr, value in state.iteritems():
+            setattr(self, attr, value)
+
     def __repr__(self):
         return "<Account %s>" % (
             self.me.screen_name if self.me else self.uuid[:4]
         )
 
-    @pyqtSlot(result="QVariant")
-    def get_uuid(self):
-        return self.uuid
-
-    @property
-    def valid(self):
-        return self.oauth_key and self.oauth_secret
+    def __hash__(self):
+        return hash(self.uuid)
 
     @pyqtSlot()
     @async
@@ -130,26 +151,11 @@ class Account(QObject):
         self.me = safe_api_request(self.api.me)
         self.connected.emit(self)
 
-    def simplify(self):
-        print "account.simplify", self.me, bool(self.me)
-        return {
-            'uuid': self.uuid,
-            'oauth': '{0}/{1}'.format(self.oauth_key, self.oauth_secret),
-            'avatar': self.me.profile_image_url if self.me else "",
-            'screen_name': self.me.screen_name if self.me else self.uuid[:4],
-            'connected': self.valid and self.api,
-            'active': False
-        }
-
-
 
 class Twitter(QObject):
     newTweets = pyqtSignal(object, list)
     newSubscription = pyqtSignal("QVariant")
 
-    announceAccount = pyqtSignal("QVariant")
-    accountConnected = pyqtSignal("QVariant")
-    accountAuthFailed = pyqtSignal("QVariant")
     accountCreated = pyqtSignal(QObject)
 
     tweetRemoved = pyqtSignal("QVariant")
@@ -162,10 +168,7 @@ class Twitter(QObject):
     def __init__(self, config):
         QObject.__init__(self)
 
-        self.models = {}
-
-        self.accounts = {}
-        self.ordered_accounts = []
+        self.account_model = AccountModel(self)
 
         self.subscriptions = LockableDict()
 
@@ -196,39 +199,20 @@ class Twitter(QObject):
             )
 
     def on_account_connected(self, account):
-        self.accountConnected.emit(account.simplify())
         self.panel_model.setScreenName(account.uuid, account.me.screen_name)
 
     @pyqtSlot("QVariant")
     def subscribe(self, request):
         subscription = create_subscription(
             request["type"],
-            self.accounts[request["uuid"]],
+            request["account"],
             request.get("args", "")
         )
 
-        key = (
-            request["uuid"],
-            request["type"],
-            request["args"],
-        )
+        tweet_model = self.panel_model.addPanel(subscription)
+        self.tweetRemoved.connect(tweet_model.removeTweet)
+        self.tweetChanged.connect(tweet_model.replaceTweet)
 
-        if request["type"] == "direct messages":
-            model_class = DMTweetModel
-        else:
-            model_class = TweetModel
-
-        self.models[key] = model = model_class(self, subscription)
-        self.tweetRemoved.connect(model.removeTweet)
-        self.tweetChanged.connect(model.replaceTweet)
-
-        if subscription.account.me:
-            request['screen_name'] = subscription.account.me.screen_name
-        else:
-            request['screen_name'] = subscription.account.uuid[:4]
-
-        self.newSubscription.emit(request)
-        self.panel_model.addPanel(subscription)
         self.thread.force_check.set()
 
     @pyqtSlot("QVariant", "QVariant", "QVariant")
@@ -236,10 +220,9 @@ class Twitter(QObject):
     @locking
     def tweet(self, accounts, tweet, in_reply=None):
         self.check_selected_accounts(accounts)
-
         in_reply = in_reply if in_reply else None
 
-        for account in imap(self.account, accounts):
+        for account in accounts:
             safe_api_request(
                 lambda api=account.api: api.update_status(tweet, in_reply)
             )
@@ -250,7 +233,7 @@ class Twitter(QObject):
     def retweet(self, accounts, tweet_id):
         self.check_selected_accounts(accounts)
 
-        for account in imap(self.account, accounts):
+        for account in accounts:
             status = safe_api_request(
                 lambda api=account.api: api.retweet(tweet_id),
             )
@@ -273,7 +256,7 @@ class Twitter(QObject):
     def undo_retweet(self, accounts, tweet_id):
         self.check_selected_accounts(accounts)
 
-        for account in imap(self.account, accounts):
+        for account in accounts:
             status = safe_api_request(
                 lambda: account.api.destroy_status(tweet_id)
             )
@@ -282,8 +265,7 @@ class Twitter(QObject):
     @pyqtSlot("QVariant", "QVariant", "QVariant")
     @async
     @locking
-    def send_direct_message(self, from_uuid, to_twitter_id, text):
-        account = self.account(from_uuid)
+    def send_direct_message(self, account, to_twitter_id, text):
         safe_api_request(
             lambda: account.api.send_direct_message(
                 user_id=to_twitter_id,
@@ -295,10 +277,11 @@ class Twitter(QObject):
     @async
     @locking
     def destroy_tweet(self, tweet_id):
-        status = self.accounts.values()[0].api.get_status(tweet_id)
+        # FIXME
+        status = self.account_model.accounts[0].api.get_status(tweet_id)
         author_id = status.author.id
 
-        for account in self.accounts.values():
+        for account in self.account_model.accounts:
             if author_id == account.me.id:
                 account.api.destroy_status(tweet_id)
                 self.requestSent.emit(True, None)
@@ -314,75 +297,33 @@ class Twitter(QObject):
     @pyqtSlot("QVariant", "QVariant")
     @async
     @locking
-    def destroy_direct_message(self, uuid, tweet_id):
-        account = self.account(uuid)
+    def destroy_direct_message(self, account, tweet_id):
         safe_api_request(
             lambda: account.api.destroy_direct_message(tweet_id)
         )
         self.tweetRemoved.emit(tweet_id)
 
-    def announce_account(self, account):
-        print account
-        print account.simplify()
-        self.announceAccount.emit(account.simplify())
-
     @pyqtSlot(result=QObject)
     def new_account(self):
         account = Account()
-        account.ready.connect(partial(self.announce_account, account))
-        account.authFailed.connect(
-            lambda account: self.accountAuthFailed.emit(account.simplify())
-        )
-        self.add_account(account)
+        account.setParent(self)
+        #account.ready.connect(partial(self.announce_account, account))
         self.accountCreated.emit(account)
         return account
 
     def add_account(self, account):
-        self.ordered_accounts.append(account)
-        self.accounts[account.uuid] = account
+        self.account_model.addAccount(account)
         account.connected.connect(self.on_account_connected)
 
-    @pyqtSlot("QVariant", result=QObject)
-    def account(self, uuid):
-        return self.accounts[uuid]
-
-    @pyqtSlot("QVariant")
-    def dismiss_account(self, uuid):
-        account = self.accounts.pop(uuid)
-        self.ordered_accounts.remove(account)
-
-    @pyqtSlot("QVariant")
-    @async
-    def need_tweets(self, request):
-        print "need_tweets", request
-        key = (
-            request["uuid"],
-            request["type"],
-            request["args"],
-        )
-        subscription = self.subscriptions[key]
-        model = self.models[key]
-
-        tweets = subscription.tweets_before(model.oldestId())
-        self.newTweetsForModel.emit(model, tweets, -1)
-
-    def start_sync(self):
+    def connect(self):
         """
-        Emit accounts & saved options to gui
+        Connects all account and starts the TwitterThread which fetches
+        new tweets
         """
-        for account in self.ordered_accounts:
-            self.announceAccount.emit(account.simplify())
+        for account in self.account_model.accounts:
             account.connect()
 
         self.thread.start()
-
-    @pyqtSlot("QVariant", "QVariant", "QVariant", result=QObject)
-    def get_model(self, uuid, panel_type, args):
-        return self.models[uuid, panel_type, args]
-
-    @pyqtSlot("QVariant", result="QVariant")
-    def tweet_to_html(self, text):
-        return tweet_to_html(text)
 
 
 class TwitterThread(QThread):

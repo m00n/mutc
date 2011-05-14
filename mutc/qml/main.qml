@@ -48,14 +48,15 @@ Rectangle {
             anchors.top: { if (parent) parent.top }
             anchors.bottom: { if (parent) parent.bottom }
 
-            model: twitter.get_model(uuid, type, args)
+            model: tweet_model //twitter.get_model(uuid, type, args)
 
             onNeedTweets: {
-                twitter.get_model(uuid, type, args).needTweets()
+                //twitter.get_model(uuid, type, args).needTweets()
+                tweet_model.needTweets()
             }
 
             onReply: {
-                var model = twitter.get_model(uuid, type, args)
+                //var model = twitter.get_model(uuid, type, args)
                 var tweet = model.get(tweet_panel.tweetView.currentIndex)
 
                 twitter_dialog.state = "visible"
@@ -64,16 +65,17 @@ Rectangle {
                     twitter_dialog.in_reply_id = tweet.tweet_id
                     twitter_dialog.text = "@" + tweet.author.screen_name + " "
                     twitter_dialog.edit.cursorPosition = twitter_dialog.text.length
+                    twitter_dialog.direct_message = false
                 } else {
                     twitter_dialog.in_reply_id = tweet.author.id_str
                     twitter_dialog.in_reply = tweet.author.screen_name
-                    twitter_dialog.direct_message_from = uuid
+                    twitter_dialog.direct_message_from = account_obj
                     twitter_dialog.direct_message = true
                 }
             }
 
             onRetweet: {
-                var model = twitter.get_model(uuid, type, args)
+                //var model = twitter.get_model(uuid, type, args)
                 var tweet = model.get(tweet_panel.tweetView.currentIndex)
 
                 if (model.type != "direct messages") {
@@ -92,18 +94,18 @@ Rectangle {
             }
 
             onUndoRetweet: {
-                var model = twitter.get_model(uuid, type, args)
+                //var model = twitter.get_model(uuid, type, args)
                 var tweet = model.get(tweet_panel.tweetView.currentIndex)
                 twitter.undo_retweet(account_model.getActiveAccounts(), tweet.tweet_id)
             }
 
             onRemoveTweet: {
-                var model = twitter.get_model(uuid, type, args)
+                //var model = twitter.get_model(uuid, type, args)
                 var tweet = model.get(tweet_panel.tweetView.currentIndex)
                 if (model.type != "direct messages") {
                     twitter.destroy_tweet(tweet.tweet_id)
                 } else {
-                    twitter.destroy_direct_message(uuid, tweet.tweet_id)
+                    twitter.destroy_direct_message(account_obj, tweet.tweet_id)
                 }
             }
 
@@ -201,36 +203,6 @@ Rectangle {
         }
     }
 
-    ListModel {
-        id: account_model
-/*
-        ListElement {
-            uuid: "abcd"
-            oauth: "abcde"
-            screen_name: "boringplanet"
-            avatar: "m00n_s.png"
-            active: false
-        }*/
-/*
-        ListElement {
-            uuid: ""
-            oauth: "abcde"
-            screen_name: "tweethon_test"
-            avatar: "m00n_s.png"
-            active: false
-        }*/
-
-        function getActiveAccounts() {
-            var accounts = [];
-            for (var i = 0; i < account_model.count; i ++) {
-                var account = account_model.get(i)
-                if (account.active)
-                    accounts.push(account.uuid)
-            }
-
-            return accounts
-        }
-    }
 
     ListModel {
         id: panel_model
@@ -296,7 +268,7 @@ Rectangle {
 
         onAddPanel: {
             twitter.subscribe({
-                'uuid': main_menu.for_account,
+                'account': main_menu.for_account,
                 'type': main_menu.panel_type,
                 'args': "",
             });
@@ -312,7 +284,7 @@ Rectangle {
         Component.onCompleted: {
             search_dialog.dialogAccepted.connect(function () {
                 twitter.subscribe({
-                    'uuid': main_menu.for_account,
+                    'account': main_menu.for_account,
                     'type': main_menu.panel_type,
                     'args': search_dialog.value,
                 })
@@ -348,6 +320,8 @@ Rectangle {
         }
 
         onAuthSuccessful: {
+            console.log("oas", account)
+            account_model.addAccount(account)
             status_dialog.show("Account", "Account successfully authenticated")
         }
     }
@@ -465,18 +439,6 @@ Rectangle {
     }
 
     Component.onCompleted: {
-        twitter.announceAccount.connect(function (data) {
-            account_model.append(data);
-            console.log("announceAccount", data);
-        })
-        twitter.accountConnected.connect(function (data) {
-            console.log("accountConnected " + data.screen_name);
-            var keys = ['screen_name', 'avatar', 'connected'];
-            for (var index in keys) {
-                Utils.changeEntry(account_model, "uuid", data.uuid, keys[index], data[keys[index]]);
-            }
-            //Utils.changeEntry(tweet_panel_model, "uuid", data.uuid, "screen_name", data.screen_name);
-        })
         twitter.requestSent.connect(function (success, error_msg) {
             main_window.locked = false
             twitter_dialog.state = "hidden"

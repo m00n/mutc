@@ -19,7 +19,7 @@ Rectangle {
     property string in_reply_id
     property string in_reply
     property bool direct_message
-    property string direct_message_from
+    property variant direct_message_from
 
     Rectangle {
         id: status

@@ -124,23 +124,3 @@ def safe_api_request(func, on_success=lambda: None, short_wait=False):
         else:
             on_success()
             return value
-
-
-def tweet_to_html(text):
-    text_parts = []
-    for token in text.split():
-        if token.startswith(u'#'):
-            item = u'<a href="search://{0}">{0}</a>'.format(token)
-        #elif token.startswith(u'@'):
-            #item = u'<a href="user://{0}">{0}</a>'.format(token)
-        elif token.startswith((u'http://', u'https://', u'www')):
-            if not token.startswith((u'http://', u'https://')):
-                url = u'http://{0}'.format(token)
-            else:
-                url = token
-            item = u'<a href="{0}">{0}</a>'.format(url)
-        else:
-            item = escape(token)
-        text_parts.append(item)
-    return u' '.join(text_parts)
-
