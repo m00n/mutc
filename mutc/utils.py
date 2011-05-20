@@ -111,7 +111,7 @@ def safe_api_request(func, on_success=lambda: None, short_wait=False):
 
             Logger('api_request').warn(
                 "Request failed: {} ({}) -> {}s sleep",
-                error, error.exception
+                error, error.exception, sleep_time
             )
 
             if sleep_time is None:
