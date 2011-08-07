@@ -15,6 +15,8 @@ Rectangle {
     signal reply
     signal retweet(bool comment)
     signal undoRetweet
+    signal favorite
+    signal undoFavorite
     signal removeTweet
     signal panelsLocked
 
@@ -206,6 +208,8 @@ Rectangle {
             onReply: tweet_panel.reply()
             onRemoveTweet: tweet_panel.removeTweet()
             onUndoRetweet: tweet_panel.undoRetweet()
+            onFavorite: tweet_panel.favorite()
+            onUndoFavorite: tweet_panel.undoFavorite()
             onLock: tweet_panel.panelsLocked()
 
             function set_index_in_view () {

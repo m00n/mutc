@@ -13,6 +13,12 @@ Rectangle {
     height: 120
 
     property bool dataMyRetweet: my_retweet
+    /*
+    TODO: implement role
+    
+    property bool dataMyFavorite: my_favorite
+    */
+    property bool dataMyFavorite: false
 
     Image {
         id: twitter_avatar

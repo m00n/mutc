@@ -15,6 +15,8 @@ Rectangle {
     signal reply
     signal retweet(bool comment)
     signal undoRetweet
+    signal favorite
+    signal undoFavorite
     signal removeTweet
     signal lock
 
@@ -50,7 +52,7 @@ Rectangle {
             id: action_model
 
             property int buttonWidth: 30
-            property int neededWidth: (buttonWidth * 3) + 20
+            property int neededWidth: (buttonWidth * 4) + 20
 
             TweetOverlayButton {
                 id: rt_button
@@ -71,6 +73,19 @@ Rectangle {
                 onButtonClicked: {
                     overlay = false
                     overlay_item.reply()
+                }
+            }
+
+            TweetOverlayButton {
+                id: fav_menu_button
+                button_text: "\u2605" /* Filled star */
+
+                onButtonClicked: {
+                    if (ListView.view.currentItem.dataMyFavorite) 
+                        overlay_item.state = "undo-favorite"
+                    else
+		                overlay_item.state = "busy"
+    		            overlay_item.favorite()
                 }
             }
 
@@ -129,6 +144,31 @@ Rectangle {
             }
             TweetOverlayButton {
                 id: rt_cancel_undo_button
+                button_text: "cancel"
+
+                onButtonClicked: {
+                    overlay = false
+                }
+            }
+        }
+        
+        VisualItemModel {
+            id: fav_undo_model
+
+            property int buttonWidth: 120
+            property int neededWidth: (buttonWidth * 2) + 10
+
+            TweetOverlayButton {
+                id: fav_undo_button
+                button_text: "undo fav"
+
+                onButtonClicked: {
+                    overlay_item.state = "busy"
+                    overlay_item.undoFavorite()
+                }
+            }
+            TweetOverlayButton {
+                id: fav_cancel_undo_button
                 button_text: "cancel"
 
                 onButtonClicked: {
@@ -268,6 +308,24 @@ Rectangle {
             PropertyChanges {
                 target: action_view
                 model: rt_undo_model
+                currentIndex: 0
+            }
+        },
+        State {
+            name: "favorite"
+
+            PropertyChanges {
+                target: action_view
+                model: fav_model
+                currentIndex: 0
+            }
+
+        },
+        State {
+            name: "undo-favorite"
+            PropertyChanges {
+                target: action_view
+                model: fav_undo_model
                 currentIndex: 0
             }
         },

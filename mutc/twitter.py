@@ -234,6 +234,7 @@ class Twitter(QObject):
         self.check_selected_accounts(accounts)
 
         for account in accounts:
+        	# warum die beiden so unterschiedlich?
             status = safe_api_request(
                 lambda api=account.api: api.retweet(tweet_id),
             )
@@ -261,6 +262,37 @@ class Twitter(QObject):
                 lambda: account.api.destroy_status(tweet_id)
             )
             self.tweetChanged.emit(True, tweet_id, status.retweeted_status)
+
+
+    @pyqtSlot("QVariant", "QVariant")
+    @async
+    @locking
+    def favorite(self, accounts, tweet_id):
+        self.check_selected_accounts(accounts)
+
+        for account in accounts:
+            status = safe_api_request(
+                lambda api=account.api: api.create_favorite(tweet_id),
+            )
+            
+            status.favorited = True
+            
+            self.tweetChanged.emit(False, tweet_id, status)
+
+    @pyqtSlot("QVariant", "QVariant")
+    @async
+    @locking
+    def undo_favorite(self, accounts, tweet_id):
+        self.check_selected_accounts(accounts)
+
+        for account in accounts:
+            status = safe_api_request(
+                lambda: account.api.destroy_favorite(tweet_id)
+            )
+            
+            status.favorited = False
+            
+            self.tweetChanged.emit(True, tweet_id, status)
 
     @pyqtSlot("QVariant", "QVariant", "QVariant")
     @async

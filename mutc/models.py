@@ -264,6 +264,7 @@ class TweetModel(QAbstractListModel):
         if role == self.IdRole:
             return status.id_str
 
+        # note to myself: this seems to be ugly
         if isinstance(status, tweepy.SearchResult):
             return self.data_search(status, role)
         elif hasattr(status, "retweeted_status"):

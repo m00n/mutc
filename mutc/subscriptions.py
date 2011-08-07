@@ -297,6 +297,7 @@ def create_subscription(name, account, args):
         "mentions": Mentions,
         "search": Search,
         "direct messages": DirectMessages,
+        "favorites": Favorites,
         "wall": Wall
     }[name](account, args)
 
@@ -319,3 +320,12 @@ class Subscriptions(QAbstractListModel):
 #subscriptions.register(HomeTimeline)
 #subscriptions.register(Mentions)
 #subscriptions.register(Search)
+
+#locke 2011-07-18
+
+
+class Favorites(Subscription):
+    subscription_type = "favorites"
+    def get_stream(self):
+        return self.account.api.favorites
+

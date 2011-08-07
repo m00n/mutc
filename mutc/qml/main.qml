@@ -99,6 +99,24 @@ Rectangle {
                 twitter.undo_retweet(account_model.getActiveAccounts(), tweet.tweet_id)
             }
 
+            onFavorite: {
+                //var model = twitter.get_model(uuid, type, args)
+                var tweet = model.get(tweet_panel.tweetView.currentIndex)
+
+                if (model.type != "direct messages") {
+                    twitter.favorite(account_model.getActiveAccounts(), tweet.tweet_id);
+                } else {
+                    status_dialog.show("Error", "Can't fav direct messages")
+                    main_window.locked = false
+                }
+            }
+
+            onUndoFavorite: {
+                //var model = twitter.get_model(uuid, type, args)
+                var tweet = model.get(tweet_panel.tweetView.currentIndex)
+                twitter.undo_favorite(account_model.getActiveAccounts(), tweet.tweet_id)
+            }
+
             onRemoveTweet: {
                 //var model = twitter.get_model(uuid, type, args)
                 var tweet = model.get(tweet_panel.tweetView.currentIndex)
@@ -226,6 +244,11 @@ Rectangle {
             type: 'search'
             args: true
             ask_text: "Enter search query"
+        }
+        ListElement {
+            type: 'favorites'
+            args: false
+            ask_text: ""
         }
         ListElement {
             type: 'wall'
