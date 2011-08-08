@@ -291,6 +291,12 @@ class DirectMessages(Subscription):
         return timeline
 
 
+class Favorites(Subscription):
+    subscription_type = "favorites"
+    def get_stream(self):
+        return self.account.api.favorites
+
+
 def create_subscription(name, account, args):
     return {
         "timeline": HomeTimeline,
@@ -320,12 +326,3 @@ class Subscriptions(QAbstractListModel):
 #subscriptions.register(HomeTimeline)
 #subscriptions.register(Mentions)
 #subscriptions.register(Search)
-
-#locke 2011-07-18
-
-
-class Favorites(Subscription):
-    subscription_type = "favorites"
-    def get_stream(self):
-        return self.account.api.favorites
-
