@@ -182,6 +182,10 @@ class TweetModel(QAbstractListModel):
     def type(self):
         return "default"
 
+    @pyqtProperty("QVariant")
+    def account(self):
+        return self.subscription.account
+
     def _on_old_tweets_recv(self, subscription, tweets):
         self.busy = False
         #index = self.index(self.rowCount() - 1)

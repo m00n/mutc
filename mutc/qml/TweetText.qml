@@ -107,14 +107,12 @@ Item {
                     url = "http://twitter.com/" + part.substr(1)
                     islink = true
                 } else if (part.substr(0, 1) == "#") {
-                    url = "search://" + part.substr(1)
+                    url = "search://" + part
                     islink = true
                 } else if (part.match(/(http:\/\/\S*)/g)) {
                     url = part
                     islink = true
                 }
-
-                //if (part.substr(0, 1) == "&")
 
                 for (var ix = text_index; ix < text_index + unescaped_splitted[i].length; ix++) {
                     indexmap[ix] = i
