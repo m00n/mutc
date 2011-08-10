@@ -83,10 +83,10 @@ Rectangle {
                 onButtonClicked: {
                     if (ListView.view.currentItem.dataMyFavorite)
                         overlay_item.state = "undo-favorite"
-                    else
-                        //overlay = false
+                    else{
                         overlay_item.state = "busy"
                         overlay_item.favorite()
+                    }
                 }
             }
 
