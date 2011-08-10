@@ -17,6 +17,7 @@ Item {
 
         anchors.fill: parent
 
+        // ??
         property string text: "&gt;&lt; foo #bar @zort baz http://foo.bar/baz foo"
 
 

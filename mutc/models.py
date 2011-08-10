@@ -147,6 +147,7 @@ class TweetModel(QAbstractListModel):
     MyRetweetRole = Qt.UserRole + 6
     InReplyRole = Qt.UserRole + 7
     InReplyToIdRole = Qt.UserRole + 8
+    MyFavoritedRole = Qt.UserRole + 9
 
     busyStateChanged = pyqtSignal(bool)
     countChanged = pyqtSignal(int)
@@ -176,6 +177,7 @@ class TweetModel(QAbstractListModel):
             self.MyRetweetRole: "my_retweet",
             self.InReplyRole: "in_reply",
             self.InReplyToIdRole: "in_reply_id",
+            self.MyFavoritedRole: "my_favorite",
         })
 
     @pyqtProperty(unicode, constant=True)
@@ -264,7 +266,7 @@ class TweetModel(QAbstractListModel):
         if role == self.IdRole:
             return status.id_str
 
-        # note to myself: this seems to be ugly
+        # Locke: note to myself: this seems to be ugly...
         if isinstance(status, tweepy.SearchResult):
             return self.data_search(status, role)
         elif hasattr(status, "retweeted_status"):
@@ -289,6 +291,8 @@ class TweetModel(QAbstractListModel):
             return status.in_reply_to_screen_name
         elif role == self.InReplyToIdRole:
             return status.in_reply_to_status_id_str
+        elif role == self.MyFavoritedRole:
+            return status.favorited
 
     def data_default(self, status, role):
         if role == self.AuthorRole:
@@ -310,6 +314,8 @@ class TweetModel(QAbstractListModel):
             return status.in_reply_to_screen_name
         elif role == self.InReplyToIdRole:
             return status.in_reply_to_status_id_str
+        elif role == self.MyFavoritedRole:
+            return status.favorited
 
     def data_search(self, result, role):
         if role == self.AuthorRole:
@@ -336,6 +342,8 @@ class TweetModel(QAbstractListModel):
             return ""
         elif role == self.InReplyToIdRole:
             return ""
+        elif role == self.MyFavoritedRole:
+            return False
 
     @pyqtSlot()
     def needTweets(self):
@@ -375,6 +383,8 @@ class DMTweetModel(TweetModel):
         elif role == self.IdRole:
             return dm.id_str
         elif role == self.MyRetweetRole:
+            return False
+        elif role == self.MyFavoritedRole:
             return False
 
 

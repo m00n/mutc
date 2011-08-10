@@ -81,11 +81,12 @@ Rectangle {
                 button_text: "\u2605" /* Filled star */
 
                 onButtonClicked: {
-                    if (ListView.view.currentItem.dataMyFavorite) 
+                    if (ListView.view.currentItem.dataMyFavorite)
                         overlay_item.state = "undo-favorite"
                     else
-		                overlay_item.state = "busy"
-    		            overlay_item.favorite()
+                        //overlay = false
+                        overlay_item.state = "busy"
+                        overlay_item.favorite()
                 }
             }
 

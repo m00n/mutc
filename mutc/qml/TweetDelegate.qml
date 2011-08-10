@@ -13,12 +13,7 @@ Rectangle {
     height: 120
 
     property bool dataMyRetweet: my_retweet
-    /*
-    TODO: implement role
-    
     property bool dataMyFavorite: my_favorite
-    */
-    property bool dataMyFavorite: false
 
     Image {
         id: twitter_avatar
@@ -59,6 +54,19 @@ Rectangle {
             margins: 5
         }
 
+    }
+
+    Text {
+        id: faved
+        text: "\u2605"
+        font.pointSize: twitter_name.font.pointSize + 3
+        color: style.textColor
+
+        // TODO: arrange via twitter_avatar and/or twitter_name?
+        x: 5
+        y: 5
+
+        visible: my_favorite
     }
 
     TweetText {

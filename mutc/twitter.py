@@ -180,6 +180,8 @@ class Twitter(QObject):
         self.thread = TwitterThread(self, self.subscriptions, config["limits"])
         self.thread.newTweets.connect(self.newTweets.emit)
 
+        self.logger = Logger("twitter")
+
     def locking(func):
         @wraps(func)
         def wrapper(self, *args, **kwds):
@@ -271,11 +273,11 @@ class Twitter(QObject):
         self.check_selected_accounts(accounts)
 
         for account in accounts:
+            self.logger.debug("api.create_favorite({0})", tweet_id)
+
             status = safe_api_request(
                 lambda api=account.api: api.create_favorite(tweet_id),
             )
-            
-            status.favorited = True
             
             self.tweetChanged.emit(False, tweet_id, status)
 
@@ -286,11 +288,11 @@ class Twitter(QObject):
         self.check_selected_accounts(accounts)
 
         for account in accounts:
+            self.logger.debug("api.destroy_favorite({0})", tweet_id)
+
             status = safe_api_request(
                 lambda: account.api.destroy_favorite(tweet_id)
             )
-            
-            status.favorited = False
             
             self.tweetChanged.emit(True, tweet_id, status)
 
