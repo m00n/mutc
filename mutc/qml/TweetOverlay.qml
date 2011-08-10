@@ -238,7 +238,7 @@ Rectangle {
                 }
 
                 function safe_get(prop, offset) {
-                    if (ListView.view) {
+                    if (ListView.view && ListView.view.currentItem) {
                         return ListView.view.currentItem[prop] + offset
                     }
                     else {

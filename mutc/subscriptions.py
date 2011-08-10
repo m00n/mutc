@@ -193,53 +193,9 @@ class Search(Subscription):
     def get_stream_args(self):
         return {'q': self.args}
 
+
 class Wall(Search):
     subscription_type = "wall"
-
-class IncomingDirectMessages(Subscription):
-    subscription_type = "incoming_dm"
-    def get_stream(self):
-        return self.account.api.direct_messages
-
-class OutgoingDirectMessages(Subscription):
-    subscription_type = "outgoing_dm"
-    def get_stream(self):
-        return self.account.api.sent_direct_messages
-
-class DirectMessages(Subscription):
-    subscription_type = "direct messages"
-
-    def __init__(self, account, args):
-        Subscription.__init__(self, account, args)
-        self.incoming_dm = IncomingDirectMessages(account, args)
-        self.outgoing_dm = OutgoingDirectMessages(account, args)
-
-    def merge_timelines(self, first, second):
-        merged = list(first)
-        merged.extend(second)
-        return sorted(
-            merged,
-            key=lambda status: status.created_at,
-            reverse=True
-        )
-
-    def update(self):
-        timeline = self.merge_timelines(
-            self.incoming_dm.update(),
-            self.outgoing_dm.update()
-        )
-        self.newTweetsReceived.emit(self, timeline)
-
-        return timeline
-
-    def tweets_before(self, max_id):
-        timeline = self.merge_timelines(
-            self.incoming_dm.tweets_before(max_id),
-            self.outgoing_dm.tweets_before(max_id)
-        )
-        self.oldTweetsReceived.emit(self, timeline)
-
-        return timeline
 
 
 class IncomingDirectMessages(Subscription):

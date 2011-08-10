@@ -275,7 +275,7 @@ class MainWindow(QDeclarativeView):
     def __init__(self, app):
         QDeclarativeView.__init__(self)
 
-        self.setViewport(QGLWidget())
+        #self.setViewport(QGLWidget())
         self.setResizeMode(QDeclarativeView.SizeRootObjectToView)
 
         factory = self.factory = ProxyNetworkAccessManagerFactory(
