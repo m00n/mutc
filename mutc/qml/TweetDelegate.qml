@@ -88,7 +88,7 @@ Rectangle {
             var search_url = /search:\/\/(.+)/
             if (search_url.exec(link)) {
                 twitter.subscribe({
-                    "uuid": uuid,
+                    "account": ListView.view.model.account,
                     "type": "search",
                     "args": RegExp.$1,
                     "foreground": true
