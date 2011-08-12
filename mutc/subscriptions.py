@@ -58,7 +58,7 @@ class Subscription(QObject):
     def update(self):
         tweets = []
 
-        cursor_args = {}
+        cursor_args = {"include_entities": 1}
         count = None
 
         if self.last_tweet_id:
