@@ -278,7 +278,9 @@ class Twitter(QObject):
             status = safe_api_request(
                 lambda api=account.api: api.create_favorite(tweet_id),
             )
-            
+
+            status.favorited = True
+
             self.tweetChanged.emit(False, tweet_id, status)
 
     @pyqtSlot("QVariant", "QVariant")
@@ -293,7 +295,9 @@ class Twitter(QObject):
             status = safe_api_request(
                 lambda: account.api.destroy_favorite(tweet_id)
             )
-            
+
+            status.favorited = False
+
             self.tweetChanged.emit(True, tweet_id, status)
 
     @pyqtSlot("QVariant", "QVariant", "QVariant")
