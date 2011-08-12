@@ -10,6 +10,9 @@ Rectangle {
 
     Style { id: style }
 
+    border.color: style.borderColor
+    border.width: 2
+
     function show() {
         options_dialog.opacity = 1
 

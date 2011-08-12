@@ -368,9 +368,7 @@ Rectangle {
         id: options_dialog
         opacity: 0
         anchors {
-            left: parent.left
             right: parent.right
-            top: parent.top
             bottom: toolbar_row.top
             bottomMargin: 2
         }
