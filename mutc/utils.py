@@ -28,7 +28,7 @@ from threading import Lock
 from time import sleep
 from urlparse import urlparse
 
-from PyQt4.Qt import QThreadPool, QRunnable
+from PyQt4.Qt import *
 from tweepy import TweepError
 from logbook import Logger
 
@@ -43,6 +43,28 @@ class LockableDict(dict):
 
     def __exit__(self, *args):
         self._lock.release()
+
+
+class CallEvent(QEvent):
+    def __init__(self, func, *args, **kwds):
+        QEvent.__init__(self, 1000)
+        self.func = func
+        self.args = args
+        self.kwds = kwds
+
+
+class CallInMainLoop(QObject):
+    @pyqtSlot(QEvent)
+    def event(self, event):
+        if isinstance(event, CallEvent):
+            event.func(*event.args, **event.kwds)
+        return QObject.event(self, event)
+
+    def __call__(self, func, *args, **kwds):
+        QApplication.instance().postEvent(self, CallEvent(func, *args, **kwds))
+
+
+call_in_mainloop = CallInMainLoop()
 
 
 def async(func):

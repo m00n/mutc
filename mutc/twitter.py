@@ -34,7 +34,7 @@ from PyQt4.QtCore import *
 
 from models import PanelModel, TweetModel, DMTweetModel, AccountModel
 from subscriptions import create_subscription
-from utils import LockableDict, async, safe_api_request
+from utils import LockableDict, call_in_mainloop, async, safe_api_request
 
 CK = "owLrhjNm3qUOHA1ybLnZzA"
 CS = "lycIVjOXaALggV18Cgec9mOFkDqC1hNXoFxHet5dEg"
@@ -278,7 +278,7 @@ class Twitter(QObject):
             status = safe_api_request(
                 lambda api=account.api: api.create_favorite(tweet_id),
             )
-            
+
             self.tweetChanged.emit(False, tweet_id, status)
 
     @pyqtSlot("QVariant", "QVariant")
@@ -293,8 +293,15 @@ class Twitter(QObject):
             status = safe_api_request(
                 lambda: account.api.destroy_favorite(tweet_id)
             )
-            
+
             self.tweetChanged.emit(True, tweet_id, status)
+
+            # Remove tweet from Favorites-Panels
+            for subscription, model in self.panel_model.panels:
+                print repr(tweet_id), subscription.subscription_type, subscription.account, account
+                if subscription.subscription_type == "favorites" \
+                   and subscription.account == account:
+                    call_in_mainloop(model.removeTweet, tweet_id)
 
     @pyqtSlot("QVariant", "QVariant", "QVariant")
     @async
