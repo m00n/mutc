@@ -148,6 +148,7 @@ class TweetModel(QAbstractListModel):
     InReplyRole = Qt.UserRole + 7
     InReplyToIdRole = Qt.UserRole + 8
     MyFavoritedRole = Qt.UserRole + 9
+    MyEntitiesRole = Qt.UserRole + 10
 
     busyStateChanged = pyqtSignal(bool)
     countChanged = pyqtSignal(int)
@@ -178,6 +179,7 @@ class TweetModel(QAbstractListModel):
             self.InReplyRole: "in_reply",
             self.InReplyToIdRole: "in_reply_id",
             self.MyFavoritedRole: "my_favorite",
+            self.MyEntitiesRole: "entities",
         })
 
     @pyqtProperty(unicode, constant=True)
@@ -297,6 +299,8 @@ class TweetModel(QAbstractListModel):
             return status.in_reply_to_status_id_str
         elif role == self.MyFavoritedRole:
             return status.favorited
+        elif role == self.MyEntitiesRole:
+            return status.entities
 
     def data_default(self, status, role):
         if role == self.AuthorRole:
@@ -320,6 +324,8 @@ class TweetModel(QAbstractListModel):
             return status.in_reply_to_status_id_str
         elif role == self.MyFavoritedRole:
             return status.favorited
+        elif role == self.MyEntitiesRole:
+            return status.entities
 
     def data_search(self, result, role):
         if role == self.AuthorRole:
@@ -348,6 +354,8 @@ class TweetModel(QAbstractListModel):
             return ""
         elif role == self.MyFavoritedRole:
             return False
+        elif role == self.MyEntitiesRole:
+            return []
 
     @pyqtSlot()
     def needTweets(self):
@@ -390,6 +398,8 @@ class DMTweetModel(TweetModel):
             return False
         elif role == self.MyFavoritedRole:
             return False
+        elif role == self.MyEntitiesRole:
+            return []
 
 
 class PanelModel(QAbstractListModel):

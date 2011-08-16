@@ -427,6 +427,14 @@ Rectangle {
             if (event.key == Qt.Key_Space) {
                 tweet_panels.currentItem.overlay = !tweet_panels.currentItem.overlay
             }
+            if (event.key == Qt.Key_F) {
+                var model = tweet_panels.currentItem.model
+                var tweet = model.get(tweet_panels.currentItem.tweetView.currentIndex)
+
+                // TODO: handle urls.length > 1
+                if (tweet.entities.urls && tweet.entities.urls.length > 0)
+                    app.open_url(tweet.entities.urls[0].url)
+            }
         }
 
         if (event.key == Qt.Key_Return) {

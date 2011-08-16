@@ -58,7 +58,7 @@ class Subscription(QObject):
     def update(self):
         tweets = []
 
-        cursor_args = {}
+        cursor_args = {"include_entities": 1}
         count = None
 
         if self.last_tweet_id:
@@ -86,7 +86,8 @@ class Subscription(QObject):
         self.fetching = True
 
         cursor_args = {
-            "max_id": max_id
+            "max_id": max_id,
+            "include_entities": 1
         }
         cursor_args.update(self.get_stream_args())
         cursor = tweepy.Cursor(

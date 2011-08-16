@@ -370,6 +370,11 @@ class Twitter(QObject):
 
         self.thread.start()
 
+    @pyqtSlot("QVariant")
+    @async
+    @locking
+    def debug_tweet(self, tweet):
+            self.logger.debug("debug_tweet: {0}", tweet)
 
 class TwitterThread(QThread):
     newTweets = pyqtSignal(object, object)
