@@ -24,7 +24,7 @@ Welcome to the mutc wiki!
 * Run `python setup.py install` as root
 * Just run `mutc`
 
-### Windows
+## Windows
 * todo
 
 
