@@ -431,11 +431,9 @@ Rectangle {
                 var model = tweet_panels.currentItem.model
                 var tweet = model.get(tweet_panels.currentItem.tweetView.currentIndex)
 
-                // TODO: urls.length > 1
-                if (tweet.entities && tweet.entities.urls.length > 0)
+                // TODO: handle urls.length > 1
+                if (tweet.entities.urls && tweet.entities.urls.length > 0)
                     app.open_url(tweet.entities.urls[0].url)
-
-                twitter.debug_tweet(tweet);
             }
         }
 
