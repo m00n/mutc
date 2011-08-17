@@ -49,10 +49,13 @@ class App(QApplication):
     backendReady = pyqtSignal()
 
     def __init__(self, args):
-        QApplication.__init__(self, args)
-
         self.data_path = self.setup_data_path()
         self.load_config()
+
+        if self.config["graphics"] == "raster":
+            self.setGraphicsSystem("raster")
+
+        QApplication.__init__(self, args)
 
         self.twitter = Twitter(self.config)
         self.load_state()
@@ -267,7 +270,6 @@ class Config(QObject):
         dict_ = self.config
         for part in key.split("."):
             dict_ = dict_[part]
-
         return dict_
 
 
@@ -275,7 +277,9 @@ class MainWindow(QDeclarativeView):
     def __init__(self, app):
         QDeclarativeView.__init__(self)
 
-        #self.setViewport(QGLWidget())
+        if app.config['graphics'] == "opengl":
+            self.setViewport(QGLWidget())
+
         self.setResizeMode(QDeclarativeView.SizeRootObjectToView)
 
         factory = self.factory = ProxyNetworkAccessManagerFactory(

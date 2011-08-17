@@ -7,5 +7,6 @@
         "buffer": 15,
         "clients": 1,
         "min_seconds": 50
-    }
+    },
+    "graphics": "raster"
 }
