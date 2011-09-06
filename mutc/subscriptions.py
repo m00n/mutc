@@ -254,6 +254,21 @@ class Favorites(Subscription):
         return self.account.api.favorites
 
 
+class List(Subscription):
+    subscription_type = "list"
+    def get_stream(self):
+        return self.account.api.list_timeline
+
+    def get_stream_args(self):
+        if '/' in self.args:
+            owner, slug = self.args.split('/')
+        else:
+            owner = self.account.api.screen_name
+            slug = self.args
+
+        return {'slug': slug, 'owner': owner}
+
+
 def create_subscription(name, account, args):
     return {
         "timeline": HomeTimeline,
@@ -261,7 +276,8 @@ def create_subscription(name, account, args):
         "search": Search,
         "direct messages": DirectMessages,
         "favorites": Favorites,
-        "wall": Wall
+        "wall": Wall,
+        "list": List
     }[name](account, args)
 
 

@@ -255,6 +255,11 @@ Rectangle {
             args: true
             ask_text: "Enter hashtag"
         }
+        ListElement {
+            type: 'list'
+            args: true
+            ask_text: "Enter list name"
+        }
     }
 
     TweetDialog {
