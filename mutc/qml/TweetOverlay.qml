@@ -59,7 +59,7 @@ Rectangle {
                 button_text: "\u21BA"
 
                 onButtonClicked: {
-                    if (ListView.view.currentItem.dataMyRetweet)
+                    if (overlay_item.ListView.view.currentItem.dataMyRetweet)
                         overlay_item.state = "undo-retweet"
                     else
                         overlay_item.state = "retweet"
@@ -81,7 +81,7 @@ Rectangle {
                 button_text: "\u2605" /* Filled star */
 
                 onButtonClicked: {
-                    if (ListView.view.currentItem.dataMyFavorite)
+                    if (overlay_item.ListView.view.currentItem.dataMyFavorite)
                         overlay_item.state = "undo-favorite"
                     else{
                         overlay_item.state = "busy"

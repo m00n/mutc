@@ -36,8 +36,8 @@ Rectangle {
     Text {
         id: twitter_name
         text: {
-            var you = ListView.view.panel_screen_name
-            if (ListView.view.model.type == "direct messages") {
+            var you = tweet_delegate.ListView.view.panel_screen_name
+            if (tweet_delegate.ListView.view.model.type == "direct messages") {
                 if (author.screen_name == you)
                     "to <b>" + in_reply.screen_name
                 else
@@ -88,7 +88,7 @@ Rectangle {
             var search_url = /search:\/\/(.+)/
             if (search_url.exec(link)) {
                 twitter.subscribe({
-                    "account": ListView.view.model.account,
+                    "account": tweet_delegate.ListView.view.model.account,
                     "type": "search",
                     "args": RegExp.$1,
                     "foreground": true
@@ -147,7 +147,7 @@ Rectangle {
         y: parent.height - 18
         z: 10
 
-        visible: in_reply && ListView.view.model.type != "direct messages" ? true : false
+        visible: in_reply && tweet_delegate.ListView.view.model.type != "direct messages" ? true : false
 
         text: "In reply to " + in_reply
         color: style.textColor
@@ -183,7 +183,7 @@ Rectangle {
             margins: 5
         }
 
-        visible: index == ListView.view.currentIndex
+        visible: index == tweet_delegate.ListView.view.currentIndex
     }
 
     Behavior on opacity {

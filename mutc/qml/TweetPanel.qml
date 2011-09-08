@@ -58,7 +58,7 @@ Rectangle {
                     "@" + screen_name + "/" + type
             }
             color: style.textColor
-            font.underline: index == ListView.view.currentIndex
+            font.underline: index == tweet_panel.ListView.view.currentIndex
 
             anchors.verticalCenter: parent.verticalCenter
         }
@@ -77,7 +77,7 @@ Rectangle {
                 color: title_rect.border.color
             }
             onButtonClicked: {
-                ListView.view.model.move(index, index - 1);
+                tweet_panel.ListView.view.model.move(index, index - 1);
             }
         }
         Button {
@@ -95,7 +95,7 @@ Rectangle {
             }
 
             onButtonClicked: {
-                ListView.view.model.move(index, index + 1);
+                tweet_panel.ListView.view.model.move(index, index + 1);
             }
         }
         Button {
@@ -115,7 +115,7 @@ Rectangle {
 
 
             onButtonClicked: {
-                ListView.view.model.remove(index);
+                tweet_panel.ListView.view.model.remove(index)
             }
         }
 
@@ -153,16 +153,16 @@ Rectangle {
                 anchors.fill: parent
                 onDoubleClicked: {
                     if (!locked) {
-                        var coords = ListView.view.mapFromItem(parent, mouseX, mouseY + tweetView.contentY);
-                        var idx = ListView.view.indexAt(coords.x, coords.y);
+                        var coords = tweet_view.mapFromItem(parent, mouseX, mouseY + tweetView.contentY);
+                        var idx = tweet_view.indexAt(coords.x, coords.y);
 
-                        if (idx == ListView.view.currentIndex && overlay) {
+                        if (idx == tweet_view.currentIndex && overlay) {
                             overlay = false
-                        } else if (idx != ListView.view.currentIndex && overlay) {
+                        } else if (idx != tweet_view.currentIndex && overlay) {
                             overlay = false
                         } else {
                             overlay = true;
-                            ListView.view.currentIndex = idx;
+                            tweet_view.currentIndex = idx;
                         }
                     }
                 }

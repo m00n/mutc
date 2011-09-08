@@ -4,6 +4,8 @@ Component {
     id: account_delegate
 
     Rectangle {
+        id: account_rect
+
         height: 22
         width: (screen_name_text.paintedWidth) + 23
 
@@ -92,12 +94,13 @@ Component {
 
             z: 100
             onClicked: {
-                var coords = ListView.view.mapFromItem(screen_name_text, mouseX, mouseY);
-                var idx = ListView.view.indexAt(coords.x, coords.y);
+                var view = account_rect.ListView.view
+                var coords = view.mapFromItem(screen_name_text, mouseX, mouseY);
+                var idx = view.indexAt(coords.x, coords.y);
                 if (is_selected)
-                    ListView.view.model.deselect(idx)
+                    view.model.deselect(idx)
                 else
-                    ListView.view.model.select(idx)
+                    view.model.select(idx)
             }
         }
     }
