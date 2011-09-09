@@ -142,12 +142,8 @@ Rectangle {
         }
 
         delegate: TweetDelegate {
-            width: {
-                if (parent)
-                    parent.width
-                else
-                    300
-            }
+            width: parent ? parent.width : 300
+            height: type == "wall" ? 72 : 120
 
             MouseArea {
                 anchors.fill: parent

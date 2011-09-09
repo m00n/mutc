@@ -13,4 +13,10 @@ ListModel {
         args: ""
         screen_name: "mutc_test"
     }
+    ListElement {
+        uuid: "abcd"
+        type: "wall"
+        args: "#test"
+        screen_name: "mutc_test"
+    }
 }

@@ -110,7 +110,7 @@ Rectangle {
         color: style.textColor
 
         x: 5
-        y: parent.height - 18
+        y: parent.height - (parent.height / 6)
         z: 10
 
         MouseArea {
