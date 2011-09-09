@@ -25,7 +25,7 @@ from datetime import datetime
 from functools import partial, wraps
 from itertools import imap
 from uuid import uuid4
-from time import sleep, time
+from time import sleep, time, mktime
 
 import tweepy
 from logbook import Logger
@@ -495,5 +495,10 @@ def calc_ticks(rate_limit, calls, clients=1, buffer=10, min_seconds=55):
     next_reset = datetime.fromtimestamp(rate_limit["reset_time_in_seconds"])
     delta = (next_reset - datetime.now()).total_seconds()
 
-    ticks =  (delta / (rate_limit["remaining_hits"] - buffer)) * calls
+    try:
+        ticks =  (delta / (rate_limit["remaining_hits"] - buffer)) * calls
+    except ZeroDivisionError:
+        print "No credits left, next reset is", next_reset
+        ticks = delta
+
     return max(int(ticks * clients), min_seconds)
